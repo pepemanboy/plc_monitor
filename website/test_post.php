@@ -1,5 +1,4 @@
 <?php
-
    	include("connect.php");
    	
    	$link=Connection();
@@ -14,5 +13,5 @@
 	mysql_close($link);
 
    	header("Location: index.php");
-
+     
 ?>
