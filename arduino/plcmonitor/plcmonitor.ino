@@ -1,3 +1,5 @@
+#include "plcshield.h"
+
 #define ANALOG_INPUT_COUNT 6
 #define DIGITAL_INPUT_COUNT 6
 #define INPUT_COUNT (ANALOG_INPUT_COUNT + DIGITAL_INPUT_COUNT)
@@ -23,13 +25,31 @@ enum
   action_Delay, ///< Turn on certain amount of time
 }do_actions_e;
 
+/* Value union */
+typedef union Value Value;
+union Value {
+   uint8_t d; ///< Digital
+   uint32_t c; ///< Counter
+   float a; ///< Analog
+};  
+
+/* Gain Offset Structure */
+typedef struct plc_gof plc_gof;
+struct plc_gof
+{
+  float g;
+  float o;
+};
+
 /* Input struct */
 typedef struct plc_in_t plc_in_t;
 struct plc_in_t
 {
   String nametag; ///< Nametag identifier
   uint8_t type; ///< Input type
-  uint32_t value; ///< Input value
+  Value value; ///< Input value
+  float treshold; ///< Threshold
+  plc_gof gof; ///< Gain and offset
 };
 
 /* Digital output struct */
@@ -52,6 +72,18 @@ struct PlcDevice
   String nametag;
   uint8_t ip[4];
 };
+
+/* Value string */
+String _valueString(plc_in_t * p)
+{
+  switch (p->type)
+  {
+    case type_Digital: return String(p->value.d); break;
+    case type_Analog: return String(p->value.a); break;
+    case type_Counter: return String(p->value.c); break;
+  }
+  return "None";
+}
 
 /* Initialize plcDevice */
 void _plcDeviceInit(PlcDevice *d)
@@ -83,7 +115,7 @@ String _actionsString(plc_do_t * d)
 {
   String n = "";
   uint8_t i;
-  for (i = 0; i < OUTPUT_COUNT; i ++)
+  for (i = 0; i < INPUT_COUNT; i ++)
   {
     n = n + String(d->actions[i]) + " ";
   }
@@ -126,7 +158,7 @@ void _printPlcDevice(PlcDevice *d)
     Serial.print("Input #" + String(i));
     Serial.print("\tName: " + d->in[i].nametag);
     Serial.print("\tType: " + _typeString(d->in[i].type));
-    Serial.println("\tValue: " + String(d->in[i].value)); 
+    Serial.println("\tValue: " + _valueString(&d->in[i])); 
   }
 
   for(i = 0; i < OUTPUT_COUNT; i ++)
@@ -138,6 +170,52 @@ void _printPlcDevice(PlcDevice *d)
   }
 }
 
+/* Update inputs */
+void _updateInputs(PlcDevice * d)
+{
+  uint8_t i;
+  for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+  {
+    d->din[i].value.d = plc_digitalRead(i+1); // Count starts in 1   
+    d->ain[i].value.a = plc_analogRead(i+1); 
+  }
+}
+
+/* Update outputs */
+void _updateOutputs(PlcDevice * d)
+{
+  uint8_t i;
+  for (i = 0; i < OUTPUT_COUNT; i ++)
+  {
+    plc_digitalWrite(i+1, d->dout[i].value);
+  }
+}
+
+void _outputStep(PlcDevice * d)
+{
+  uint8_t i, j;
+  for (i = 0; i < OUTPUT_COUNT; i++)
+  {
+    for (j = 0; j < INPUT_COUNT; j++)
+    {
+      switch(d->dout[i].actions[j])
+      {
+        case action_Permanent:break;
+        case action_Event: break;
+        case action_Delay: break;
+        default: break;
+      }
+    }
+  }
+}
+
+/* Update io */
+void _updateIo(PlcDevice * d)
+{
+  _updateInputs(d);
+  _updateOutputs(d);
+}
+
 /* Global variables */
 PlcDevice plcDevice;
 
@@ -145,12 +223,15 @@ void setup()
 {
   Serial.begin(9600);
   delay(100);
+
   
   _plcDeviceInit(&plcDevice);
   _printPlcDevice(&plcDevice);
+
+  plc_setup();
 }
 
 void loop() 
 {
-
+  _updateIo(&plcDevice);
 }
