@@ -6,13 +6,15 @@
 		$pass="123456";
 		$db="plcmonitor_prueba_juanjo";
 
-		$connection = mysql_connect($server, $user, $pass);
+		echo "Intento ";
 
-		if (!$connection) {
-	    	die('MySQL ERROR 1 : ' . mysql_error());
-		}
+
+		$connection = mysqli_connect($server, $user, $pass, $db);
 		
-		mysql_select_db($db) or die( 'MySQL ERROR 2 : '. mysql_error() );
+	 if (!$connection) {
+    die("Connection failed: " . mysqli_connect_error());
+        }
+        echo "Connected successfully";
 
 		return $connection;
 	}

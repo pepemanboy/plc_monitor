@@ -3,7 +3,7 @@
 	include("connect.php"); 
 	$link=Connection();
 
-	$result=mysql_query("SELECT * FROM `tempLog` ORDER BY `timeStamp` DESC",$link);
+	$result=mysqli_query($link, "SELECT * FROM `tempLog` ORDER BY `timeStamp` DESC");
 ?>
 
 <html>
@@ -11,7 +11,7 @@
       <title>Sensor Data</title>
    </head>
 <body>
-   <h1>Temperature / moisture sensor readings</h1>
+   <h1>Temperature sensor readings</h1>
 
    <table border="1" cellspacing="1" cellpadding="1">
 		<tr>
@@ -22,12 +22,12 @@
 
       <?php 
 		  if($result!==FALSE){
-		     while($row = mysql_fetch_array($result)) {
+		     while($row = mysqli_fetch_array($result)) {
 		        printf("<tr><td> &nbsp;%s </td><td> &nbsp;%s&nbsp; </td><td> &nbsp;%s&nbsp; </td></tr>", 
 		           $row["timeStamp"], $row["temperature"], $row["humidity"]);
 		     }
-		     mysql_free_result($result);
-		     mysql_close();
+		     mysqli_free_result($result);
+		     mysqli_close($connection);
 		  }
       ?>
 
