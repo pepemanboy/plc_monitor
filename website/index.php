@@ -16,7 +16,7 @@
    <table border="1" cellspacing="1" cellpadding="1">
 		<tr>
 			<td>&nbsp;Timestamp&nbsp;</td>
-			<td>&nbsp;Temperature 1&nbsp;</td>
+			<td>&nbsp;Temperature 1&nbsp;</td> 
 			<td>&nbsp;Moisture 1&nbsp;</td>
 		</tr>
 

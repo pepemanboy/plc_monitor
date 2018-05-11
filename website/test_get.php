@@ -11,7 +11,7 @@
 	
    $query = "SELECT temperature, humidity  FROM  tempLog ORDER BY timeStamp DESC LIMIT 10";
       
-
+ 
 
 if ($result = mysqli_query($link, $query)) {
 

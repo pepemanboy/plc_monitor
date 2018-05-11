@@ -12,7 +12,7 @@
 /*if ($temp1==null || !$temp){ 
         echo "temp1 is null";
 {*/
-
+ 
 	$query = "INSERT INTO `tempLog` (`temperature`, `humidity`) 
         VALUES (".$temp1.",".$hum1.")";  
    	
