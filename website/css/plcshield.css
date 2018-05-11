@@ -1,0 +1,41 @@
+body {
+  padding-top: 5rem;
+}
+/* Container principal de admin */
+.admin{
+
+}
+
+/* Tabla de plcs */
+.tabla{
+	padding-top: 2rem;
+}
+
+.boton-refrescar{
+	margin-left: 20px;
+}
+
+.contador{
+	margin-left: 5px;
+}
+
+.di{
+	margin-bottom: 5px;
+}
+
+.boton-programar{
+	padding-top: 10px;
+	padding-bottom: 20px;
+}
+
+.dropdown-visualizador-senales{
+	margin-left: 10px;
+}
+
+.visualizador-dp-row{
+	padding-top: 20px;
+}
+
+.visualizador-dp-label{
+	margin-right: 10px;
+}

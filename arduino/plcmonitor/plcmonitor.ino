@@ -1,4 +1,4 @@
-#include <EEPROM.h>
+#include <EEPROMAnything.h>
 
 #define ANALOG_INPUT_COUNT 6
 #define DIGITAL_INPUT_COUNT 6
@@ -318,13 +318,13 @@ void _updateIo(PlcDevice * d)
 /* Write to non-volatile memory */
 void _memorySave(PlcDevice * d)
 {
-  EEPROM.put(0, *d);
+  EEPROM_writeAnything(0, *d);
 }
 
 /* Read from non-volatile memory */
 void _memoryRead(PlcDevice * d)
 {
-  EEPROM.get(0, *d);
+  EEPROM_readAnything(0, *d);
 }
 
 
@@ -341,7 +341,7 @@ void setup()
   _memoryRead(&plcDevice);
   _printPlcDevice(&plcDevice);
 
-  _memorySave(&plcDevice);
+  // _memorySave(&plcDevice);
 
   // plc_setup();
 }
