@@ -1,17 +1,20 @@
 <?php
-	function Connection(){
-		$server="http://cirotec.mx";
-		$user="pepemanboy";
-		$pass="pepe1995*";
-		$db="database";
-	   	
-		$connection = mysql_connect($server, $user, $pass);
 
-		if (!$connection) {
-	    	die('MySQL ERROR: ' . mysql_error());
-		}
+	function Connection(){
+		$server="localhost";
+		$user="pepemanboy";
+		$pass="123456";
+		$db="plcmonitor_prueba_juanjo";
+
+		echo "Intento ";
+
+
+		$connection = mysqli_connect($server, $user, $pass, $db);
 		
-		mysql_select_db($db) or die( 'MySQL ERROR: '. mysql_error() );
+	 if (!$connection) {
+    	die("Connection failed: " . mysqli_connect_error());
+     } 
+     echo "Connected successfully";
 
 		return $connection;
 	}

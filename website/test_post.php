@@ -1,18 +1,24 @@
 <?php
+      include("connect.php");
+      
+      $link=Connection();
+      echo "post";
 
-   	include("connect.php");
-   	
-   	$link=Connection();
+   $temp1=$_POST["temp1"];
+   $hum1=$_POST["hum1"];
 
-	$temp1=$_POST["temp1"];
-	$hum1=$_POST["hum1"];
+   
 
-	$query = "INSERT INTO `tempLog` (`temperature`, `humidity`) 
-		VALUES ('".$temp1."','".$hum1."')"; 
-   	
-   	mysql_query($query,$link);
-	mysql_close($link);
+/*if ($temp1==null || !$temp){ 
+        echo "temp1 is null";
+{*/
+ 
+   $query = "INSERT INTO `tempLog` (`temperature`, `humidity`) 
+        VALUES (".$temp1.",".$hum1.")";  
+      
+   mysqli_query($link, $query);
+   mysqli_close($link);
 
-   	header("Location: index.php");
-
+   header("Location: index.php");
+     
 ?>
