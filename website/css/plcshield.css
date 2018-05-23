@@ -1,14 +1,13 @@
 body {
   padding-top: 5rem;
 }
+
+.titulo{
+	margin-bottom: 2rem;
+}
 /* Container principal de admin */
 .admin{
 
-}
-
-/* Tabla de plcs */
-.tabla{
-	padding-top: 2rem;
 }
 
 .boton-refrescar{
@@ -32,10 +31,66 @@ body {
 	margin-left: 10px;
 }
 
+.dropdown-visualizador-plcs{
+	margin-left: 10px;
+}
+
+.button-visualizador-senales{
+	margin-left: 10px;
+	height: auto;
+}
+
 .visualizador-dp-row{
 	padding-top: 20px;
 }
 
 .visualizador-dp-label{
 	margin-right: 10px;
+}
+
+.control-status-indicator{
+	
+}
+
+.control-recibir-boton{
+
+}
+
+.control-enviar-boton{
+	margin-left: 10px;
+}
+
+.viz-radio{
+	margin-left: 10px;
+}
+
+.viz-checkbox{
+	margin-left: 10px;
+}
+
+.viz-borrar-boton{
+	margin-left: 10px;
+}
+
+.viz-agregar-accion-boton{
+	margin-top: 20px;
+	margin-bottom: 20px;
+	margin-right: 15px;
+	margin-left: 15px;
+}
+
+.viz-control-grafica-row{
+	margin-bottom: 10px;
+}
+
+.viz-title-row {
+	margin-left: 0px;
+}
+
+.viz-status-indicator {
+	margin-right: 15px;
+}
+
+.viz-accion{
+	margin-bottom: 10px;
 }

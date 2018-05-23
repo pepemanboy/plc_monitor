@@ -1,6 +1,6 @@
 <?php 
 /**
-Control Inputs
+Get inputs and outputs
 */
 
 // Includes
@@ -14,8 +14,11 @@ if (empty($_POST['plc_number']))
 }
 
 // Fetch arguments
-$suffix = "plc" . $_POST['plc_number'] . "_";  
-$table_name = $suffix . "inputs";
+$suffix = "plc" . $_POST['plc_number'] . "_";
+
+//Tables to query  
+$inputs_table = $suffix . "inputs";
+$outputs_table = $suffix . "outputs";
 
 //Connect to server and database
 $link = null;
@@ -23,9 +26,11 @@ $r = connectToDatabase($link);
 if($r != OK)
 	_exit($r, $link);
 
+// Inputs
+
 // Query table existent
 $exists = False;
-$r = tableExists($link, $table_name, $exists); 
+$r = tableExists($link, $inputs_table, $exists); 
 if($r != OK)
 	_exit($r, $link);
 
@@ -33,7 +38,7 @@ if($r != OK)
 if (!$exists)
 {
      $query = "
-     CREATE TABLE " . $table_name . " (
+     CREATE TABLE " . $inputs_table . " (
      timeStamp TIMESTAMP NOT NULL PRIMARY KEY,
      	di1 int(11) NOT NULL,
 		di2 int(11) NOT NULL,
@@ -74,7 +79,7 @@ if ($empty)
 		_exit(ERROR_QUERY, $link);
 }
 
-// Query inputs
+// Query digital Inputs
 $query = "SELECT /*+ MAX_EXECUTION_TIME(1000) */ di1,di2,di3,di4,di5,di6,ai1,ai2,ai3,ai4,ai5,ai6 FROM  " . $table_name . " ORDER BY timeStamp DESC LIMIT 1"; 
 if ($result = mysqli_query($link, $query)) 
 {

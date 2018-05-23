@@ -1,70 +1,121 @@
 <?php 
-echo ("hola");
+/**
+Control outputs
+*/
+// Includes
+include_once("definitions.php");
+include_once("connect.php");
 
-$str = "";
-$arr = $_POST['outputs'];
-
-
-for ($i = 0; $i < 6; $i++)
+//Check for expected POST arguments
+if (empty($_POST['operation']) or empty($_POST['plc_number']))
 {
-	if($arr[$i] == "true")
-		$str .= ($i+1) . " ";
+	_exit(ERROR_ARGUMENTS, $link);
 }
 
+$operation = $_POST['operation'];
+$plc_number = $_POST['plc_number'];
+$suffix = "plc" . $plc_number . "_";  
+$table_name = $suffix . "outputs";
 
+// Connect to server and database
+$link = null;
+$r = connectToDatabase($link);
+if ($r != OK)
+	_exit($r, $link);
 
-// Connect to database
-	include("connect.php");
-   	
-   	$link=Connection();
+// Query table existent
+$exists = False;
+$r = tableExists($link, $table_name, $exists); 
+if ($r != OK)
+	_exit($r, $link);
 
-echo("antes");
-// Check if table is present
-// Select 1 from table_name will return false if the table does not exist
-$val= mysqli_query($link, 'Select 1 from `Output_table` LIMIT 1');
-echo("despues");
-
-if($val != FALSE)
+// Create table if it doesnt exist
+if (!$exists)
 {
-echo("false");
-   //POST control outputs
-	$query = "INSERT INTO Output_table(control_output_1,control_output_2,control_output_3,control_output_4,control_output_5,control_output_6) 
-		VALUES (".$arr[0].",".$arr[1].",".$arr[2].",".$arr[3].",".$arr[4].",".$arr[5].")"; 
-   	
-   	
-
-}else{
-	echo("true");
-    // If not, create table of 0
-     $query = "CREATE TABLE Output_table (
+     $query = "
+     CREATE TABLE " . $table_name . " (
      timeStamp TIMESTAMP NOT NULL PRIMARY KEY,
-     	control_output_1 int(11) NOT NULL,
-		control_output_2 int(11) NOT NULL,
-		control_output_3 int(11) NOT NULL,
-		control_output_4 int(11) NOT NULL,
-		control_output_5 int(11) NOT NULL,
-		control_output_6 int(11) NOT NULL
-	
-	)";
-
-	mysqli_query($link,$query);
-
-    $query = "INSERT INTO Output_table (control_output_1,control_output_2,control_output_3,control_output_4,control_output_5,control_output_6) 
-		VALUES (0,0,0,0,0,0)"; 
-
-		mysqli_query($link,$query);
+     	do1 int(11) NOT NULL,
+		do2 int(11) NOT NULL,
+		do3 int(11) NOT NULL,
+		do4 int(11) NOT NULL,
+		do5 int(11) NOT NULL,
+		do6 int(11) NOT NULL	
+	)
+	";
+	$r = mysqli_query($link,$query);
+	if (!$r)
+		_exit(ERROR_QUERY, $link);
 }
 
+// Query table empty
+$empty = True;
+$r = tableEmpty($link, $table_name, $empty); 
+if (!$r)
+	_exit(ERROR_QUERY, $link);
+if($empty)
+{
+	// Insert first row
+	$query = "
+	INSERT INTO " . $table_name . " 
+	(do1,do2,do3,do4,do5,do6) 
+	VALUES (0,0,0,0,0,0);
+	";  
+	$r = mysqli_query($link,$query);
+	if (!$r)
+		_exit(ERROR_QUERY, $link);
+}
 
+// Set outputs
+if ($operation == "set")
+{
+	if (empty($_POST['outputs']) ) 
+	    _exit(ERROR_ARGUMENTS, $link);
 
+	// Fetch arguments
+	$arr = $_POST['outputs'];  	
 
-echo(" voy a poner el query ");
-// Post the outputs to the table
-mysqli_query($link,$query);
-echo(" puse el query ");
-	mysqli_close($link);
+	// Post control outputs to table
+	$query = "
+	DELETE FROM " . $table_name . ";
+	INSERT INTO " . $table_name . " 
+	(do1,do2,do3,do4,do5,do6) 
+	VALUES (".$arr[0].",".$arr[1].",".$arr[2].",".$arr[3].",".$arr[4].",".$arr[5].");
+	";  	
 
-   	//header("Location: index.php");
-echo $str;
+	$r = mysqli_multi_query($link, $query);
+	if (!$r)
+		_exit(ERROR_QUERY, $link);
+
+	do{} while(mysqli_more_results($link) && mysqli_next_result($link)); // flush multi queries
+}
+// Get outputs
+else
+{
+	// Query inputs
+	$query = "SELECT /*+ MAX_EXECUTION_TIME(1000) */ do1,do2,do3,do4,do5,do6  FROM  " . $table_name . " ORDER BY timeStamp DESC LIMIT 1"; 
+	if ($result = mysqli_query($link, $query)) 
+	{
+		// Get row
+	    $row = mysqli_fetch_row($result);   
+
+		// Output digital_outputs variable
+	    echo("digital_outputs("); 
+	    for($i = 0; $i < 6; $i++)
+	    {
+	    	echo($row[$i]);
+	    	if ($i != 5) echo (",");
+	    }
+	    echo(")");
+
+	    // Free result
+	    mysqli_free_result($result);
+	}else
+	{
+		_exit(ERROR_QUERY,$link);
+	}
+}
+// Close MySQL connection
+_exit(OK, $link); 
 ?>
 
