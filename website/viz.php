@@ -100,13 +100,53 @@
     </div> <!-- Acaba grafica -->
     <!-- Boton de agregar accion -->
     <div class ="row">
-      <button type="button" class="btn btn-success btn-lg btn-block viz-agregar-accion-boton disabled" id = "viz-agregar-accion-boton">Agregar accion</button>
+      <button type="button" class="btn btn-success btn-lg btn-block viz-agregar-accion-boton disabled" id = "viz-agregar-accion-boton" data-toggle='modal' data-target='#viz-agregar-modal'>Selecciona una señal</button>
     </div>    
-    <!--Acciones -->
+    <!--Acciones -->    
+    <div id = "viz-actions-row"> </div>
     <!-- Debug row -->
-    <div id = "debug-row">
-      Debug row
-    </div>
+    <div id = "debug-row"></div>
+    <!-- Modal borrar -->
+      <div class="modal fade" id="viz-borrar-modal" tabindex="-1" role="dialog" aria-labelledby="admin-borrar-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="viz-borrar-modal-titulo">Precaución</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" id = "viz-borrar-modal-body">
+              ¿Estás seguro que deseas borrar la acción?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-primary" id = "viz-borrar-modal-boton">Borrar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal borrar -->
+      <!-- Modal agregar -->
+      <div class="modal fade" id="viz-agregar-modal" tabindex="-1" role="dialog" aria-labelledby="viz-agregar-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="viz-agregar-modal-titulo">Agregar nueva accion</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" id = "viz-agregar-modal-body">    
+              <!-- Inicia cuerpo modal agregar -->            
+              Agregar accion
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-primary" id = "viz-agregar-modal-boton">Agregar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal agregar -->
   </div> <!-- Acaba container -->
   <!-- Inicia JavaScript -->
   <!-- primero jQuery, despues Popper.js, despues Bootstrap, despues propio -->
@@ -137,7 +177,7 @@
     }
   </script>
   <!-- Charts -->
-  <script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+  <!-- <script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script> -->
   <script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
 <!-- End charts -->
 <!-- Acaba Javascript -->

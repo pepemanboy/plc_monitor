@@ -36,25 +36,28 @@ if (!$exists)
 {
   $query = "
   CREATE TABLE " . $table_name . " (
-  timeStamp TIMESTAMP NOT NULL PRIMARY KEY,
-  input int(11) NOT NULL,
+  id int NOT NULL AUTO_INCREMENT,
+  input VARCHAR(10) NOT NULL,
   threshold float(5,2) NOT NULL,
   updown BIT NOT NULL,
   output int(11) NOT NULL,
   email VARCHAR(200) NOT NULL,
   notification_interval_s int(11) NOT NULL,
   action_type int(11) NOT NULL,
-  delay_s int(11) NOT NULL)";
+  delay_s int(11) NOT NULL,
+  PRIMARY KEY (id))";
   $r = mysqli_query($link,$query);
   if (!$r)
     _exit(ERROR_QUERY, $link);
 }
 
-if ($operation == "set")
+if ($operation == "add")
 {
   // Check for arguments
-  if(empty($_POST['input']) or empty($_POST['threshold']) or empty($_POST['updown']) or empty($_POST['output']) or empty($_POST['email']) or empty($_POST['notification_interval_s']) or empty($_POST['action_type']) or empty($_POST['delay_s']))
+  if(!isset($_POST['input']) or !isset($_POST['threshold']) or !isset($_POST['updown']) or !isset($_POST['output']) or !isset($_POST['email']) or !isset($_POST['notification_interval_s']) or !isset($_POST['action_type']) or !isset($_POST['delay_s']))
+  {
     _exit(ERROR_ARGUMENTS, $link);
+  }
 
   // Fetch arguments
   $input = $_POST['input'];
@@ -65,34 +68,40 @@ if ($operation == "set")
   $notification_interval_s = $_POST['notification_interval_s'];
   $action_type = $_POST['action_type'];
   $delay_s = $_POST['delay_s'];
+/*
+  echo("Table " . $table_name . " Output " . $output .  " Input " . $input . " threshold " . $threshold . " updown " . $updown . " output " . $output . " email " . $email . " notification " . $notification_interval_s . " action " . $action_type . " delay " . $delay_s);*/
 
-  // Delete row that contains same output
-  $query = "DELETE FROM " . $table_name . " WHERE output = " . $output . "; ";
+  if($output > 0)
+  {
+    // Delete row that contains same output
+    $query = "DELETE FROM " . $table_name . " WHERE output = " . $output . "; ";
+    $r = mysqli_query($link,$query);
+    if (!$r)
+      _exit(ERROR_QUERY, $link);    
+  }
   
   // Insert new row
-  $query = $query . "INSERT INTO " . $table_name . " (input, threshold, updown, output, email, notification_interval_s, action_type, delay_s) VALUES(";
+  $query = "INSERT INTO " . $table_name . " (input, threshold, updown, output, email, notification_interval_s, action_type, delay_s) VALUES(";
   
   // Values to insert
-  $query = $query . $input . ",";
+  $query = $query . "'" . $input . "',";
   $query = $query . $threshold . ",";
   $query = $query . $updown . ",";
   $query = $query . $output . ",";
-  $query = $query . $email . ",";
+  $query = $query . "'" . $email . "',";
   $query = $query . $notification_interval_s . ",";
   $query = $query . $action_type . ",";
   $query = $query . $delay_s . ");";
 
   // Execute query
-  $r = mysqli_multi_query($link, $query);
+  $r = mysqli_query($link,$query);
   if (!$r)
     _exit(ERROR_QUERY, $link);
-
-  do{} while(mysqli_more_results($link) && mysqli_next_result($link)); // flush multi queries
 }
-else // Get
+else if ($operation == "get")// Get
 {
   // Query rows
-  $query = "SELECT input,threshold,updown,output,email,notification_interval_s, action_type,delay_s FROM " . $table_name . " ORDER BY input DESC";
+  $query = "SELECT id,input,threshold,updown,output,email,notification_interval_s, action_type,delay_s FROM " . $table_name . " ORDER BY input DESC";
 
   $result = mysqli_query($link, $query);
   if (!$result)
@@ -100,6 +109,7 @@ else // Get
 
   if (($n = mysqli_num_rows($result)) > 0) {
       // output data of each row
+    $ids = array();
     $inputs = array();
     $thresholds = array();
     $updowns = array();
@@ -111,6 +121,7 @@ else // Get
     $i = 0;
     while($row = mysqli_fetch_assoc($result)) 
     {
+      $ids[$i] = $row["id"];
       $inputs[$i] = $row["input"];
       $thresholds[$i] = $row["threshold"];
       $updowns[$i] = $row["updown"];
@@ -123,6 +134,14 @@ else // Get
     }
 
       // Return values
+    echo("ids(");
+    for($i = 0; $i < $n; $i++)
+    {
+      echo($ids[$i]);
+      if($i < $n - 1)
+        echo(",");
+    }
+    echo(")");
     echo("inputs(");
     for($i = 0; $i < $n; $i++)
     {
@@ -198,6 +217,21 @@ else // Get
 
     mysqli_free_result($result);
   }
+}
+else if ($operation == "delete")
+{
+  //Check for expected POST arguments
+  if (empty($_POST['delete_id']))
+    _exit(ERROR_ARGUMENTS, $link);
+  
+  // Fetch arguments
+  $delete_id = $_POST['delete_id'];
+
+  // Delete row that contains same output
+  $query = "DELETE FROM " . $table_name . " WHERE id = " . $delete_id . "; ";
+  $result = mysqli_query($link, $query);
+  if (!$result)
+    _exit(ERROR_QUERY,$link);
 }
 
 // Close MySQL connection

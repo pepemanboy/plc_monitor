@@ -5,6 +5,7 @@ var OUTPUT_COUNT = 6;
 var g_plc = 0;
 var g_signal_number = 0;
 var g_signal_type = "";
+var g_action_delete = 0;
 
 var g_di_names = [];
 var g_ai_names = [];
@@ -13,12 +14,14 @@ var g_do_names = [];
 var g_dates = [];
 var g_values = [];
 
+var g_actions = [];
+
 // On load
 $( document ).ready(function() {
   // Set active menu
   $("#navbar-item-viz").addClass("active");
   $("#navbar-item-viz").attr("href", "#");
-  updateChart([],[],"Nada para mostrar");
+  updateChart([],[],"Gráfica");
 });
 
 // Cuando se pica algun plc en el dropdown, actualizar g_plc
@@ -29,6 +32,8 @@ $('.dropdown-plc').click(function(){
 	g_signal_number = 0;
 	g_signal_type = "";	
 	updateSignalDropdown(g_plc);
+	// displayActions([],0,0,0);
+	getActions(g_plc,0,0);
 });
 
 // Cuando se pica alguna senal en el dropdown, actualizar g_signal
@@ -43,7 +48,9 @@ $('.dropdown-senales').click(function(){
 	g_signal_type = $(this).attr('data-signal-type');
 	$("#viz-agregar-accion-boton").removeClass("disabled");
 	vizStatus("OK");
-	getActions(g_plc);
+	getActions(g_plc, g_signal_number, g_signal_type);
+	var sn = g_signal_type.toUpperCase() + g_signal_number;
+	$("#viz-agregar-accion-boton").text("Agregar accion a " + sn);
 });
 
 // Update signal dropdown names. n is plc number
@@ -92,8 +99,6 @@ $("#viz-visualizar-fechas-boton").click(function(){
 	// No dates
 	if($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "" )
 		return false;
-
-
 
 	// Cambiar a formato de base de datos
 	var fecha1 = moment($("#datetimepicker1").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
@@ -246,12 +251,12 @@ function downloadCSV(args) {
 }
 
 // Obtener acciones. N es el numero de plc
-function getActions(n)
+function getActions(plc_number, signal_number, signal_type)
 {
 	vizStatus("Querying actions");
 	$.post("viz_action.php",
 	{
-		plc_number: n,
+		plc_number: plc_number,
 		operation: "get"
 	},
 	function(data,status)
@@ -261,6 +266,7 @@ function getActions(n)
 		if(!plcOk(err))
 			return;
 
+		var ids = getPhpArray(data, "ids");
 		var inputs = getPhpArray(data, "inputs");
 		var thresholds = getPhpArray(data, "thresholds");
 		var updowns = getPhpArray(data, "updowns");
@@ -270,10 +276,11 @@ function getActions(n)
 		var action_types = getPhpArray(data, "action_types");
 		var delays_s = getPhpArray(data, "delays_s");
 
-		var actions = [];
+		g_actions = [];
 		for(var i = 0; i < inputs.length; i ++)
 		{
-			actions.push({
+			g_actions.push({
+				ID: ids[i],
 				input: inputs[i], 
 				threshold: thresholds[i], 
 				updown: updowns[i], 
@@ -284,15 +291,26 @@ function getActions(n)
 				delay_s: delays_s[i]
 			});
 		}
-		displayActions(actions);
+		displayActions(g_actions, signal_number, signal_type);
 	}); 
 }
 
-function displayActions(actions)
+function displayActions(actions, signal_number, signal_type)
 {
+	// Filter for selected input
+	var signal_name = signal_type + signal_number;
+	var inputActions = actions.filter(function (el) {
+	  return el.input == signal_name;
+	});
+	inputActions = actions;
+	if (inputActions.length < 1)
+	{
+		$("#viz-actions-row").html("");	
+		return;
+	}
 	$.post("viz_action_box.php",
 	{
-		actions: JSON.stringify(actions)
+		number_of_actions: inputActions.length 
 	},
 	function(data,status)
 	{
@@ -302,8 +320,8 @@ function displayActions(actions)
 			return;
 
 		var a = getPhpVariable(data, "table");
-		$("#debug-row").html(a);	
-		fillActions(actions);		
+		$("#viz-actions-row").html(a);	
+		fillActions(inputActions);		
 	}); 
 }
 
@@ -312,11 +330,15 @@ function fillActions(actions)
 	for(var i = 1; i <= actions.length; i ++)
 	{
 		var action = actions[i-1];
+		$("#viz-action-id" + i).text("Accion para " + action.input.toUpperCase());
 		$("#viz-action-threshold" + i).val(action.threshold).prop('disabled', true);
 		$("#viz-action-updown" + i).prop("checked",action.updown > 0 ? true : false).prop('disabled', true);
+		var do_txt = "Ninguna salida";
+		if(action.output > 0)
+			do_txt = "DO" + action.output + " Nombre: " + g_do_names[action.output-1];
 		$("#viz-action-output" + i).append($('<option>', {
 		    value: 1,
-		    text: "DO" + action.output + " Nombre: " + g_do_names[action.output-1]
+		    text: do_txt
 		})).prop('disabled', true);
 		$("#viz-action-email" + i).val(action.email).prop('disabled', true);
 		// Calculate time
@@ -362,6 +384,7 @@ function fillActions(actions)
 		    value: 1,
 		    text: s
 		})).prop('disabled', true);
+		$("#viz-action-borrar-boton" + i).attr("data-action-id", action.ID);
 	}
 }
 
@@ -369,3 +392,236 @@ $("#viz-agregar-accion-boton").click(function(){
 	if($(this).hasClass( "disabled" ))
 		return false;
 });
+
+// Boton de borrar en una fila. Mostrar modal
+$(document).on("click" , '.viz-action-borrar-boton', function(){
+  var n = $(this).attr("data-action-id");
+  g_action_delete = n;
+  $("#viz-borrar-modal-body").text("¿Estás seguro que deseas borrar la accion " + n + "?");
+});
+
+// Boton de borrar accion dentro del modal
+$('#viz-borrar-modal-boton').click(function(){
+  $('#viz-borrar-modal').modal('hide');
+  deleteAction(g_plc, g_action_delete);
+});
+
+// Borrar accion
+function deleteAction(plc_number, action_id)
+{
+	vizStatus("Deleting action");
+
+	$.post("viz_action.php",
+	{
+		plc_number: plc_number,
+		operation: "delete",
+		delete_id: action_id
+	},
+	function(data,status)
+	{
+		var err = getPhpVariable(data, "error"); 
+		vizStatus(err);
+		if(!plcOk(err))
+			return;	
+		getActions(g_plc, g_signal_number, g_signal_type);
+	}); 
+}
+
+$("#viz-agregar-accion-boton").click(function(){
+  showModalAction();
+});
+
+function showModalAction()
+{ 
+	$.post("viz_action_box.php",
+	{
+		number_of_actions: 1,
+		modal: true
+	},
+	function(data,status)
+	{
+		var err = getPhpVariable(data, "error"); 
+		vizStatus(err);
+		if(!plcOk(err))
+			return;
+
+		var a = getPhpVariable(data, "table");
+		$("#viz-agregar-modal-body").html(a);	
+		formatModalAction();
+	}); 
+}
+
+function formatModalAction()
+{
+	$("#viz-action-header0").html("Nueva acción para PLC " + g_plc + " " + g_signal_type.toUpperCase() + g_signal_number);	
+	
+	// Title
+
+	// Outputs list
+	var signal_name = g_signal_type + g_signal_number;
+	var inputActions = g_actions.filter(function (el) {
+	  return el.output == 0;
+	});
+
+	$("#viz-action-output0").append($('<option>', {
+		    value: 0,
+		    text: "Ninguna salida"
+		}));
+
+	for(var i = 1; i <= 6; i ++)
+	{
+		var txt = "DO" + (i) + " [" + g_do_names[i-1] + "]";
+		var a = g_actions.filter(function (el) {
+		  return el.output == i;
+		});
+		if(a.length > 0)
+		{
+			txt += " usada por " + a[0].input;
+		}
+		$("#viz-action-output0").append($('<option>', {
+		    value: i,
+		    text: txt
+		}));
+	}
+
+	// minutos, horas, etc list
+	$("#viz-action-interval-suffix0").append($('<option>', 
+		{
+		    value: 1,
+		    text: "minutos"
+		}));
+	$("#viz-action-interval-suffix0").append($('<option>', 
+		{
+		    value: 2,
+		    text: "horas"
+		}));
+	$("#viz-action-interval-suffix0").append($('<option>', 
+		{
+		    value: 3,
+		    text: "dias"
+		}));
+
+	//minutos, horas, etc para delay
+	$("#viz-action-delay-suffix0").append($('<option>', 
+		{
+		    value: 1,
+		    text: "segundos"
+		}));
+	$("#viz-action-delay-suffix0").append($('<option>', 
+		{
+		    value: 2,
+		    text: "minutos"
+		}));
+	$("#viz-action-delay-suffix0").append($('<option>', 
+		{
+		    value: 3,
+		    text: "horas"
+		}));
+
+	// Radios
+	var $radios = $('input:radio[name=viz-action-radios0]');
+    if($radios.is(':checked') === false) {
+        $radios.filter('[data-action-type=1]').prop('checked', true);
+    }
+	
+}
+
+$("#viz-agregar-modal-boton").click(function(){
+  addAction(g_plc);
+});
+
+function addAction(plc_number)
+{
+	if(!verifyAction())
+		return false;
+
+	vizStatus("Adding action");
+
+	// Notification interval time
+	var n_t = Number($("#viz-action-interval0").val());
+	var n_s = $("#viz-action-interval-suffix0 option:selected").val();
+	switch(Number(n_s)){
+		case 3: n_t *= 24;
+		case 2: n_t *= 60; 
+		case 1: n_t *= 60;
+		default: break;
+	}
+
+	// Email
+	var email = "None";
+	if(n_t)
+	{
+		var email = $("#viz-action-email0").val();
+	}
+
+	// Delay time
+	var d_t = Number($("#viz-action-delay0").val());
+	var d_s = $("#viz-action-delay-suffix0 option:selected").val();
+	switch(Number(d_s)){		
+		case 3: d_t *= 60;
+		case 2: d_t *= 60; 
+		case 1: d_t *= 1;
+		default: break;
+	}
+
+	$.post("viz_action.php",
+	{
+		plc_number: plc_number,
+		operation: "add",
+		input: ("" + g_signal_type + g_signal_number),
+		threshold: $("#viz-action-threshold0").val(),
+		updown: $("#viz-action-updown0").prop("checked") ? 1 : 0,
+		output: Number($("#viz-action-output0 option:selected").val()),
+		email: email,
+		notification_interval_s: n_t ,
+		action_type: Number($('input[name=viz-action-radios0]:checked').attr("data-action-type")),
+		delay_s: d_t
+	},
+	function(data,status)
+	{
+		var err = getPhpVariable(data, "error"); 
+		vizStatus(err);
+		if(!plcOk(err))
+			return;	
+		getActions(g_plc, g_signal_number, g_signal_type);
+	}); 
+}
+
+function verifyAction()
+{
+	var r = true;
+	// Threshold
+	var th = $("#viz-action-threshold0").val();
+	if(!th)
+	{
+		alert("Sin valor de nivel");
+		return false;
+	}
+
+	// Notifs
+	var notif = $("#viz-action-interval0").val();
+	if(notif && notif > 0)
+	{
+		var email = $("#viz-action-email0").val();
+		if (!email)
+		{
+			alert("Agregar email o quitar intervalo");
+			return false;
+		}
+	}
+
+	// Temporizador
+	var radios = $('input[name=viz-action-radios0]:checked').attr("data-action-type");
+	if(radios && radios == 2)
+	{
+		var delay = $("#viz-action-delay0").val();
+		if (!delay || delay < 0)
+		{
+			alert("Sin valor de temporizador");
+			return false;
+		}
+	}
+	
+	return true;
+}
+

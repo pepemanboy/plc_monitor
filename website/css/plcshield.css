@@ -94,3 +94,20 @@ body {
 .viz-accion{
 	margin-bottom: 10px;
 }
+
+.viz-action-email{
+	min-width: 200px;
+}
+
+.viz-action-output{
+	min-width: 300px;
+}
+
+.viz-action-threshold{
+	max-width: 100px;
+}
+
+.viz-action-borrar-boton
+{
+	margin-left: 10px;
+}

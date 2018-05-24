@@ -9,32 +9,24 @@ include_once("connect.php");
 include_once("plc_util.php");
 
 //Check for expected POST arguments
-if (empty($_POST['actions']))
+if ( empty($_POST['number_of_actions']) )
   _exit(ERROR_ARGUMENTS, $link);
 
 // Fetch arguments
-$actionsString = $_POST['actions'];
-$actions = json_decode($actionsString, true);
+$number_of_actions = $_POST['number_of_actions'];
 
 echo("table(");
-for($i = 0; $i < count($actions); $i++)
+for($i = 0; $i < $number_of_actions; $i++)
 {
-  $action = $actions[$i];
-  $input = $action["input"];
-  $threshold = $action["threshold"];
-  $updown = $action["updown"];
-  $output = $action["output"];
-  $email = $action["email"];
-  $notification_interval_s = $action["notification_interval_s"];
-  $action_type = $action["action_type"];
-  $delay_s = $action["delay_s"];
   $index = $i + 1;
+  if (!empty($_POST['modal']))
+    $index = 0;
   // Echo action
   echo("
 <div class = 'viz-accion card'>
-  <div class='card-header'>
-    Accion " . $index . "
-    <button type='button' class='btn btn-danger viz-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal'>Borrar</button>
+  <div class='card-header viz-action-header' id = 'viz-action-header" . $index . "'>
+    <span id = 'viz-action-id" . $index . "'> </span>
+    <button type='button' class='btn btn-danger viz-action-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal' id = 'viz-action-borrar-boton" . $index . "'>Borrar</button>
   </div>
   <div class = 'card-body'>
     <!-- Empieza primera fila -->
@@ -44,7 +36,7 @@ for($i = 0; $i < count($actions); $i++)
         <label class='input-group-text'>Nivel:</label>
       </div> 
       <!-- Input nivel -->
-      <input class='form-control' type='number' placeholder='Nivel' id = 'viz-action-threshold" . $index . "'>
+      <input class='form-control viz-action-threshold' type='number' placeholder='Nivel' id = 'viz-action-threshold" . $index . "'>
       <!-- Checkbox arriba / abajo -->
       <div class='input-group-append'>
         <div class='input-group-text'>                  
@@ -57,7 +49,7 @@ for($i = 0; $i < count($actions); $i++)
         <label class='input-group-text'>Salida:</label>
       </div>
       <!-- Select salida -->
-      <select class='custom-select' id = 'viz-action-output" . $index . "'>
+      <select class='custom-select viz-action-output' id = 'viz-action-output" . $index . "'>
       </select>
     </div> <!-- Acaba primera fila -->
     <!-- Empieza segunda fila -->
@@ -67,7 +59,7 @@ for($i = 0; $i < count($actions); $i++)
         <label class='input-group-text'>Email:</label>
       </div>
       <!-- Input email -->
-      <input class='form-control' type='text' placeholder='name@example.com' id = 'viz-action-email" . $index . "'>
+      <input class='form-control viz-action-email' type='text' placeholder='name@example.com' id = 'viz-action-email" . $index . "'>
       <!-- Label intervalo de notificaciones -->
       <div class='input-group-prepend'>
         <label class='input-group-text'>Intervalo de notificaciones:</label>
@@ -84,7 +76,7 @@ for($i = 0; $i < count($actions); $i++)
       <div class='input-group-prepend'>
         <div class='input-group-text'>                  
           Permanente
-          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' aria-label='Radio button for following text input' id='' data-action-type = 1>
+          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' aria-label='Radio button for following text input' id='' data-action-type = 1 >
         </div>
       </div>
       <!-- Boton de reset -->

@@ -1,3 +1,7 @@
+/**
+Javascript para admin.php
+*/
+
 // Variables globales
 g_plc = 0;
 

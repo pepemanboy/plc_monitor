@@ -1,4 +1,4 @@
- function getPhpVariable(response_str, variable_str)
+function getPhpVariable(response_str, variable_str)
 {
   var varIndex = response_str.indexOf(variable_str); // Index of variable
   var openParIndex = response_str.indexOf("(",varIndex); // Open Parentheses index
