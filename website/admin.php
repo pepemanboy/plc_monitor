@@ -45,7 +45,9 @@
       <!-- Inicia debugging -->
       <div class = "row justify-content-end" >
         <p class = "float-right"><span class="badge badge-light" id = "admin-status-indicator">Status: OK</span></p>
-      </div> <!-- Acaba debugging -->  
+      </div> <!-- Acaba debugging --> 
+      <!-- Debug row -->
+      <div id = "debug-row"></div> 
       <!-- Modal borrar -->
       <div class="modal fade" id="admin-borrar-modal" tabindex="-1" role="dialog" aria-labelledby="admin-borrar-modal-titulo" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">

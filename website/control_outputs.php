@@ -92,7 +92,7 @@ if ($operation == "set")
 // Get outputs
 else
 {
-	// Query inputs
+	// Query outputs
 	$query = "SELECT /*+ MAX_EXECUTION_TIME(1000) */ do1,do2,do3,do4,do5,do6  FROM  " . $table_name . " ORDER BY timeStamp DESC LIMIT 1"; 
 	if ($result = mysqli_query($link, $query)) 
 	{

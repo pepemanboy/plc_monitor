@@ -1,4 +1,4 @@
-/**
+/** 
 Javascript para admin.php
 */
 
@@ -26,14 +26,16 @@ function deletePlc(n){
   // Proteccion de argumento
   if(n < 1)
     return;
+  adminStatus("Borrando PLC");
   // Post request 
-  $.post("admin_delete_plc.php",
+  $.post("tabla_plcs.php",
   {
+    operation: "delete",
     plc_number: n
   },
   function(data,status){
     // Checar errores
-    var err = getPhpVariable(data, "error");
+    var err = getPhpVar(data, "error").val;
     adminStatus(err);
     if(plcOk(err))
       updateTable();
@@ -49,7 +51,7 @@ $('#admin-borrar-modal-boton').click(function(){
 // Boton de agregar plc dentro de modal
 $('#admin-agregar-modal-boton').click(function(){
   var txt = $('#admin-agregar-modal-input').val();
-  if (!txt) // Por hacer: validar texto
+  if (!txt) 
   {
     $('#admin-agregar-modal-input').addClass("is-invalid");
   }else{
@@ -62,38 +64,54 @@ $('#admin-agregar-modal-boton').click(function(){
 
 // Agregar un plc 
 function addPlc(nombre_plc){
-  $.post("admin_add_plc.php",
+  // Checar argumentos
+  if(!nombre_plc)
+    return;
+  adminStatus("Agregando PLC");
+  $.post("tabla_plcs.php",
   {
+    operation: "add",
     plc_name: nombre_plc
   },
   function(data,status){
-    err = getPhpVariable(data, "error");
+    err = getPhpVar(data, "error").val;
     adminStatus(err);
-    if(plcOk(err))
-    {
-      updateTable();
-      $("#admin-agregar-modal-input").val("");
-    }
+    if(!plcOk(err))
+      return;
+    updateTable();
+    $("#admin-agregar-modal-input").val(""); // Clear modal    
   });    
 }
 
 // Actualizar tabla
 function updateTable()
 {
-  $.post("admin_devices.php",
-  {},
-  function(data,status){
-    var err = getPhpVariable(data, "error");
-    if(plcOk(err))
+  // adminStatus("Actualizando tabla");
+  $.post("tabla_plcs.php",
     {
-      var table = getPhpVariable(data, "table");
-      $("#admin-plc-table").html(table);
-    }        
-  }); 
+      operation: "get",
+      format: "table",
+    },
+    function(data,status){
+      var err = getPhpVar(data, "error").val;
+      // adminStatus(err);
+      if(!plcOk(err))
+        return;
+      var table = getPhpVar(data, "table");
+      if(table.error)
+        return;
+      $("#admin-plc-table").html(table.val);    
+    }); 
 }
 
 // Reportar status
 function adminStatus(status)
 {
   $("#admin-status-indicator").text("Status: " + status);
+}
+
+// Debug in a row
+function debugText(txt)
+{
+  $("#debug-row").text(txt);
 }

@@ -171,48 +171,4 @@ function deletePlc(&$connection, $id)
 	return OK;
 }
 
-//Connect to server and database
-/*
-$link = null;
-$r = connectToDatabase($link);
-if($r != OK)
-	_exit($r, $link);
-
-
-$ids = array();
-$names = array();
-$r = getPlcList($link, $ids, $names);
-
-
-for($i = 0; $i < count($ids); $i++)
-{
-	echo("id = " . $ids[$i] . " name = " . $names[$i] . "  ");
-}
-
-
-/*
-$r = plcTableAssert($link);
-if($r != OK)
-	_exit($r, $link);
-echo("PLC table ready");
-/*
-$id = 0;
-$r = nextPlcId($link,$id);
-if($r != OK)
-	_exit($r, $link);
-
-echo("Next ID = " . $id);
-
-$name = "";
-$r = findPlc($link, 2, $name);
-if($r != OK)
-	_exit($r, $link);
-
-echo("Name = " . $name); 
-/*
-$r = addPlcId($link,69);
-if($r != OK)
-	_exit($r, $link);
-echo("Added");*/
-
 ?>
