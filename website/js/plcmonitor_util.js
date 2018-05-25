@@ -14,6 +14,17 @@ function getPhpArray(response_str, variable_str)
 	return arr;
 }
 
+function getPhpArr(response_str, variable_str)
+{
+	var ret = {val: [], error: false};
+	var str = getPhpVar(response_str, variable_str);
+	if(str.error)
+		ret.error = true;
+	else	
+		ret.val = str.val.split(',');	
+	return ret;
+}
+
 /* Returns true when errors present */
 function plcOk(error_code)
 {

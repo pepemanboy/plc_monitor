@@ -33,6 +33,7 @@ $('.dropdown-plc').click(function(){
 	g_signal_type = "";	
 	updateSignalDropdown(g_plc);
 	// displayActions([],0,0,0);
+	$("#viz-agregar-accion-boton").text("Selecciona una señal");
 	getActions(g_plc,0,0);
 });
 
@@ -266,7 +267,8 @@ function getActions(plc_number, signal_number, signal_type)
 		if(!plcOk(err))
 			return;
 
-		var ids = getPhpArray(data, "ids");
+		var err = getPhpArr(data, "ids").error;
+		var ids = getPhpArr(data, "ids");
 		var inputs = getPhpArray(data, "inputs");
 		var thresholds = getPhpArray(data, "thresholds");
 		var updowns = getPhpArray(data, "updowns");
@@ -277,20 +279,24 @@ function getActions(plc_number, signal_number, signal_type)
 		var delays_s = getPhpArray(data, "delays_s");
 
 		g_actions = [];
-		for(var i = 0; i < inputs.length; i ++)
+		if(!err)
 		{
-			g_actions.push({
-				ID: ids[i],
-				input: inputs[i], 
-				threshold: thresholds[i], 
-				updown: updowns[i], 
-				output: outputs[i],
-				email: emails[i],
-				notification_interval_s: notification_intervals_s[i],
-				action_type: action_types[i],
-				delay_s: delays_s[i]
-			});
+			for(var i = 0; i < inputs.length; i ++)
+			{
+				g_actions.push({
+					ID: ids[i],
+					input: inputs[i], 
+					threshold: thresholds[i], 
+					updown: updowns[i], 
+					output: outputs[i],
+					email: emails[i],
+					notification_interval_s: notification_intervals_s[i],
+					action_type: action_types[i],
+					delay_s: delays_s[i]
+				});
+			}
 		}
+		
 		displayActions(g_actions, signal_number, signal_type);
 	}); 
 }
