@@ -20,7 +20,10 @@
   <?php include "navbar.php"; ?>
   <!-- Inicia container -->
   <div class = "container admin">
-    <!--Titulo e indicador -->
+    <!--Titulo e indicador -->    
+    <div class = "row float-right">        
+      <h4><span class="badge badge-light" id = "config-status-indicator">Status: OK</span></h4>   
+    </div>
     <div class = "row">
       <h2>Configuracion</h2> 
       <!-- Dropdown senales -->
@@ -33,10 +36,7 @@
         </div>
       </div> <!-- Acaba dropdown senales -->
     </div>
-    <!-- Boton de agregar nuevo y debugging-->
-    <div class = "row float-right">        
-      <h4><span class="badge badge-light" id = "config-status-indicator">Status: OK</span></h4>   
-    </div>
+    <!-- Boton de agregar nuevo -->
     <div class = "row">
       <button type="button" class="btn btn-success" id = "config-programar-boton">Configurar PLC</button>
     </div>

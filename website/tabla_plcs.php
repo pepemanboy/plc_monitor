@@ -88,11 +88,23 @@ else if ($operation == "get")
 		mysqli_free_result($result);
 	}
 
+	$status = array();
+	$i = 0;
+	foreach($ids as $id)
+	{
+		$stat = 0;
+		$r = arduinoStatus($link, $id , "get" , $stat);
+		if ($r != OK)
+			_exit($r, $link);
+		$status[$i] = $stat;
+		$i = $i + 1;
+	}
+
 	// Print on selected format
 	$format = $_POST['format'];
 	if($format == "table") 
 	{
-		printTable($ids, $names);
+		printTable($ids, $names, $status);
 	}
 	else
 	{
@@ -144,20 +156,47 @@ else if ($operation == "delete")
 			_exit(ERROR_QUERY,$link);
 	}
 }
+else if ($operation == "exists")
+{	
+	$r = arduinoStatus($link, 1);
+	if ($r != OK)
+		_exit($r, $link);	
+	echo("{");
+	// Check for arguments
+	if (!isset($_POST['plc_number'])) 
+		_exit(ERROR_ARGUMENTS);
+
+    // Fetch arguments
+	$plc_number = $_POST['plc_number']; 
+
+	// Query
+	$query = "SELECT name FROM plcs WHERE id = " . $plc_number;
+	$result = mysqli_query($link, $query);
+	if (!$result)
+		_exit(ERROR_QUERY,$link);
+
+	$exists = 0;
+
+	if (($n = mysqli_num_rows($result)) > 0) 
+		$exists = 1;
+
+	echo("exists(" . $exists . ")");
+}
 
 // Format the output as table
-function printTable($ids, $names)
+function printTable($ids, $names, $status)
 {
-
 	echo("table(");
 	for($i = 0; $i < count($ids); $i++)
 	{
 		$name = $names[$i];
 		$id = $ids[$i];
+		$stat = $status[$i];
 		// Echo row
 		echo("<tr id = 'admin-row-" . $id . "'>
-	      <th scope='row'>Id: ". $id ." Nombre: " . $name . "</th>
-	      <td>Conectado</td>
+	      <th scope='row'>". $id ."</th>
+	      <td>" . $name . "</td>
+	      <td>" . $stat . "</td>
 	      <td>
 	        <button type='button' class='btn btn-danger admin-borrar-boton' data-plc-number = '" . $id . "' id = 'admin-borrar-boton-" . $id . "' data-toggle='modal' data-target='#admin-borrar-modal'>Borrar</button>
 	      </td>

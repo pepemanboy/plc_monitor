@@ -171,8 +171,9 @@ if ($operation == "set")
 	do{} while(mysqli_more_results($link) && mysqli_next_result($link)); // flush multi queries
 }
 // Get config
-else
+else if ($operation == "get")
 {
+	echo("{");
 	// Query inputs
 	$query = "SELECT ";
 	for($i = 1; $i <= 6; $i ++)
@@ -198,12 +199,23 @@ else
 	{
 		// Get row
 		$row = mysqli_fetch_assoc($result);  
-		for ($i = 1; $i <= 6; $i ++)
+		if (isset($_POST['arduino']))
 		{
-			echo("di" . $i . "(" . $row["di" . $i . "_name"] . "," . $row["di" . $i . "_freq"] . "," . $row["di" . $i . "_count"] . ")");
-			echo("ai" . $i . "(" . $row["ai" . $i . "_name"] . "," . $row["ai" . $i . "_freq"] . "," . $row["ai" . $i . "_gain"] . "," . $row["ai" . $i . "_offs"] . ")"); 
-			echo("do" . $i . "(" . $row["do" . $i . "_name"] .  ")");
-		}
+			for ($i = 1; $i <= 6; $i ++)
+			{
+				echo("di" . $i . "(" . $row["di" . $i . "_freq"] . "," . $row["di" . $i . "_count"] . ")");
+				echo("ai" . $i . "(" . $row["ai" . $i . "_freq"] . "," . $row["ai" . $i . "_gain"] . "," . $row["ai" . $i . "_offs"] . ")"); 
+			}
+		} 
+		else
+		{
+			for ($i = 1; $i <= 6; $i ++)
+			{
+				echo("di" . $i . "(" . $row["di" . $i . "_name"] . "," . $row["di" . $i . "_freq"] . "," . $row["di" . $i . "_count"] . ")");
+				echo("ai" . $i . "(" . $row["ai" . $i . "_name"] . "," . $row["ai" . $i . "_freq"] . "," . $row["ai" . $i . "_gain"] . "," . $row["ai" . $i . "_offs"] . ")"); 
+				echo("do" . $i . "(" . $row["do" . $i . "_name"] .  ")");
+			}
+		}		
 	    // Free result
 		mysqli_free_result($result);
 	}else

@@ -45,6 +45,7 @@ function getPhpVar(response_str, variable_str)
 		var openParIndex = varIndex + variable_str.length;
 		var closedParIndex = response_str.indexOf(")",varIndex); // Open Parentheses index
 		var value = response_str.substring(openParIndex+1,closedParIndex); // Text inside parentheses
+		if(value == "") ret.error = true;
 		ret.val = value;
 	}	
 	return ret;

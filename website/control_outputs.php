@@ -100,7 +100,7 @@ else
 	    $row = mysqli_fetch_row($result);   
 
 		// Output digital_outputs variable
-	    echo("digital_outputs("); 
+	    echo("{digital_outputs("); 
 	    for($i = 0; $i < 6; $i++)
 	    {
 	    	echo($row[$i]);

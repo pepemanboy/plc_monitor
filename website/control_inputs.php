@@ -8,7 +8,7 @@ include_once("definitions.php");
 include_once("connect.php");
 
 // Check for expected POST arguments
-if (empty($_POST['plc_number'])) 
+if (empty($_POST['plc_number']) or empty($_POST['operation'])) 
 {
     _exit(ERROR_ARGUMENTS);
 }
@@ -16,6 +16,7 @@ if (empty($_POST['plc_number']))
 // Fetch arguments
 $suffix = "plc" . $_POST['plc_number'] . "_";  
 $table_name = $suffix . "inputs";
+$operation = $_POST['operation'];
 
 //Connect to server and database
 $link = null;
@@ -74,36 +75,70 @@ if ($empty)
 		_exit(ERROR_QUERY, $link);
 }
 
-// Query inputs
-$query = "SELECT /*+ MAX_EXECUTION_TIME(1000) */ di1,di2,di3,di4,di5,di6,ai1,ai2,ai3,ai4,ai5,ai6 FROM  " . $table_name . " ORDER BY timeStamp DESC LIMIT 1"; 
-if ($result = mysqli_query($link, $query)) 
-{
-	// Get row
-    $row = mysqli_fetch_row($result);   
+if($operation == "get")
+{	
+	// Query inputs
+	$query = "SELECT /*+ MAX_EXECUTION_TIME(1000) */ di1,di2,di3,di4,di5,di6,ai1,ai2,ai3,ai4,ai5,ai6 FROM  " . $table_name . " ORDER BY timeStamp DESC LIMIT 1"; 
+	if ($result = mysqli_query($link, $query)) 
+	{
+		// Get row
+	    $row = mysqli_fetch_row($result);   
 
-	// Output digital_inputs variable
-    echo("digital_inputs("); 
-    for($i = 0; $i < 6; $i++)
-    {
-    	echo($row[$i]);
-    	if ($i != 5) echo (",");
-    }
-    echo(")");
+		// Output digital_inputs variable
+	    echo("digital_inputs("); 
+	    for($i = 0; $i < 6; $i++)
+	    {
+	    	echo($row[$i]);
+	    	if ($i != 5) echo (",");
+	    }
+	    echo(")");
 
-    // Output analog_inputs variable
-    echo("analog_inputs(");  
-    for($i = 6; $i < 12; $i++)
-    {
-    	echo($row[$i]);
-    	if ($i != 11) echo (",");
-    }
-    echo(")");
+	    // Output analog_inputs variable
+	    echo("analog_inputs(");  
+	    for($i = 6; $i < 12; $i++)
+	    {
+	    	echo($row[$i]);
+	    	if ($i != 11) echo (",");
+	    }
+	    echo(")");
 
-    // Free result
-    mysqli_free_result($result);
+	    // Free result
+	    mysqli_free_result($result);
+	}
+	else
+		_exit(ERROR_QUERY, $link);
 }
-else
-	_exit(ERROR_QUERY, $link);
+else if ($operation == "set")
+{
+	echo("{");
+	if (!isset($_POST['di1']) or !isset($_POST['di2']) or !isset($_POST['di3']) or !isset($_POST['di4']) or !isset($_POST['di5']) or !isset($_POST['di6']) or !isset($_POST['ai1']) or !isset($_POST['ai2']) or !isset($_POST['ai3']) or !isset($_POST['ai4']) or !isset($_POST['ai5']) or !isset($_POST['ai6'])) 
+		_exit(ERROR_ARGUMENTS);
+	$di1 = $_POST['di1'];
+	$di2 = $_POST['di2'];
+	$di3 = $_POST['di3'];
+	$di4 = $_POST['di4'];
+	$di5 = $_POST['di5'];
+	$di6 = $_POST['di6'];
+	$ai1 = $_POST['ai1'];
+	$ai2 = $_POST['ai2'];
+	$ai3 = $_POST['ai3'];
+	$ai4 = $_POST['ai4'];
+	$ai5 = $_POST['ai5'];
+	$ai6 = $_POST['ai6'];
+
+	// Delete
+	$query = "DELETE FROM " . $table_name;
+	$r = mysqli_query($link,$query);
+	if (!$r)
+		_exit(ERROR_QUERY, $link);
+
+	// Insert
+	$query = "INSERT INTO " . $table_name . " (di1,di2,di3,di4,di5,di6,ai1,ai2,ai3,ai4,ai5,ai6) VALUES (" . $di1 . "," . $di2 . "," . $di3 . "," . $di4 . "," . $di5 . "," . $di6 . "," . $ai1 . "," . $ai2 . "," . $ai3 . "," . $ai4 . "," . $ai5 . "," . $ai6 . ")";
+	$r = mysqli_query($link,$query);
+	if (!$r)
+		_exit(ERROR_QUERY, $link);
+}
+
 
 // Close connection
 _exit(OK,$link); 

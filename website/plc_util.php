@@ -9,10 +9,10 @@ function createPlcTable(&$connection)
 {
 	$query = "
 	CREATE TABLE plcs (
-    id int NOT NULL AUTO_INCREMENT,
-    name VARCHAR(200) NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (name));
+	id int NOT NULL AUTO_INCREMENT,
+	name VARCHAR(200) NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (name));
 	";
 	$r = mysqli_query($connection,$query);
 	if (!$r)
@@ -89,10 +89,10 @@ function findPlcById(&$connection, $id, &$name)
 	if ($result = mysqli_query($connection, $query)) 
 	{
 		// Get row
-    	$row = mysqli_fetch_row($result);   
-    	$name = $row[1];
-    	return OK;
-    }
+		$row = mysqli_fetch_row($result);   
+		$name = $row[1];
+		return OK;
+	}
 
 	return ERROR_QUERY;
 }
@@ -111,10 +111,10 @@ function findPlcByName(&$connection, &$name, &$id)
 	if ($result = mysqli_query($connection, $query)) 
 	{
 		// Get row
-    	$row = mysqli_fetch_row($result);   
-    	$id = $row[0];
-    	return OK;
-    }
+		$row = mysqli_fetch_row($result);   
+		$id = $row[0];
+		return OK;
+	}
 
 	return ERROR_QUERY;
 }
@@ -139,13 +139,13 @@ function getPlcList(&$connection, &$ids, &$names)
 	$result = mysqli_query($connection, $query);
 	if (mysqli_num_rows($result) > 0) {
 	    // output data of each row
-	    $i = 0;
-	    while($row = mysqli_fetch_row($result)) {
-	    	$ids[$i] = $row[0];
-	    	$names[$i] = $row[1];
-	        $i = $i + 1;
-	    }
-	    mysqli_free_result($result);
+		$i = 0;
+		while($row = mysqli_fetch_row($result)) {
+			$ids[$i] = $row[0];
+			$names[$i] = $row[1];
+			$i = $i + 1;
+		}
+		mysqli_free_result($result);
 	} 
 	return OK;
 }
@@ -167,6 +167,70 @@ function deletePlc(&$connection, $id)
 	$r = mysqli_query($connection,$query);
 	if (!$r)
 		return ERROR_QUERY;
+
+	return OK;
+}
+
+/* Get Arduino status */
+function arduinoStatus(&$connection, $id, $operation = "set", &$status = NULL)
+{
+	// Check connection
+	if (!$connection)
+		return ERROR_CONNECTION;
+
+	// Table name
+	$table_name = "plc" . $id . "_status";
+
+	// Query table existent
+	$exists = False;
+	$r = tableExists($connection, $table_name, $exists); 
+	if ($r != OK)
+		return $r;
+
+	// Create table if it doesnt exist
+	if (!$exists)
+	{
+		$query = "
+		CREATE TABLE " . $table_name . " (
+		timeStamp TIMESTAMP NOT NULL PRIMARY KEY)
+		";
+		$r = mysqli_query($connection,$query);
+		if (!$r)
+			return ERROR_QUERY;
+	}
+	if ($operation == "set")
+	{
+		// Delete
+		$query = "DELETE FROM " . $table_name;
+		$r = mysqli_query($connection,$query);
+		if (!$r)
+			return ERROR_QUERY;
+
+		// Log
+		$query = "INSERT INTO " . $table_name . " (timeStamp) values (NULL)";
+		$r = mysqli_query($connection,$query);
+		if (!$r)
+			return ERROR_QUERY;
+	}
+	else if ($operation == "get")
+	{
+		// Query
+		$query = "SELECT timeStamp FROM " . $table_name . " ORDER BY timeStamp DESC LIMIT 1";
+		$result = mysqli_query($connection, $query);
+		if (!$result) 
+			return ERROR_QUERY;
+		
+		// Get row
+		$row = mysqli_fetch_assoc($result);
+
+		if (($n = mysqli_num_rows($result)) == 0) 
+			$status = "Nunca";
+		else
+			$status = $row['timeStamp'];
+
+	  // Free result
+	  mysqli_free_result($result);
+	}	
 
 	return OK;
 }

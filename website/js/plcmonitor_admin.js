@@ -104,6 +104,26 @@ function updateTable()
     }); 
 }
 
+// Prueba
+function existsTest()
+{
+  $.post("tabla_plcs.php",
+    {
+      operation: "exists",
+      plc_number: 2,
+    },
+    function(data,status){
+      var err = getPhpVar(data, "error").val;
+      // adminStatus(err);
+      if(!plcOk(err))
+        return;
+      var exists = getPhpVar(data, "exists");
+      if(exists.error)
+        return; 
+      alert("Exists = " + exists.val); 
+    }); 
+}
+
 // Reportar status
 function adminStatus(status)
 {

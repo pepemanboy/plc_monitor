@@ -47,11 +47,17 @@ if (!$exists)
 // Insert value
 if ($operation == "set")
 {
-	if (empty($_POST['value'])) 
+	echo("{");
+	if (!isset($_POST['value'])) 
 		_exit(ERROR_ARGUMENTS, $link);
 
 	// Fetch arguments
 	$val = $_POST['value'];  
+
+	$query = "INSERT INTO " . $table_name . " (val) VALUES (" . $val . ")";
+	$r = mysqli_query($link,$query);
+	if (!$r)
+		_exit(ERROR_QUERY, $link);
 }
 // Get values
 else

@@ -6,8 +6,8 @@ if(!defined("DEFINITIONS"))
 
 	/* Username and password */
 	define("SERVER", "localhost");
-	define("USERNAME", "pepemanb_test");
-	define("PASSWORD", "VO+%A;WqeHWA");
+	define("USERNAME", "pepemanb_pepeman");
+	define("PASSWORD", "pepe1995*");
 	define("DATABASE", "pepemanb_plcmonitor");
 	define("TABLE_PREFIX", "plc");
 	define("MAIN_TABLE", "plcs");
@@ -33,7 +33,7 @@ if(!defined("DEFINITIONS"))
 	{
 		if($connection)
 			mysqli_close($connection);
-		die("error(" . $str . ")");
+		die("error(" . $str . ")}");
 	}
 } // End definitions module
 

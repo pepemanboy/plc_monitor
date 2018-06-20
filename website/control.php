@@ -101,7 +101,9 @@
     </div>
     <div class = "row justify-content-end">
       <p ><span class="badge badge-light control-status-indicator" id = "control-outputs-indicator">Output status: OK</span></p>
-    </div> <!-- Acaba debugging -->  
+    </div> <!-- Acaba debugging --> 
+    <!-- Debug row -->
+    <div id = "debug-row"></div> 
   </div> <!-- Acaba container -->
   <!-- Inicia JavaScript -->
   <!-- primero jQuery, despues Popper.js, despues Bootstrap, despues propio -->

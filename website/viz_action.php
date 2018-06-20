@@ -131,53 +131,13 @@ else if ($operation == "get")// Get
       $action_types[$i] = $row["action_type"];
       $delays_s[$i] = $row["delay_s"];
       $i = $i + 1;
-    }
+    }    
+    mysqli_free_result($result);
+  }
 
-      // Return values
-    echo("ids(");
-    for($i = 0; $i < $n; $i++)
-    {
-      echo($ids[$i]);
-      if($i < $n - 1)
-        echo(",");
-    }
-    echo(")");
-    echo("inputs(");
-    for($i = 0; $i < $n; $i++)
-    {
-      echo($inputs[$i]);
-      if($i < $n - 1)
-        echo(",");
-    }
-    echo(")");
-
-    echo("thresholds(");
-    for($i = 0; $i < $n; $i++)
-    {
-      echo($thresholds[$i]);
-      if($i < $n - 1)
-        echo(",");
-    }
-    echo(")");
-
-    echo("updowns(");
-    for($i = 0; $i < $n; $i++)
-    {
-      echo($updowns[$i]);
-      if($i < $n - 1)
-        echo(",");
-    }
-    echo(")");
-
-    echo("outputs(");
-    for($i = 0; $i < $n; $i++)
-    {
-      echo($outputs[$i]);
-      if($i < $n - 1)
-        echo(",");
-    }
-    echo(")");
-
+  // Return values
+  if(!isset($_POST['arduino']))
+  {
     echo("emails(");
     for($i = 0; $i < $n; $i++)
     {
@@ -187,37 +147,110 @@ else if ($operation == "get")// Get
     }
     echo(")");
 
-    echo("notification_intervals_s(");
+    echo("ids(");
     for($i = 0; $i < $n; $i++)
     {
-      echo($notification_intervals_s[$i]);
+      echo($ids[$i]);
       if($i < $n - 1)
         echo(",");
     }
     echo(")");
 
-    echo("action_types(");
+    echo("inputs(");
     for($i = 0; $i < $n; $i++)
     {
-      echo($action_types[$i]);
+      echo($inputs[$i]);
       if($i < $n - 1)
         echo(",");
     }
     echo(")");
 
-    echo("delays_s(");
-    for($i = 0; $i < $n; $i++)
+  } 
+  echo("{");  
+  echo("n(" . $n . ")");
+
+  echo("inputs_types(");
+  for($i = 0; $i < $n; $i++)
+  {
+    $input = $inputs[$i];
+    if (strpos($input, 'di') !== false)
     {
-      echo($delays_s[$i]);
-      if($i < $n - 1)
-        echo(",");
+      echo(1);
     }
-    echo(")");
-
-
-    mysqli_free_result($result);
+    else
+    {
+      echo(2);
+    }
+    if($i < $n - 1)
+      echo(",");
   }
+  echo(")");
+
+  echo("inputs_numbers(");
+  for($i = 0; $i < $n; $i++)
+  {
+    $input = $inputs[$i];
+    echo(substr($input,2));
+    if($i < $n - 1)
+      echo(",");
+  }
+  echo(")");
+
+  echo("thresholds(");
+  for($i = 0; $i < $n; $i++)
+  {
+    echo($thresholds[$i]);
+    if($i < $n - 1)
+      echo(",");
+  }
+  echo(")");
+
+  echo("updowns(");
+  for($i = 0; $i < $n; $i++)
+  {
+    echo($updowns[$i]);
+    if($i < $n - 1)
+      echo(",");
+  }
+  echo(")");
+
+  echo("outputs(");
+  for($i = 0; $i < $n; $i++)
+  {
+    echo($outputs[$i]);
+    if($i < $n - 1)
+      echo(",");
+  }
+  echo(")");
+
+  echo("notification_intervals_s(");
+  for($i = 0; $i < $n; $i++)
+  {
+    echo($notification_intervals_s[$i]);
+    if($i < $n - 1)
+      echo(",");
+  }
+  echo(")");
+
+  echo("action_types(");
+  for($i = 0; $i < $n; $i++)
+  {
+    echo($action_types[$i]);
+    if($i < $n - 1)
+      echo(",");
+  }
+  echo(")");
+
+  echo("delays_s(");
+  for($i = 0; $i < $n; $i++)
+  {
+    echo($delays_s[$i]);
+    if($i < $n - 1)
+      echo(",");
+  }
+  echo(")");
 }
+
 else if ($operation == "delete")
 {
   //Check for expected POST arguments

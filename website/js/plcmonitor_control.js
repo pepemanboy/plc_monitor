@@ -69,7 +69,8 @@ function getInputs(n){
   inputsStatus("Ejecutando consulta");
   $.post("control_inputs.php",
   {
-    plc_number: n
+    plc_number: n,
+    operation: "get"
   },
   function(data,status){
     var digital_inputs = getPhpArray(data,"digital_inputs").map(Number);
@@ -85,6 +86,11 @@ function getInputs(n){
     }
   });    
   return true;  
+}
+
+function debugText(txt)
+{
+  $("#debug-row").text(txt);
 }
 
 // Recibir outputs. n es el numero de plc

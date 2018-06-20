@@ -268,7 +268,8 @@ function getActions(plc_number, signal_number, signal_type)
 			return;
 
 		var err = getPhpArr(data, "ids").error;
-		var ids = getPhpArr(data, "ids");
+		var n = getPhpVariable(data, "n");
+		var ids = getPhpArr(data, "ids").val;
 		var inputs = getPhpArray(data, "inputs");
 		var thresholds = getPhpArray(data, "thresholds");
 		var updowns = getPhpArray(data, "updowns");
@@ -360,7 +361,7 @@ function fillActions(actions)
 					s = "dias", t /= 24;
 			}
 		}				
-		$("#viz-action-interval" + i).val(Math.floor(t)).prop('disabled', true);
+		$("#viz-action-interval" + i).val(t).prop('disabled', true);
 		$("#viz-action-interval-suffix" + i).append($('<option>', {
 		    value: 1,
 		    text: s
@@ -385,7 +386,7 @@ function fillActions(actions)
 					s = "dias", t /= 24;
 			}
 		}	
-		$("#viz-action-delay" + i).val(Math.floor(t)).prop('disabled', true);
+		$("#viz-action-delay" + i).val(t).prop('disabled', true);
 		$("#viz-action-delay-suffix" + i).append($('<option>', {
 		    value: 1,
 		    text: s
@@ -542,6 +543,8 @@ function addAction(plc_number)
 		return false;
 
 	vizStatus("Adding action");
+
+	$('#viz-agregar-modal').modal('hide');
 
 	// Notification interval time
 	var n_t = Number($("#viz-action-interval0").val());
