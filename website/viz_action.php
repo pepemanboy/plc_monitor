@@ -175,11 +175,11 @@ else if ($operation == "get")// Get
     $input = $inputs[$i];
     if (strpos($input, 'di') !== false)
     {
-      echo(1);
+      echo(TYPE_DIGITAL);
     }
     else
     {
-      echo(2);
+      echo(TYPE_ANALOG);
     }
     if($i < $n - 1)
       echo(",");

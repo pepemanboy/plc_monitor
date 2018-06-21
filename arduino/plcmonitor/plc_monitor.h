@@ -57,11 +57,12 @@ struct Action
 	float threshold; ///< Threshold for input value
   uint8_t threshold_side; ///< Threshold side that triggers the action
   uint8_t type; ///< Action type
-  uint32_t elapsed_s; ///< Time since trigger
-  uint32_t delay_s; ///< Time for trigger to activate
+  uint32_t delay_elapsed_ms; ///< Time since trigger
+  uint32_t delay_ms; ///< Time for trigger to activate
   uint8_t delay_triggered; ///< Delay triggered flag
 	uint8_t output; ///< Output related
-	uint32_t notification_interval_s; ///< Notification interval
+	uint32_t notification_period_ms; ///< Notification period
+  uint32_t notification_elapsed_ms; ///< Elapsed ms since last notification was sent
 };
 
 /* Gain Offset Structure */
@@ -77,8 +78,9 @@ typedef struct plc_in_t plc_in_t;
 struct plc_in_t
 {
   uint8_t type; ///< Input type
-	int freq; ///< Logging frequency
-  uint32_t elapsed_ms; ///< Elapsed seconds since last logging
+  uint8_t number; ///< Input number
+	uint32_t log_period_ms; ///< Logging period
+  uint32_t log_elapsed_ms; ///< Elapsed seconds since last logging
   float value; ///< Input value
   float reading; ///< Input reading
   float reading_; ///< Past input reading
@@ -89,6 +91,7 @@ struct plc_in_t
 typedef struct plc_do_t plc_do_t;
 struct plc_do_t
 {
+  uint8_t number; ///< Output number
 	uint8_t value; ///< Digital output value
 };
 
@@ -123,8 +126,11 @@ void _plcDeviceInit()
   for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
     plcDevice.din[i].type = type_Digital;
+    plcDevice.din[i].number = i+1;
 		plcDevice.ain[i].type = type_Analog;
 		plcDevice.ain[i].gof = {1,0};
+    plcDevice.ain[i].number = i+1;
+    plcDevice.dout[i].number = i+1;
   }
 }
 
@@ -145,10 +151,10 @@ uint8_t _plcGetConfig()
 
 	for(i = 0; i < DIGITAL_INPUT_COUNT; i++)
 	{
-		plcDevice.din[i].freq = di_freq[i];
+		plcDevice.din[i].log_period_ms = di_freq[i] * 1000;
 		plcDevice.din[i].type = di_count[i] ? type_Counter : type_Digital;
 
-		plcDevice.ain[i].freq = ai_freq[i];
+		plcDevice.ain[i].log_period_ms = ai_freq[i] * 1000;
 		plcDevice.ain[i].gof = {ai_gain[i], ai_offs[i]};
 	}
 
@@ -182,9 +188,9 @@ uint8_t _plcGetActions()
 		plcDevice.actions[i].input_type = inputs_types[i];
 		plcDevice.actions[i].threshold = thresholds[i];
 		plcDevice.actions[i].threshold_side = updowns[i];
-		plcDevice.actions[i].notification_interval_s = notification_interval_s[i];
+		plcDevice.actions[i].notification_period_ms = notification_interval_s[i] * 1000;
 		plcDevice.actions[i].type = action_types[i];
-		plcDevice.actions[i].delay_s = delays_s[i];
+		plcDevice.actions[i].delay_ms = delays_s[i] * 1000;
 	}
 
 	return Ok;
@@ -254,10 +260,11 @@ void _printPlcDevice()
   // Digital inputs
   for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
-    Serial.print("DI #" + String(i+1));
+    Serial.print("DI #" + String(plcDevice.din[i].number));
     Serial.print(" Type: " + _typeString(plcDevice.din[i].type));
     Serial.print(", Value: " + String(plcDevice.din[i].value));
-    Serial.print(", Freq: " + String(plcDevice.din[i].freq));
+    Serial.print(", Log period ms: " + String(plcDevice.din[i].log_period_ms));
+    Serial.print(", Log elapsed ms: " + String(plcDevice.din[i].log_elapsed_ms));
     Serial.print(", Reading: " + String(plcDevice.din[i].reading));
     Serial.println(", Reading_: " + String(plcDevice.din[i].reading_));
   }
@@ -265,10 +272,11 @@ void _printPlcDevice()
   // Analog inputs
   for (i = 0; i < ANALOG_INPUT_COUNT; i ++)
   {
-    Serial.print("AI #" + String(i+1));
+    Serial.print("AI #" + String(plcDevice.ain[i].number));
     Serial.print(" Type: " + _typeString(plcDevice.ain[i].type));
     Serial.print(", Value: " + String(plcDevice.ain[i].value));
-    Serial.print(", Freq: " + String(plcDevice.ain[i].freq));
+    Serial.print(", Log period ms: " + String(plcDevice.ain[i].log_period_ms));
+    Serial.print(", Log elapsed ms: " + String(plcDevice.ain[i].log_elapsed_ms));
     Serial.print(", Reading: " + String(plcDevice.ain[i].reading));
     Serial.print(", Reading_: " + String(plcDevice.ain[i].reading_));
     Serial.print(", Gain: " + String(plcDevice.ain[i].gof.g));
@@ -278,7 +286,7 @@ void _printPlcDevice()
   // Outputs
   for (i = 0; i < OUTPUT_COUNT; i ++)
   {
-    Serial.print("DO #" + String(i+1));
+    Serial.print("DO #" + String(plcDevice.dout[i].number));
     Serial.println(" Value: " + String(plcDevice.dout[i].value));
   }
 
@@ -295,10 +303,11 @@ void _printPlcDevice()
     Serial.print(", Output: " + String(plcDevice.actions[i].output));
     Serial.print(", Threshold: " + String(plcDevice.actions[i].threshold));
     Serial.print(", Threshold side: " + String(plcDevice.actions[i].threshold_side));
-    Serial.print(", Elapsed_s: " + String(plcDevice.actions[i].elapsed_s));
-    Serial.print(", Delay_s: " + String(plcDevice.actions[i].delay_s));
+    Serial.print(", Delay_Elapsed_ms: " + String(plcDevice.actions[i].delay_elapsed_ms));
+    Serial.print(", Delay_ms: " + String(plcDevice.actions[i].delay_ms));
     Serial.print(", Triggered: " + String(plcDevice.actions[i].delay_triggered));
-    Serial.println(", Notif: " + String(plcDevice.actions[i].notification_interval_s));
+    Serial.println(", Notif: " + String(plcDevice.actions[i].notification_period_ms));
+    Serial.println(", Notif elapsed: " + String(plcDevice.actions[i].notification_elapsed_ms));
   }
   Serial.println("-------------------------------");
 }
@@ -336,12 +345,12 @@ uint8_t _logInputs()
   
   for (uint8_t i = 0; i < INPUT_COUNT; i++)
   {  
-    if (plcDevice.in[i].freq == 0) continue; // No logging
-    plcDevice.in[i].elapsed_ms += e;
-    if (plcDevice.in[i].elapsed_ms/1000 > plcDevice.in[i].freq)
+    if (plcDevice.in[i].log_period_ms == 0) continue; // No logging
+    plcDevice.in[i].log_elapsed_ms += e;
+    if (plcDevice.in[i].log_elapsed_ms > plcDevice.in[i].log_period_ms)
     {
-      _plcLogInput(i,plcDevice.in[i].type);
-      plcDevice.in[i].elapsed_ms = 0;
+      _plcLogInput(plcDevice.in[i].number, plcDevice.in[i].type);
+      plcDevice.in[i].log_elapsed_ms = 0;
       delay(500);
     }
   }
@@ -424,12 +433,7 @@ void testMonitor()
   // Update io
   Serial.println("Update io");
   _updateIo();
-  _printPlcDevice();
-
-  
-  
-  
-  
+  _printPlcDevice();  
 }
 
 #endif // PLC_MONITOR_H

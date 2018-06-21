@@ -76,7 +76,7 @@ for($i = 0; $i < $number_of_actions; $i++)
       <div class='input-group-prepend'>
         <div class='input-group-text'>                  
           Permanente
-          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' aria-label='Radio button for following text input' id='' data-action-type = 1 >
+          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_PERMANENT . " >
         </div>
       </div>
       <!-- Boton de reset -->
@@ -87,7 +87,7 @@ for($i = 0; $i < $number_of_actions; $i++)
       <div class='input-group-prepend'>
         <div class='input-group-text'>                  
           Temporizador
-          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' aria-label='Radio button for following text input' id='' data-action-type = 2>
+          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_DELAY . ">
         </div>
       </div>
       <!-- Input temporizador -->
@@ -99,7 +99,7 @@ for($i = 0; $i < $number_of_actions; $i++)
       <div class='input-group-prepend'>
         <div class='input-group-text'>                  
           Durante
-          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' data-action-type = 3>
+          <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' data-action-type = " . ACTION_EVENT . ">
         </div>
       </div>
     </div> <!-- Acaba tercera fila -->

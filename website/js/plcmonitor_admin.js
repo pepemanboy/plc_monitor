@@ -86,7 +86,6 @@ function addPlc(nombre_plc){
 // Actualizar tabla
 function updateTable()
 {
-  // adminStatus("Actualizando tabla");
   $.post("tabla_plcs.php",
     {
       operation: "get",
@@ -99,7 +98,10 @@ function updateTable()
         return;
       var table = getPhpVar(data, "table");
       if(table.error)
+      {
+        alert("table error");
         return;
+      }
       $("#admin-plc-table").html(table.val);    
     }); 
 }

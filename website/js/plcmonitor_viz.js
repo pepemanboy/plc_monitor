@@ -268,6 +268,7 @@ function getActions(plc_number, signal_number, signal_type)
 			return;
 
 		var err = getPhpArr(data, "ids").error;
+		var empty = getPhpArr(data, "ids").empty;
 		var n = getPhpVariable(data, "n");
 		var ids = getPhpArr(data, "ids").val;
 		var inputs = getPhpArray(data, "inputs");
@@ -280,7 +281,7 @@ function getActions(plc_number, signal_number, signal_type)
 		var delays_s = getPhpArray(data, "delays_s");
 
 		g_actions = [];
-		if(!err)
+		if(!err && !empty)
 		{
 			for(var i = 0; i < inputs.length; i ++)
 			{
@@ -372,7 +373,7 @@ function fillActions(actions)
 	    if($radios.is(':checked') === false) {
 	        $radios.filter('[data-action-type=' + selected + ']').prop('checked', true);
 	    }
-		$("input[name=viz-action-radios" + i + "]:checked").val();
+		// $("input[name=viz-action-radios" + i + "]:checked").val();
 		// Calculate delay time
 		var t = action.delay_s;
 		var s = "sec";
@@ -573,6 +574,10 @@ function addAction(plc_number)
 		default: break;
 	}
 
+	// Action type
+	var at = Number($('input[name=viz-action-radios0]:checked').attr("data-action-type"));
+	alert("At = " + at);
+
 	$.post("viz_action.php",
 	{
 		plc_number: plc_number,
@@ -583,7 +588,7 @@ function addAction(plc_number)
 		output: Number($("#viz-action-output0 option:selected").val()),
 		email: email,
 		notification_interval_s: n_t ,
-		action_type: Number($('input[name=viz-action-radios0]:checked').attr("data-action-type")),
+		action_type: at,
 		delay_s: d_t
 	},
 	function(data,status)
@@ -621,7 +626,7 @@ function verifyAction()
 
 	// Temporizador
 	var radios = $('input[name=viz-action-radios0]:checked').attr("data-action-type");
-	if(radios && radios == 2)
+	if(radios && radios == ACTION_DELAY)
 	{
 		var delay = $("#viz-action-delay0").val();
 		if (!delay || delay < 0)

@@ -19,6 +19,17 @@ if(!defined("DEFINITIONS"))
 	define("ERROR_ARGUMENTS", "ARGUMENTS ERROR");
 	define("ERROR_SELECT_DB", "SELECTDB ERROR");
 
+	/* Input types */
+	define("TYPE_DIGITAL", 0);
+	define("TYPE_COUNTER", 1);
+	define("TYPE_ANALOG", 2);
+
+	/* Action types */
+	define("ACTION_NONE", 0);
+	define("ACTION_PERMANENT", 1);
+	define("ACTION_EVENT", 2);
+	define("ACTION_DELAY", 3);
+
 	/* Debugging */
 	define("DEBUGGING", "DEBUGGING");
 

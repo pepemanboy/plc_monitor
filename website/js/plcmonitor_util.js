@@ -1,3 +1,9 @@
+/* Action types */
+const ACTION_NONE = 0;
+const ACTION_PERMANENT = 1;
+const ACTION_EVENT = 2;
+const ACTION_DELAY = 3;
+
 function getPhpVariable(response_str, variable_str)
 {
   var varIndex = response_str.indexOf(variable_str); // Index of variable
@@ -16,10 +22,12 @@ function getPhpArray(response_str, variable_str)
 
 function getPhpArr(response_str, variable_str)
 {
-	var ret = {val: [], error: false};
+	var ret = {val: [], error: false, empty: false};
 	var str = getPhpVar(response_str, variable_str);
 	if(str.error)
 		ret.error = true;
+	if(str.empty)
+		ret.empty = true;
 	else	
 		ret.val = str.val.split(',');	
 	return ret;
@@ -35,7 +43,7 @@ function plcOk(error_code)
 // Get php variable to var. Return false if does not exist
 function getPhpVar(response_str, variable_str)
 {
-	var ret = {val: 0, error: false};
+	var ret = {val: 0, error: false, empty: false};
 	var varIndex = response_str.indexOf(variable_str + "(");
 	if (varIndex < 0)
 	{
@@ -45,7 +53,7 @@ function getPhpVar(response_str, variable_str)
 		var openParIndex = varIndex + variable_str.length;
 		var closedParIndex = response_str.indexOf(")",varIndex); // Open Parentheses index
 		var value = response_str.substring(openParIndex+1,closedParIndex); // Text inside parentheses
-		if(value == "") ret.error = true;
+		if(value == "") ret.empty = true;
 		ret.val = value;
 	}	
 	return ret;
