@@ -22,7 +22,7 @@
   <div class = "container admin">
     <!-- Inicia titulo y dropdown -->
     <div class = "row titulo">
-      <h2>Control de dispositivo (</h2>
+      <h2>Control de dispositivo </h2>
       <!-- Dropdown senales -->
       <div class="dropdown dropdown-visualizador-senales">
         <a class="btn btn-info dropdown-toggle plc-dropdown-menu" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

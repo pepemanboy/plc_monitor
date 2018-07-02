@@ -171,6 +171,13 @@ uint8_t checkErrors()
   return str_buf.indexOf("error(OK)") >= 0 ? Ok : Error;
 }
 
+/* Check if character is hex
+ */
+bool isHex(char x)
+{
+  return ((x >= '0' && x <= '9') || (x >= 'a' && x <= 'f'));
+}
+
 /* Send a POST request to the server
  *
  * @param url php file address from /plcmonitor/
@@ -211,12 +218,13 @@ uint8_t _post(String url, String params)
   }
 
   // Read response
-  bool start = false;
-  int i = 0;
   str_buf = "";
+  /*  
+  bool start = false;
   while (client.available()) {
     // Read character
     char c = client.read();
+    //Serial.print(c);
     // Pre-message
     if(!start)
     {
@@ -233,7 +241,41 @@ uint8_t _post(String url, String params)
       }
       str_buf += c;
     }
+  }*/
+
+  // Read raw text from request
+  String str_buf_1 = "";
+  while (client.available())
+  {
+    // Read character
+    char c = client.read();
+    str_buf_1 += c;
   }
+
+  // Search for message
+  int a,b,n;
+  const String header_end = "Connection: close";
+  a = str_buf_1.indexOf(header_end) + header_end.length();
+  for (b = a ; b < str_buf_1.length(); b ++)
+    if (isHex(str_buf_1.charAt(b))) break;
+
+  while(true)
+  {
+    // Extract number of following bytes
+    String n_str = str_buf_1.substring(b, str_buf_1.indexOf("\r\n",b));
+    char n_char[n_str.length() + 1];
+    n_str.toCharArray(n_char, n_str.length() + 1);
+    n = strtol(n_char,0,16);
+    if(n == 0) break;
+    // Extract line of text
+    a = str_buf_1.indexOf("\r\n",b) + 2;
+    b = str_buf_1.indexOf("\r\n",a);
+    str_buf += str_buf_1.substring(a,b);
+    b = b + 2;
+  }
+
+  // Remove opening and closing braces
+  str_buf = str_buf.substring(1,str_buf.length()-1);
 
   // Wait for server to terminate
   r = _waitClientDisconnect();
@@ -360,6 +402,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
 	uint8_t r = _post("viz_action.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
   if (r != Ok)
     return r;    
+  plcDebug(str_buf);
   if (checkErrors() != Ok)
     return Error;
   if (!checkIntegrity())
@@ -387,7 +430,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
     return r;
 
   // Get ids
-  r = _getArray(inputs_numbers,type_uint8,"ids(",n);
+  r = _getArray(ids,type_uint8,"ids(",n);
   if (r != Ok)
     return r;
 
@@ -443,7 +486,6 @@ uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
     return r;
   if (checkErrors() != Ok)
     return Error;
-  plcDebug(str_buf);
   if (!checkIntegrity())
     return Error_checksum;
   float float_buf[3];
