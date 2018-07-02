@@ -5,6 +5,7 @@ Control outputs
 // Includes
 include_once("definitions.php");
 include_once("connect.php");
+include_once("plc_util.php");
 
 //Check for expected POST arguments
 if (empty($_POST['operation']) or empty($_POST['plc_number']))
@@ -20,6 +21,12 @@ $table_name = $suffix . "outputs";
 // Connect to server and database
 $link = null;
 $r = connectToDatabase($link);
+if ($r != OK)
+	_exit($r, $link);
+
+// Check if plc exists
+$name = "";
+$r = findPlcById($link,$plc_number,$name);
 if ($r != OK)
 	_exit($r, $link);
 
@@ -69,25 +76,57 @@ if($empty)
 // Set outputs
 if ($operation == "set")
 {
-	if (empty($_POST['outputs']) ) 
+	if (!isset($_POST['arduino']))
+	{
+		if (empty($_POST['outputs']) ) 
 	    _exit(ERROR_ARGUMENTS, $link);
 
-	// Fetch arguments
-	$arr = $_POST['outputs'];  	
+		// Fetch arguments
+		$arr = $_POST['outputs'];  	
 
-	// Post control outputs to table
-	$query = "
-	DELETE FROM " . $table_name . ";
-	INSERT INTO " . $table_name . " 
-	(do1,do2,do3,do4,do5,do6) 
-	VALUES (".$arr[0].",".$arr[1].",".$arr[2].",".$arr[3].",".$arr[4].",".$arr[5].");
-	";  	
+		// Post control outputs to table
+		$query = "
+		DELETE FROM " . $table_name . ";
+		INSERT INTO " . $table_name . " 
+		(do1,do2,do3,do4,do5,do6) 
+		VALUES (".$arr[0].",".$arr[1].",".$arr[2].",".$arr[3].",".$arr[4].",".$arr[5].");
+		";  	
 
-	$r = mysqli_multi_query($link, $query);
-	if (!$r)
-		_exit(ERROR_QUERY, $link);
+		$r = mysqli_multi_query($link, $query);
+		if (!$r)
+			_exit(ERROR_QUERY, $link);
 
-	do{} while(mysqli_more_results($link) && mysqli_next_result($link)); // flush multi queries
+		do{} while(mysqli_more_results($link) && mysqli_next_result($link)); // flush multi queries
+	}
+	else // Outputs coming from arduino
+	{
+		echo("{");
+		if (!isset($_POST['do1']) || !isset($_POST['do2']) || !isset($_POST['do3']) || !isset($_POST['do4']) || !isset($_POST['do5']) || !isset($_POST['do6']) ) 
+	    _exit(ERROR_ARGUMENTS, $link);
+
+		// Fetch arguments
+		$do1 = $_POST['do1'];
+		$do2 = $_POST['do2'];
+		$do3 = $_POST['do3'];
+		$do4 = $_POST['do4'];
+		$do5 = $_POST['do5'];
+		$do6 = $_POST['do6'];
+
+		// Post control outputs to table
+		$query = "
+		DELETE FROM " . $table_name . ";
+		INSERT INTO " . $table_name . " 
+		(do1,do2,do3,do4,do5,do6) 
+		VALUES (".$do1.",".$do2.",".$do3.",".$do4.",".$do5.",".$do6.");
+		";  	
+
+		$r = mysqli_multi_query($link, $query);
+		if (!$r)
+			_exit(ERROR_QUERY, $link);
+
+		do{} while(mysqli_more_results($link) && mysqli_next_result($link)); // flush multi queries
+	}
+	
 }
 // Get outputs
 else
@@ -98,15 +137,21 @@ else
 	{
 		// Get row
 	    $row = mysqli_fetch_row($result);   
+	    echo("{");
 
+	    $cs = "";
 		// Output digital_outputs variable
-	    echo("{digital_outputs("); 
+	    echoChecksum($cs,"digital_outputs("); 
 	    for($i = 0; $i < 6; $i++)
 	    {
-	    	echo($row[$i]);
-	    	if ($i != 5) echo (",");
+	    	echoChecksum($cs,$row[$i]);
+	    	if ($i != 5) echoChecksum($cs,",");
 	    }
-	    echo(")");
+	    echoChecksum($cs,")");
+	    
+	    // Calculate checksum
+		$md5 = hash('md5',$cs);
+		echo("md5(" . $md5 . ")");
 
 	    // Free result
 	    mysqli_free_result($result);

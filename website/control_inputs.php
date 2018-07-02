@@ -6,6 +6,7 @@ Control Inputs
 // Includes
 include_once("definitions.php");
 include_once("connect.php");
+include_once("plc_util.php");
 
 // Check for expected POST arguments
 if (empty($_POST['plc_number']) or empty($_POST['operation'])) 
@@ -14,6 +15,7 @@ if (empty($_POST['plc_number']) or empty($_POST['operation']))
 }
 
 // Fetch arguments
+$plc_number = $_POST['plc_number'];
 $suffix = "plc" . $_POST['plc_number'] . "_";  
 $table_name = $suffix . "inputs";
 $operation = $_POST['operation'];
@@ -22,6 +24,12 @@ $operation = $_POST['operation'];
 $link = null;
 $r = connectToDatabase($link);
 if($r != OK)
+	_exit($r, $link);
+
+// Check if plc exists
+$name = "";
+$r = findPlcById($link,$plc_number,$name);
+if ($r != OK)
 	_exit($r, $link);
 
 // Query table existent

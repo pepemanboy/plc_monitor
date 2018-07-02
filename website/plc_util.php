@@ -89,7 +89,8 @@ function findPlcById(&$connection, $id, &$name)
 	if ($result = mysqli_query($connection, $query)) 
 	{
 		// Get row
-		$row = mysqli_fetch_row($result);   
+		$row = mysqli_fetch_row($result);  
+		if ($row == NULL) return ERROR_QUERY; 
 		$name = $row[1];
 		return OK;
 	}
@@ -169,6 +170,13 @@ function deletePlc(&$connection, $id)
 		return ERROR_QUERY;
 
 	return OK;
+}
+
+/* Echo and add to checksum string */
+function echoChecksum(&$checksum_str, $str)
+{
+	$checksum_str = $checksum_str . $str;
+	echo($str);
 }
 
 /* Get Arduino status */

@@ -19,9 +19,18 @@ $suffix = "plc" . $plc_number . "_";
 $table_name = $suffix . "actions";
 $operation = $_POST['operation'];
 
+// Checksum
+$cs = "";
+
 // Connect to server and database
 $link = null;
 $r = connectToDatabase($link);
+if ($r != OK)
+  _exit($r, $link);
+
+// Check if plc exists
+$name = "";
+$r = findPlcById($link,$plc_number,$name);
 if ($r != OK)
   _exit($r, $link);
 
@@ -147,15 +156,6 @@ else if ($operation == "get")// Get
     }
     echo(")");
 
-    echo("ids(");
-    for($i = 0; $i < $n; $i++)
-    {
-      echo($ids[$i]);
-      if($i < $n - 1)
-        echo(",");
-    }
-    echo(")");
-
     echo("inputs(");
     for($i = 0; $i < $n; $i++)
     {
@@ -167,88 +167,102 @@ else if ($operation == "get")// Get
 
   } 
   echo("{");  
-  echo("n(" . $n . ")");
 
-  echo("inputs_types(");
+  echoChecksum($cs,"ids(");
+  for($i = 0; $i < $n; $i++)
+  {
+    echoChecksum($cs,$ids[$i]);
+    if($i < $n - 1)
+      echoChecksum($cs,",");
+  }
+  echoChecksum($cs,")");
+  
+  echoChecksum($cs,"n(" . $n . ")");
+
+  echoChecksum($cs,"inputs_types(");
   for($i = 0; $i < $n; $i++)
   {
     $input = $inputs[$i];
     if (strpos($input, 'di') !== false)
     {
-      echo(TYPE_DIGITAL);
+      echoChecksum($cs,TYPE_DIGITAL);
     }
     else
     {
-      echo(TYPE_ANALOG);
+      echoChecksum($cs,TYPE_ANALOG);
     }
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
 
-  echo("inputs_numbers(");
+  echoChecksum($cs,"inputs_numbers(");
   for($i = 0; $i < $n; $i++)
   {
     $input = $inputs[$i];
-    echo(substr($input,2));
+    echoChecksum($cs,substr($input,2));
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
 
-  echo("thresholds(");
+  echoChecksum($cs,"thresholds(");
   for($i = 0; $i < $n; $i++)
   {
-    echo($thresholds[$i]);
+    echoChecksum($cs,$thresholds[$i]);
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
 
-  echo("updowns(");
+  echoChecksum($cs,"updowns(");
   for($i = 0; $i < $n; $i++)
   {
-    echo($updowns[$i]);
+    echoChecksum($cs,$updowns[$i]);
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
 
-  echo("outputs(");
+  echoChecksum($cs,"outputs(");
   for($i = 0; $i < $n; $i++)
   {
-    echo($outputs[$i]);
+    echoChecksum($cs,$outputs[$i]);
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
 
-  echo("notification_intervals_s(");
+  echoChecksum($cs,"notification_intervals_s(");
   for($i = 0; $i < $n; $i++)
   {
-    echo($notification_intervals_s[$i]);
+    echoChecksum($cs,$notification_intervals_s[$i]);
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
 
-  echo("action_types(");
+  echoChecksum($cs,"action_types(");
   for($i = 0; $i < $n; $i++)
   {
-    echo($action_types[$i]);
+    echoChecksum($cs,$action_types[$i]);
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
 
-  echo("delays_s(");
+  echoChecksum($cs,"delays_s(");
   for($i = 0; $i < $n; $i++)
   {
-    echo($delays_s[$i]);
+    echoChecksum($cs,$delays_s[$i]);
     if($i < $n - 1)
-      echo(",");
+      echoChecksum($cs,",");
   }
-  echo(")");
+  echoChecksum($cs,")");
+
+  // Calculate checksum
+  $md5 = hash('md5',$cs);
+  echo("md5(" . $md5 . ")");
 }
 
 else if ($operation == "delete")
@@ -265,6 +279,43 @@ else if ($operation == "delete")
   $result = mysqli_query($link, $query);
   if (!$result)
     _exit(ERROR_QUERY,$link);
+}
+
+else if ($operation == "email")
+{
+  // Argument check
+  if (!isset($_POST['action_id']))
+    _exit(ERROR_ARGUMENTS, $link);
+
+  // Fetch arguments
+  $action_id = $_POST['action_id'];
+
+  // Query database
+  $query = "SELECT email, input, threshold, updown FROM " . $table_name . " WHERE id = " . $action_id;
+  $result = mysqli_query($link, $query);
+  if (!$result)
+    _exit(ERROR_QUERY,$link);
+
+  if($row = mysqli_fetch_assoc($result))
+  {
+    // Get results  
+    $email = $row['email'];
+    $updown = $row['updown'];
+    $input = $row['input'];
+    $threshold = $row['threshold'];
+
+    // Compose email
+    $message = "Entrada " . $input . " ha pasado el threshold " . $threshold . " " ;
+    if ($updown == 0)
+      $message = $message . "arriba";
+    else
+      $message = $message . "abajo";
+    $subject = "Alerta";
+    $header = "From: Alerta PLC Monitor";
+    // send email
+    mail($email,$subject,$message,$header);
+  }
+  mysqli_free_result($result);
 }
 
 // Close MySQL connection

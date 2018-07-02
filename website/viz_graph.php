@@ -26,6 +26,12 @@ $r = connectToDatabase($link);
 if ($r != OK)
 	_exit($r, $link);
 
+// Check if plc exists
+$name = "";
+$r = findPlcById($link,$plc_number,$name);
+if ($r != OK)
+	_exit($r, $link);
+
 // Query table existent
 $exists = False;
 $r = tableExists($link, $table_name, $exists); 

@@ -9,6 +9,8 @@
 
 #include <Ethernet.h>
 #include <SPI.h>
+#include "plc_common.h"
+#include <MD5.h>
 
 /* PLC ID */
 #ifndef PLC_ID
@@ -28,6 +30,9 @@
 /* Timeout settings */
 #define PLC_TIMEOUT_MS (1000)
 #define PLC_TIMEOUT_DELAY_MS (1)
+
+/* Delays */
+#define PLC_LOG_INPUT_DELAY_MS (500)
 
 /* Server settings */
 #define PLC_SERVER {192, 185, 131, 113}
@@ -51,17 +56,6 @@ const char comm_closing = '}';
 /* Global ethernet client */
 EthernetClient client;
 
-/* Error codes */
-enum error_codes
-{
-  Ok = 0, ///< No error
-  Error, ///< Generic error
-  Error_disconnect, ///< Disconnect error
-  Error_connect, ///< Connect error
-	Error_timeout, ///< Timeout error
-	Error_inexistent, ///< PLC does not exist in server
-};
-
 /* Data types */
 enum data_types
 {
@@ -71,6 +65,35 @@ enum data_types
   type_long, ///< Long
   type_ulong, ///< Unsigned long
 };
+
+/* Check the integrity of a message using md5 checksum
+ *  
+ *  @return true if checksum is correct, false otherwise
+ */
+bool checkIntegrity()
+{
+  // Calculate md5
+  int l = str_buf.length() + 1; // Include null termination
+  char tmp[l];
+  str_buf.substring(0,str_buf.indexOf("md5")).toCharArray(tmp,l);
+  unsigned char* hash=MD5::make_hash(tmp);
+  char *md5str = MD5::make_digest(hash, 16);
+  String calculated_md5 = String(md5str);
+
+  // Obtain md5 from original string
+  int a = str_buf.indexOf("md5(");
+  if (a < 0) return false;
+  a += 4;
+
+  int b = str_buf.indexOf(")",a);
+  if (b < 0) return false;
+
+  String original_md5 = str_buf.substring(a,b);
+
+  bool eq = original_md5.equals(calculated_md5);
+
+  return eq;
+}
 
 /*  Get an array from str_buf
  *
@@ -226,25 +249,6 @@ uint8_t _post(String url, String params)
   return Ok;
 }
 
-/* Check if plc exists in database table
- * pepemanboy.com/plcmonitor/tabla_plcs.php
- * Args: plc_number = ID, operation = "exists"
- * Returns: exists(1 or 0)
- *
- * @param e placeholder for answer
- * @return error code
-*/
-uint8_t plcExists(bool * e)
-{
-  uint8_t r = _post("tabla_plcs.php","plc_number=" + String(PLC_ID) + "&operation=exists");
-  if (r != Ok)
-    return r;
-  if (checkErrors() != Ok)
-    return Error;
-  *e = str_buf.indexOf("exists(1)") != -1;
-  return Ok;
-}
-
 /* Get outputs
  * pepemanboy.com/plcmonitor/control_outputs.php
  * Args: plc_number = ID, operation = "get"
@@ -256,23 +260,39 @@ uint8_t plcExists(bool * e)
 */
 uint8_t getOutputs(bool * o)
 {
-	// Check if plc exists in the server
-	bool e = false;
-	uint8_t r = plcExists(&e);
-	if (r != Ok)
-		return r;
-	if (!e)
-		return Error_inexistent;
-
-	r = _post("control_outputs.php","plc_number=" + String(PLC_ID) + "&operation=get");
+	uint8_t r = _post("control_outputs.php","plc_number=" + String(PLC_ID) + "&operation=get");
   if (r != Ok)
     return r;
   if (checkErrors() != Ok)
     return Error;
+  if (!checkIntegrity())
+    return Error_checksum;
   uint8_t i = 0;
   for (i = 0; i < 6; i ++)
     o[i] = str_buf[String("digital_outputs(").length() + 2 * i] == '1';
   return Ok;
+}
+
+/* Set outputs
+ * pepemanboy.com/plcmonitor/control_outputs.php
+ * Args: plc_number = ID, operation = "set", do1 = 0, do2 = 1, ... , arduino = true
+ * Returns: error(OK)
+ *
+ * @param dout digital output array
+*/
+uint8_t setOutputs(bool * dout)
+{
+  str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&arduino=true&";
+  uint8_t i;
+  for(i = 0; i < 6; i ++)
+  {
+    str_buf += "do" + String(i+1) + "=" + String(dout[i]);
+    if(i != 5) str_buf += "&";
+  }
+  uint8_t r = _post("control_outputs.php", str_buf);  
+  if (checkErrors() != Ok)
+    return Error;
+  return r;
 }
 
 /* Set inputs
@@ -285,14 +305,6 @@ uint8_t getOutputs(bool * o)
 */
 uint8_t setInputs(bool * di, int * ai)
 {
-	// Check if plc exists in the server
-	bool e = false;
-	uint8_t r = plcExists(&e);
-	if (r != Ok)
-		return r;
-	if (!e)
-		return Error_inexistent;
-
   str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&";
   uint8_t i;
   for(i = 0; i < 6; i ++)
@@ -301,7 +313,7 @@ uint8_t setInputs(bool * di, int * ai)
     str_buf += "ai" + String(i+1) + "=" + String(ai[i]);
     if(i != 5) str_buf += "&";
   }
-	r = _post("control_inputs.php", str_buf);
+	uint8_t r = _post("control_inputs.php", str_buf);
   if (checkErrors() != Ok)
     return Error;
   return r;
@@ -318,16 +330,9 @@ uint8_t setInputs(bool * di, int * ai)
 */
 uint8_t logInput(uint8_t n, uint8_t type, float val)
 {
-	// Check if plc exists in the server
-	bool e = false;
-	uint8_t r = plcExists(&e);
-	if (r != Ok)
-		return r;
-	if (!e)
-		return Error_inexistent;
-
-  str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&signal_number=" + String(n) + "&signal_type=" + (type == 1 ? "di" : "ai") + "&value=" + String(val);
-	r = _post("viz_graph.php", str_buf);
+	str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&signal_number=" + String(n) + "&signal_type=" + (type == input_Analog ? "ai" : "di") + "&value=" + String(val);
+	uint8_t r = _post("viz_graph.php", str_buf);
+	delay(PLC_LOG_INPUT_DELAY_MS);
   if (checkErrors() != Ok)
     return Error;
   return r;
@@ -339,7 +344,9 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
  * Returns: n(), inputs(), thresholds(), updowns(), outputs(), notification_interval_s(), action_types(), delays_s()
  *
  * @param num
- * @param inputs
+ * @param inputs_types
+ * @param inputs_numbers
+ * @param ids
  * @param thresholds
  * @param updowns
  * @param outputs
@@ -348,21 +355,16 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
  * @param delays_S
  * @return error code
 */
-uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbers, float * thresholds, uint8_t * updowns, uint8_t * outputs, long * notification_interval_s, uint8_t * action_types, long * delays_s)
+uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbers, uint8_t * ids, float * thresholds, uint8_t * updowns, uint8_t * outputs, long * notification_interval_s, uint8_t * action_types, long * delays_s)
 {
-	// Check if plc exists in the server
-	bool e = false;
-	uint8_t r = plcExists(&e);
-	if (r != Ok)
-		return r;
-	if (!e)
-		return Error_inexistent;
-
-	r = _post("viz_action.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
+	uint8_t r = _post("viz_action.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
   if (r != Ok)
     return r;    
   if (checkErrors() != Ok)
     return Error;
+  if (!checkIntegrity())
+    return Error_checksum;
+
 
   // Get n
   int a = str_buf.indexOf("n(") + 2;
@@ -381,6 +383,11 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
    
   // Get inputs numbers
   r = _getArray(inputs_numbers,type_uint8,"inputs_numbers(",n);
+  if (r != Ok)
+    return r;
+
+  // Get ids
+  r = _getArray(inputs_numbers,type_uint8,"ids(",n);
   if (r != Ok)
     return r;
 
@@ -431,19 +438,14 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
 */
 uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
 {
-	// Check if plc exists in the server
-	bool e = false;
-	uint8_t r = plcExists(&e);
-	if (r != Ok)
-		return r;
-	if (!e)
-		return Error_inexistent;
-
-	r = _post("config_program.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
+	uint8_t r = _post("config_program.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
   if (r != Ok)
     return r;
   if (checkErrors() != Ok)
     return Error;
+  plcDebug(str_buf);
+  if (!checkIntegrity())
+    return Error_checksum;
   float float_buf[3];
   uint8_t i = 0;
   for(i = 0; i < 6; ++i)
@@ -471,7 +473,9 @@ uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
 */
 uint8_t initEthernet()
 {
+  plcDebug("Connecting to ethernet");
   Ethernet.begin(mac /*, ip*/); // Without IP, about 20 seconds. With IP, about 1 second.
+  plcDebug("Connected to ethernet. IP = " + Ethernet.localIP());
   return Ok;
 }
 
@@ -494,14 +498,6 @@ void testEthernet()
   Serial.println(str_buf);
   Serial.println();
   
-  // Check if plc exists
-  bool e = false;
-  Serial.println("Querying exists");
-  r = plcExists(&e);
-  Serial.println("Error = " + String(r));
-  Serial.println("Exists = " + String(e));
-  Serial.println();
-
   // Get outputs
   bool outputs[6];
   Serial.println("Getting outputs");
@@ -557,6 +553,7 @@ void testEthernet()
   uint8_t n;
   uint8_t inputs_types[MAX_ACTIONS];
   uint8_t inputs_numbers[MAX_ACTIONS];
+  uint8_t ids[MAX_ACTIONS];
   float thresholds[MAX_ACTIONS];
   uint8_t updowns[MAX_ACTIONS];
   uint8_t outputs2[MAX_ACTIONS];
@@ -564,7 +561,7 @@ void testEthernet()
   uint8_t action_types[MAX_ACTIONS];
   long delays_s[MAX_ACTIONS];
   Serial.println("Querying actions");
-  r = getActions(&n,inputs_types, inputs_numbers,thresholds,updowns,outputs2,notification_interval_s,action_types,delays_s);
+  r = getActions(&n,inputs_types, inputs_numbers,ids,thresholds,updowns,outputs2,notification_interval_s,action_types,delays_s);
   Serial.println("N = " + String(n));
   Serial.println("Error = " + String(r));
   for (i = 0; i < n; ++i)

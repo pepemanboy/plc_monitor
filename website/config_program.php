@@ -24,6 +24,12 @@ $r = connectToDatabase($link);
 if ($r != OK)
 	_exit($r, $link);
 
+// Check if plc exists
+$name = "";
+$r = findPlcById($link,$plc_number,$name);
+if ($r != OK)
+  _exit($r, $link);
+
 // Query table existent
 $exists = False;
 $r = tableExists($link, $table_name, $exists); 
@@ -201,11 +207,15 @@ else if ($operation == "get")
 		$row = mysqli_fetch_assoc($result);  
 		if (isset($_POST['arduino']))
 		{
+			$cs = "";
 			for ($i = 1; $i <= 6; $i ++)
 			{
-				echo("di" . $i . "(" . $row["di" . $i . "_freq"] . "," . $row["di" . $i . "_count"] . ")");
-				echo("ai" . $i . "(" . $row["ai" . $i . "_freq"] . "," . $row["ai" . $i . "_gain"] . "," . $row["ai" . $i . "_offs"] . ")"); 
+				echoChecksum($cs,"di" . $i . "(" . $row["di" . $i . "_freq"] . "," . $row["di" . $i . "_count"] . ")");
+				echoChecksum($cs,"ai" . $i . "(" . $row["ai" . $i . "_freq"] . "," . $row["ai" . $i . "_gain"] . "," . $row["ai" . $i . "_offs"] . ")"); 
 			}
+			// Calculate checksum
+			$md5 = hash('md5',$cs);
+			echo("md5(" . $md5 . ")");
 		} 
 		else
 		{
