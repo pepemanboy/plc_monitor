@@ -48,6 +48,7 @@ const uint8_t PORT = PLC_PORT;
 
 /* Global string buffer for comm */
 String str_buf;
+String str_buf_1;
 
 /* Communication protocol */
 const char comm_opening = '{';
@@ -65,6 +66,14 @@ enum data_types
   type_long, ///< Long
   type_ulong, ///< Unsigned long
 };
+
+/* Mantain ethernet connection */
+uint8_t ethernetMaintain()
+{
+  uint8_t r = Ethernet.maintain();
+  plcDebug("Maintain = " + String(r));
+  return r; 
+}
 
 /* Check the integrity of a message using md5 checksum
  *  
@@ -242,9 +251,7 @@ uint8_t _post(String url, String params)
       str_buf += c;
     }
   }*/
-
-  // Read raw text from request
-  String str_buf_1 = "";
+  
   while (client.available())
   {
     // Read character
@@ -287,7 +294,7 @@ uint8_t _post(String url, String params)
 
   // Disconnect
   client.stop();
-  delay(100);
+  delay(1000);
   return Ok;
 }
 

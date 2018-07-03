@@ -552,7 +552,7 @@ uint8_t _updateActions()
         if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].permanent_triggered)
         {
           _plcDigitalWrite(output, HIGH);
-          _plcSendOutputs();
+          r |= _plcSendOutputs();
           plcDevice.actions[i].permanent_triggered = true;
         }
         break;
@@ -560,13 +560,13 @@ uint8_t _updateActions()
         if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].event_triggered)
         {
           _plcDigitalWrite(output,HIGH);
-          _plcSendOutputs();
+          r |= _plcSendOutputs();
           plcDevice.actions[i].event_triggered = true;
         }
         else if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].event_triggered)
         {
           _plcDigitalWrite(output,LOW);
-          _plcSendOutputs();
+          r |= _plcSendOutputs();
           plcDevice.actions[i].event_triggered = false;
         }
         break;
@@ -576,7 +576,7 @@ uint8_t _updateActions()
           plcDebug("Writing high");
           plcDevice.actions[i].delay_triggered = true;
           _plcDigitalWrite(output, HIGH);
-          _plcSendOutputs();
+          r |= _plcSendOutputs();
           plcDevice.actions[i].delay_elapsed_ms = 0;            
         }
         if (!plcDevice.actions[i].delay_finished && plcDevice.actions[i].delay_triggered && (plcDevice.actions[i].delay_elapsed_ms > plcDevice.actions[i].delay_ms))
@@ -584,7 +584,7 @@ uint8_t _updateActions()
           plcDebug("Finished = " + String(plcDevice.actions[i].delay_finished) + " Triggered = " + String(plcDevice.actions[i].delay_triggered));
           plcDebug("Writing low");
           _plcDigitalWrite(output, LOW);
-          _plcSendOutputs();
+          r |= _plcSendOutputs();
           plcDevice.actions[i].delay_finished = true;
         }    
         if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].delay_finished)
@@ -608,9 +608,10 @@ uint8_t _updateActions()
 /* Update plc */
 void updatePlc()
 {
+  ethernetMaintain();
   _updateTimestamps();
 	_updateIo();
-	_updateActions();
+	// _updateActions();
 	_logInputs();
   _printPlcDevice(); 
 }

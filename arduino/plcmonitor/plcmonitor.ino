@@ -5,8 +5,9 @@ void setup() {
   Serial.begin(115200);
   // testEthernet();
   // testMonitor();
-  // _plcDeviceInit();
-  
+  // _plcDeviceInit();  
+  str_buf.reserve(500);
+  str_buf_1.reserve(500);
 }
 
 void loop() {
