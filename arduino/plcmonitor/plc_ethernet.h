@@ -46,13 +46,12 @@ const byte ip[] = PLC_IP; // IP fija del Arduino. Ver Ip de computadora en red. 
 const byte SERVER[] = PLC_SERVER; // 20x faster to use ip than name.
 const uint8_t PORT = PLC_PORT;
 
-/* Global string buffer for comm */
-String str_buf;
-String str_buf_1;
-
 /* Communication protocol */
 const char comm_opening = '{';
 const char comm_closing = '}';
+
+/* Buffer size */
+#define STR_BUFFER_SIZE 500
 
 /* Global ethernet client */
 EthernetClient client;
@@ -70,7 +69,7 @@ enum data_types
 /* Mantain ethernet connection */
 uint8_t ethernetMaintain()
 {
-  uint8_t r = Ethernet.maintain();
+  uint8_t r = Ethernet.begin(mac);
   plcDebug("Maintain = " + String(r));
   return r; 
 }
@@ -79,7 +78,7 @@ uint8_t ethernetMaintain()
  *  
  *  @return true if checksum is correct, false otherwise
  */
-bool checkIntegrity()
+bool checkIntegrity(const String str_buf)
 {
   // Calculate md5
   int l = str_buf.length() + 1; // Include null termination
@@ -112,7 +111,7 @@ bool checkIntegrity()
  *  @param n number of elements
  *  @return error code
  */
-uint8_t _getArray(void * arr, uint8_t type, String key, uint8_t n)
+uint8_t _getArray(const String str_buf, void * arr, uint8_t type, String key, uint8_t n)
 {
   int a,b;
   b = str_buf.indexOf(key);
@@ -175,7 +174,7 @@ uint8_t _waitClientDisconnect()
 
 /* Check for errors in response
  */
-uint8_t checkErrors()
+uint8_t checkErrors(const String str_buf)
 {
   return str_buf.indexOf("error(OK)") >= 0 ? Ok : Error;
 }
@@ -193,7 +192,7 @@ bool isHex(char x)
  * @param params POST arguments
  * @return error code
 */
-uint8_t _post(String url, String params)
+uint8_t _post(String * str_buf, String url, String params)
 {
   // Connect to server
   uint8_t r = client.connect(SERVER, PORT);
@@ -204,15 +203,15 @@ uint8_t _post(String url, String params)
   }
 
   // Send request
-  client.print("POST /plcmonitor/");
+  client.print(F("POST /plcmonitor/"));
   client.print(url);
-  client.println(" HTTP/1.1");
-  client.println("Host: www.pepemanboy.com");
-  client.println("User-Agent: Arduino/1.0");
-  client.println("Connection: close");
-  client.println("Content-Type: application/x-www-form-urlencoded;");
-  client.println("Authorization: Basic cGVwZW1hbmJveTpwZXBlMTk5NSo="); // Base 64 encoded user:pass
-  client.print("Content-Length: ");
+  client.println(F(" HTTP/1.1"));
+  client.println(F("Host: www.pepemanboy.com"));
+  client.println(F("User-Agent: Arduino/1.0"));
+  client.println(F("Connection: close"));
+  client.println(F("Content-Type: application/x-www-form-urlencoded;"));
+  client.println(F("Authorization: Basic cGVwZW1hbmJveTpwZXBlMTk5NSo=")); // Base 64 encoded user:pass
+  client.print(F("Content-Length: "));
   client.println(params.length());
   client.println();
   client.println(params);
@@ -227,7 +226,7 @@ uint8_t _post(String url, String params)
   }
 
   // Read response
-  str_buf = "";
+  *str_buf = "";
   /*  
   bool start = false;
   while (client.available()) {
@@ -251,13 +250,32 @@ uint8_t _post(String url, String params)
       str_buf += c;
     }
   }*/
-  
+
+  String str_buf_1 = "";
+  /*
   while (client.available())
   {
     // Read character
     char c = client.read();
     str_buf_1 += c;
+  }*/
+
+  Serial.println(F("------RAW------"));
+  while (client.connected())
+  {
+    while (client.available())
+    {
+      char c = client.read();
+      Serial.print(c);
+      str_buf_1 += c;
+    }
   }
+  Serial.println(F("---------------"));
+
+  str_buf_1 += '%';
+  Serial.println(F("------------PROCESADO---------"));
+  Serial.println(str_buf_1);
+  Serial.println(F("--------------"));
 
   // Search for message
   int a,b,n;
@@ -277,12 +295,16 @@ uint8_t _post(String url, String params)
     // Extract line of text
     a = str_buf_1.indexOf("\r\n",b) + 2;
     b = str_buf_1.indexOf("\r\n",a);
-    str_buf += str_buf_1.substring(a,b);
+    *str_buf += str_buf_1.substring(a,b);
     b = b + 2;
   }
 
   // Remove opening and closing braces
-  str_buf = str_buf.substring(1,str_buf.length()-1);
+  *str_buf = str_buf->substring(1,str_buf->length()-1);
+
+  Serial.println(F("------------FINAL---------"));
+  Serial.println(*str_buf);
+  Serial.println(F("--------------"));
 
   // Wait for server to terminate
   r = _waitClientDisconnect();
@@ -294,14 +316,14 @@ uint8_t _post(String url, String params)
 
   // Disconnect
   client.stop();
-  delay(1000);
+  delay(100);
   return Ok;
 }
 
 /* Get outputs
  * pepemanboy.com/plcmonitor/control_outputs.php
  * Args: plc_number = ID, operation = "get"
- * Returns: digiif (checkErrors() != Ok)
+ * Returns: digiif (checkErrors(str_buf) != Ok)
     return Error;tal_outputs(0,0,0,0,0,0,0)
  *
  * @param e placeholder for outputs array
@@ -309,12 +331,14 @@ uint8_t _post(String url, String params)
 */
 uint8_t getOutputs(bool * o)
 {
-	uint8_t r = _post("control_outputs.php","plc_number=" + String(PLC_ID) + "&operation=get");
+  String str_buf;
+  str_buf.reserve(STR_BUFFER_SIZE);
+	uint8_t r = _post(&str_buf, "control_outputs.php","plc_number=" + String(PLC_ID) + "&operation=get");
   if (r != Ok)
     return r;
-  if (checkErrors() != Ok)
+  if (checkErrors(str_buf) != Ok)
     return Error;
-  if (!checkIntegrity())
+  if (!checkIntegrity(str_buf))
     return Error_checksum;
   uint8_t i = 0;
   for (i = 0; i < 6; i ++)
@@ -331,6 +355,8 @@ uint8_t getOutputs(bool * o)
 */
 uint8_t setOutputs(bool * dout)
 {
+  String str_buf;
+  str_buf.reserve(STR_BUFFER_SIZE);
   str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&arduino=true&";
   uint8_t i;
   for(i = 0; i < 6; i ++)
@@ -338,8 +364,8 @@ uint8_t setOutputs(bool * dout)
     str_buf += "do" + String(i+1) + "=" + String(dout[i]);
     if(i != 5) str_buf += "&";
   }
-  uint8_t r = _post("control_outputs.php", str_buf);  
-  if (checkErrors() != Ok)
+  uint8_t r = _post(&str_buf, "control_outputs.php", str_buf);  
+  if (checkErrors(str_buf) != Ok)
     return Error;
   return r;
 }
@@ -354,6 +380,8 @@ uint8_t setOutputs(bool * dout)
 */
 uint8_t setInputs(bool * di, int * ai)
 {
+  String str_buf;
+  str_buf.reserve(STR_BUFFER_SIZE);
   str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&";
   uint8_t i;
   for(i = 0; i < 6; i ++)
@@ -362,8 +390,8 @@ uint8_t setInputs(bool * di, int * ai)
     str_buf += "ai" + String(i+1) + "=" + String(ai[i]);
     if(i != 5) str_buf += "&";
   }
-	uint8_t r = _post("control_inputs.php", str_buf);
-  if (checkErrors() != Ok)
+	uint8_t r = _post(&str_buf, "control_inputs.php", str_buf);
+  if (checkErrors(str_buf) != Ok)
     return Error;
   return r;
 }
@@ -379,10 +407,12 @@ uint8_t setInputs(bool * di, int * ai)
 */
 uint8_t logInput(uint8_t n, uint8_t type, float val)
 {
+  String str_buf;
+  str_buf.reserve(STR_BUFFER_SIZE);
 	str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&signal_number=" + String(n) + "&signal_type=" + (type == input_Analog ? "ai" : "di") + "&value=" + String(val);
-	uint8_t r = _post("viz_graph.php", str_buf);
+	uint8_t r = _post(&str_buf, "viz_graph.php", str_buf);
 	delay(PLC_LOG_INPUT_DELAY_MS);
-  if (checkErrors() != Ok)
+  if (checkErrors(str_buf) != Ok)
     return Error;
   return r;
 }
@@ -406,13 +436,15 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
 */
 uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbers, uint8_t * ids, float * thresholds, uint8_t * updowns, uint8_t * outputs, long * notification_interval_s, uint8_t * action_types, long * delays_s)
 {
-	uint8_t r = _post("viz_action.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
+  String str_buf;
+  str_buf.reserve(STR_BUFFER_SIZE);
+	uint8_t r = _post(&str_buf, "viz_action.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
   if (r != Ok)
     return r;    
   plcDebug(str_buf);
-  if (checkErrors() != Ok)
+  if (checkErrors(str_buf) != Ok)
     return Error;
-  if (!checkIntegrity())
+  if (!checkIntegrity(str_buf))
     return Error_checksum;
 
 
@@ -427,47 +459,47 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
   *num = n;
   
   // Get inputs types
-  r = _getArray(inputs_types,type_uint8,"inputs_types(",n);
+  r = _getArray(str_buf, inputs_types,type_uint8,"inputs_types(",n);
   if (r != Ok)
     return r;
    
   // Get inputs numbers
-  r = _getArray(inputs_numbers,type_uint8,"inputs_numbers(",n);
+  r = _getArray(str_buf, inputs_numbers,type_uint8,"inputs_numbers(",n);
   if (r != Ok)
     return r;
 
   // Get ids
-  r = _getArray(ids,type_uint8,"ids(",n);
+  r = _getArray(str_buf, ids,type_uint8,"ids(",n);
   if (r != Ok)
     return r;
 
   // Get thresholds
-  r = _getArray(thresholds,type_float,"thresholds(",n);
+  r = _getArray(str_buf, thresholds,type_float,"thresholds(",n);
   if (r != Ok)
     return r;
 
   // Get updowns
-  r = _getArray(updowns,type_uint8,"updowns(",n);
+  r = _getArray(str_buf, updowns,type_uint8,"updowns(",n);
   if (r != Ok)
     return r;
 
   // Get outputs
-  r = _getArray(outputs,type_uint8,"outputs(",n);
+  r = _getArray(str_buf, outputs,type_uint8,"outputs(",n);
   if (r != Ok)
     return r;
 
   // Get notification interval
-  r = _getArray(notification_interval_s,type_long,"notification_intervals_s(",n);
+  r = _getArray(str_buf, notification_interval_s,type_long,"notification_intervals_s(",n);
   if (r != Ok)
     return r;
 
   // Get action types
-  r = _getArray(action_types,type_uint8,"action_types(",n);
+  r = _getArray(str_buf, action_types,type_uint8,"action_types(",n);
   if (r != Ok)
     return r;
 
   // Get delays
-  r = _getArray(delays_s,type_long,"delays_s(",n);
+  r = _getArray(str_buf, delays_s,type_long,"delays_s(",n);
   if (r != Ok)
     return r;
 
@@ -488,24 +520,26 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
 */
 uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
 {
-	uint8_t r = _post("config_program.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
+  String str_buf;
+  str_buf.reserve(STR_BUFFER_SIZE);
+	uint8_t r = _post(&str_buf,"config_program.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
   if (r != Ok)
     return r;
-  if (checkErrors() != Ok)
+  if (checkErrors(str_buf) != Ok)
     return Error;
-  if (!checkIntegrity())
+  if (!checkIntegrity(str_buf))
     return Error_checksum;
   float float_buf[3];
   uint8_t i = 0;
   for(i = 0; i < 6; ++i)
   {
-    r = _getArray(float_buf,type_float,"di" + String(i + 1) + "(",2);
+    r = _getArray(str_buf, float_buf,type_float,"di" + String(i + 1) + "(",2);
     if (r != Ok)
       return r;
     dif[i] = float_buf[0];
     dic[i] = float_buf[1];
 
-    r = _getArray(float_buf,type_float,"ai" + String(i + 1) + "(",3);
+    r = _getArray(str_buf, float_buf,type_float,"ai" + String(i + 1) + "(",3);
     if (r != Ok)
       return r;
     aif[i] = float_buf[0];
@@ -522,6 +556,9 @@ uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
 */
 uint8_t initEthernet()
 {
+  // Disable SD
+  pinMode(4,OUTPUT);
+  digitalWrite(4,HIGH);
   plcDebug("Connecting to ethernet");
   Ethernet.begin(mac /*, ip*/); // Without IP, about 20 seconds. With IP, about 1 second.
   plcDebug("Connected to ethernet. IP = " + Ethernet.localIP());
@@ -529,6 +566,7 @@ uint8_t initEthernet()
 }
 
 /* Test */
+/*
 void testEthernet()
 {  
   uint8_t i = 0;
@@ -625,6 +663,6 @@ void testEthernet()
     Serial.println(" d = " + String(delays_s[i]));
   }
 	Serial.println();
-}
+}*/
 
 #endif // PLC_ETHERNET_H

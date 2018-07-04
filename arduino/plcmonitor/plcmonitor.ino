@@ -6,8 +6,6 @@ void setup() {
   // testEthernet();
   // testMonitor();
   // _plcDeviceInit();  
-  str_buf.reserve(500);
-  str_buf_1.reserve(500);
 }
 
 void loop() {
