@@ -9,6 +9,7 @@
 
 #include <Ethernet.h>
 #include <SPI.h>
+#include <string.h>
 #include "plc_common.h"
 #include <MD5.h>
 
@@ -18,9 +19,11 @@
 #endif // PLC_ID
 
 /* Device IP */
+/*
 #ifndef PLC_IP
 #error PLEASE DEFINE "PLC_IP" BEFORE INCLUDING PLC_ETHERNET.H
 #endif // IP
+*/
 
 /* MAC ADDRESS */
 #ifndef PLC_MAC
@@ -52,6 +55,13 @@ const char comm_closing = '}';
 
 /* Buffer size */
 #define STR_BUFFER_SIZE 500
+#define CHAR_BUFFER_SIZE 500
+
+/* Packet header end */
+char * header_end = "Connection: close";
+
+/* Global char buffer */
+char g_buf[CHAR_BUFFER_SIZE];
 
 /* Global ethernet client */
 EthernetClient client;
@@ -69,38 +79,13 @@ enum data_types
 /* Mantain ethernet connection */
 uint8_t ethernetMaintain()
 {
-  uint8_t r = Ethernet.begin(mac);
-  plcDebug("Maintain = " + String(r));
+  uint8_t r = Ethernet.maintain();
   return r; 
 }
 
-/* Check the integrity of a message using md5 checksum
- *  
- *  @return true if checksum is correct, false otherwise
- */
-bool checkIntegrity(const String str_buf)
+bool checkIntegrity()
 {
-  // Calculate md5
-  int l = str_buf.length() + 1; // Include null termination
-  char tmp[l];
-  str_buf.substring(0,str_buf.indexOf("md5")).toCharArray(tmp,l);
-  unsigned char* hash=MD5::make_hash(tmp);
-  char *md5str = MD5::make_digest(hash, 16);
-  String calculated_md5 = String(md5str);
-
-  // Obtain md5 from original string
-  int a = str_buf.indexOf("md5(");
-  if (a < 0) return false;
-  a += 4;
-
-  int b = str_buf.indexOf(")",a);
-  if (b < 0) return false;
-
-  String original_md5 = str_buf.substring(a,b);
-
-  bool eq = original_md5.equals(calculated_md5);
-
-  return eq;
+  return true;
 }
 
 /*  Get an array from str_buf
@@ -111,13 +96,14 @@ bool checkIntegrity(const String str_buf)
  *  @param n number of elements
  *  @return error code
  */
-uint8_t _getArray(const String str_buf, void * arr, uint8_t type, String key, uint8_t n)
+uint8_t _getArray(void * arr, uint8_t type, const char * key, uint8_t n)
 {
+  String str_buf = String(g_buf);
   int a,b;
   b = str_buf.indexOf(key);
   if (b < 0)
     return Error;
-  a = b + key.length();
+  a = b + strlen(key);
   uint8_t i;
   for(i = 0; i < n; ++i)
   {
@@ -174,9 +160,9 @@ uint8_t _waitClientDisconnect()
 
 /* Check for errors in response
  */
-uint8_t checkErrors(const String str_buf)
+uint8_t checkErrors()
 {
-  return str_buf.indexOf("error(OK)") >= 0 ? Ok : Error;
+  return strstr(g_buf,"error(OK)") ? Ok : Error;
 }
 
 /* Check if character is hex
@@ -192,7 +178,7 @@ bool isHex(char x)
  * @param params POST arguments
  * @return error code
 */
-uint8_t _post(String * str_buf, String url, String params)
+uint8_t _post(const char * url, const char * params)
 {
   // Connect to server
   uint8_t r = client.connect(SERVER, PORT);
@@ -212,7 +198,7 @@ uint8_t _post(String * str_buf, String url, String params)
   client.println(F("Content-Type: application/x-www-form-urlencoded;"));
   client.println(F("Authorization: Basic cGVwZW1hbmJveTpwZXBlMTk5NSo=")); // Base 64 encoded user:pass
   client.print(F("Content-Length: "));
-  client.println(params.length());
+  client.println(strlen(params));
   client.println();
   client.println(params);
   client.flush();
@@ -225,86 +211,92 @@ uint8_t _post(String * str_buf, String url, String params)
     return r;
   }
 
-  // Read response
-  *str_buf = "";
-  /*  
-  bool start = false;
-  while (client.available()) {
-    // Read character
-    char c = client.read();
-    //Serial.print(c);
-    // Pre-message
-    if(!start)
-    {
-      if(c == comm_opening)
-        start = true;
-    }
-    // Message
-    else
-    {
-      if (c == comm_closing)
-      {
-        start = false;
-        continue; // Message ends
-      }
-      str_buf += c;
-    }
-  }*/
+  // Buffer to store response
+  char char_buf[CHAR_BUFFER_SIZE] = "";
 
-  String str_buf_1 = "";
-  /*
-  while (client.available())
-  {
-    // Read character
-    char c = client.read();
-    str_buf_1 += c;
-  }*/
-
-  Serial.println(F("------RAW------"));
   while (client.connected())
   {
     while (client.available())
     {
       char c = client.read();
-      Serial.print(c);
-      str_buf_1 += c;
+      strcat_c(char_buf,c);
     }
   }
-  Serial.println(F("---------------"));
+  
+  char b_[500] = "";  
+  char * c_;
 
-  str_buf_1 += '%';
-  Serial.println(F("------------PROCESADO---------"));
-  Serial.println(str_buf_1);
-  Serial.println(F("--------------"));
-
-  // Search for message
-  int a,b,n;
-  const String header_end = "Connection: close";
-  a = str_buf_1.indexOf(header_end) + header_end.length();
-  for (b = a ; b < str_buf_1.length(); b ++)
-    if (isHex(str_buf_1.charAt(b))) break;
-
-  while(true)
+  if(strstr(char_buf,"Transfer-Encoding: chunked"))
   {
-    // Extract number of following bytes
-    String n_str = str_buf_1.substring(b, str_buf_1.indexOf("\r\n",b));
-    char n_char[n_str.length() + 1];
-    n_str.toCharArray(n_char, n_str.length() + 1);
-    n = strtol(n_char,0,16);
-    if(n == 0) break;
-    // Extract line of text
-    a = str_buf_1.indexOf("\r\n",b) + 2;
-    b = str_buf_1.indexOf("\r\n",a);
-    *str_buf += str_buf_1.substring(a,b);
-    b = b + 2;
+    char n_[4] = "";
+    int nb;
+    int i = 0;
+
+    char *a_;
+    a_ = strstr(char_buf,"Connection: close") + 17;
+    while(!isHex(*a_))
+      a_++;
+    
+    while(true)
+    {
+      // Initialize n_
+      memset(n_,0,4);
+        
+      // Number of following bytes
+      while(*a_ != '\r')
+      {
+        strcat_c(n_,*a_);
+        if (++i > 500)
+        {
+          client.stop();
+          return Error;
+        }
+        a_++;
+      }
+      
+      nb = strtol(n_,0,16);
+      if (nb == 0) break;
+      
+      // Extract line of text    
+      a_+=2;
+      while(*a_ != '\r')
+      {
+        strcat_c(b_,*a_);      
+        if (++i > 500)
+        {
+          client.stop();
+          return Error;
+        }
+        a_++;
+      }
+      a_+=2;    
+    }
+    // Remove opening and closing braces
+    c_ = b_;  
+    c_++;
+    c_[strlen(c_)-1] = '\0';
+  }
+  else // Not chunked
+  {
+    char * p = strstr(char_buf,"{");
+    if (!p)
+    {
+      client.stop();      
+      return Error_chunked;
+    }
+    p++;
+    p = strtok(p,"}");
+    if (!p)
+    {
+      client.stop();
+      return Error_chunked;
+    }
+    strcat(b_,p);
+    memset(p+strlen(p),'}',1); // Restore token  
+    c_ = b_;
   }
 
-  // Remove opening and closing braces
-  *str_buf = str_buf->substring(1,str_buf->length()-1);
-
-  Serial.println(F("------------FINAL---------"));
-  Serial.println(*str_buf);
-  Serial.println(F("--------------"));
+  memcpy(g_buf,c_,strlen(c_));
 
   // Wait for server to terminate
   r = _waitClientDisconnect();
@@ -331,18 +323,27 @@ uint8_t _post(String * str_buf, String url, String params)
 */
 uint8_t getOutputs(bool * o)
 {
-  String str_buf;
-  str_buf.reserve(STR_BUFFER_SIZE);
-	uint8_t r = _post(&str_buf, "control_outputs.php","plc_number=" + String(PLC_ID) + "&operation=get");
+  char q [CHAR_BUFFER_SIZE] = "";
+  sprintf(q,"plc_number=%d&operation=get",PLC_ID);
+	uint8_t r = _post("control_outputs.php",q);
   if (r != Ok)
     return r;
-  if (checkErrors(str_buf) != Ok)
+  if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity(str_buf))
+  if (!checkIntegrity())
     return Error_checksum;
-  uint8_t i = 0;
-  for (i = 0; i < 6; i ++)
-    o[i] = str_buf[String("digital_outputs(").length() + 2 * i] == '1';
+    
+  char * p;
+  p = strstr(g_buf,"digital_outputs(");
+  if (!p)
+    return Error;
+    
+  p += strlen("digital_outputs(");
+  for (uint8_t i = 0; i < 6; i ++)
+  {
+    o[i] = *p == '1';
+    if (i < 5) p += 2;
+  }
   return Ok;
 }
 
@@ -355,17 +356,16 @@ uint8_t getOutputs(bool * o)
 */
 uint8_t setOutputs(bool * dout)
 {
-  String str_buf;
-  str_buf.reserve(STR_BUFFER_SIZE);
-  str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&arduino=true&";
-  uint8_t i;
-  for(i = 0; i < 6; i ++)
+  char p [CHAR_BUFFER_SIZE] = "";
+  sprintf(p,"plc_number=%d&operation=set&arduino=true&",PLC_ID);
+  
+  for(uint8_t i = 0; i < 6; i ++)
   {
-    str_buf += "do" + String(i+1) + "=" + String(dout[i]);
-    if(i != 5) str_buf += "&";
+    sprintf(p+strlen(p),"do%d=%d",i+1,dout[i] ? 1 : 0);
+    if(i != 5) strcat(p,"&");
   }
-  uint8_t r = _post(&str_buf, "control_outputs.php", str_buf);  
-  if (checkErrors(str_buf) != Ok)
+  uint8_t r = _post("control_outputs.php", p);  
+  if (checkErrors() != Ok)
     return Error;
   return r;
 }
@@ -380,18 +380,15 @@ uint8_t setOutputs(bool * dout)
 */
 uint8_t setInputs(bool * di, int * ai)
 {
-  String str_buf;
-  str_buf.reserve(STR_BUFFER_SIZE);
-  str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&";
-  uint8_t i;
-  for(i = 0; i < 6; i ++)
+  char p[CHAR_BUFFER_SIZE];
+  sprintf(p,"plc_number=%d&operation=set&",PLC_ID);
+  for(uint8_t i = 0; i < 6; i ++)
   {
-    str_buf += "di" + String(i+1) + "=" + String(di[i]) + "&";
-    str_buf += "ai" + String(i+1) + "=" + String(ai[i]);
-    if(i != 5) str_buf += "&";
+    sprintf(p+strlen(p),"di%d=%d&ai%d=%d",i+1,di[i],i+1,ai[i]);
+    if(i != 5) strcat(p,"&");
   }
-	uint8_t r = _post(&str_buf, "control_inputs.php", str_buf);
-  if (checkErrors(str_buf) != Ok)
+	uint8_t r = _post("control_inputs.php", p);
+  if (checkErrors() != Ok)
     return Error;
   return r;
 }
@@ -407,12 +404,14 @@ uint8_t setInputs(bool * di, int * ai)
 */
 uint8_t logInput(uint8_t n, uint8_t type, float val)
 {
-  String str_buf;
-  str_buf.reserve(STR_BUFFER_SIZE);
-	str_buf = "plc_number=" + String(PLC_ID) + "&operation=set&signal_number=" + String(n) + "&signal_type=" + (type == input_Analog ? "ai" : "di") + "&value=" + String(val);
-	uint8_t r = _post(&str_buf, "viz_graph.php", str_buf);
+  char p[CHAR_BUFFER_SIZE] = "";
+  sprintf(p,"plc_number=%d&operation=set&signal_number=%d&signal_type=",PLC_ID,n);
+  strcat(p,type == input_Analog ? "ai" : "di");
+  strcat(p,"&value=");
+  dtostrf(val,3,2,p+strlen(p));
+	uint8_t r = _post("viz_graph.php", p);
 	delay(PLC_LOG_INPUT_DELAY_MS);
-  if (checkErrors(str_buf) != Ok)
+  if (checkErrors() != Ok)
     return Error;
   return r;
 }
@@ -436,70 +435,71 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
 */
 uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbers, uint8_t * ids, float * thresholds, uint8_t * updowns, uint8_t * outputs, long * notification_interval_s, uint8_t * action_types, long * delays_s)
 {
-  String str_buf;
-  str_buf.reserve(STR_BUFFER_SIZE);
-	uint8_t r = _post(&str_buf, "viz_action.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
+  char q [CHAR_BUFFER_SIZE] = "";
+  sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
+	uint8_t r = _post("viz_action.php",q);
   if (r != Ok)
-    return r;    
-  plcDebug(str_buf);
-  if (checkErrors(str_buf) != Ok)
+    return r;  
+  if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity(str_buf))
+  if (!checkIntegrity())
     return Error_checksum;
 
-
   // Get n
-  int a = str_buf.indexOf("n(") + 2;
-  if (a < 0)
+  char * p;
+  p = strstr(g_buf,"n(");
+  if (!p) 
     return Error;
-  int b = str_buf.indexOf(")", a);
-  if (b < 0)
+  p += strlen("n(");
+  p = strtok(p,")");
+  if (!p)
     return Error;
-  int n = str_buf.substring(a,b).toInt();
+  int n = strtol(p,0,10);  
+  memset(p+strlen(p),')',1); // Restore strtok
   *num = n;
   
   // Get inputs types
-  r = _getArray(str_buf, inputs_types,type_uint8,"inputs_types(",n);
+  r = _getArray(inputs_types,type_uint8,"inputs_types(",n);
   if (r != Ok)
     return r;
    
   // Get inputs numbers
-  r = _getArray(str_buf, inputs_numbers,type_uint8,"inputs_numbers(",n);
+  r = _getArray(inputs_numbers,type_uint8,"inputs_numbers(",n);
   if (r != Ok)
     return r;
 
   // Get ids
-  r = _getArray(str_buf, ids,type_uint8,"ids(",n);
+  r = _getArray(ids,type_uint8,"ids(",n);
   if (r != Ok)
     return r;
 
   // Get thresholds
-  r = _getArray(str_buf, thresholds,type_float,"thresholds(",n);
+  r = _getArray(thresholds,type_float,"thresholds(",n);
   if (r != Ok)
     return r;
 
   // Get updowns
-  r = _getArray(str_buf, updowns,type_uint8,"updowns(",n);
+  r = _getArray(updowns,type_uint8,"updowns(",n);
   if (r != Ok)
     return r;
 
   // Get outputs
-  r = _getArray(str_buf, outputs,type_uint8,"outputs(",n);
+  r = _getArray(outputs,type_uint8,"outputs(",n);
   if (r != Ok)
     return r;
 
   // Get notification interval
-  r = _getArray(str_buf, notification_interval_s,type_long,"notification_intervals_s(",n);
+  r = _getArray(notification_interval_s,type_long,"notification_intervals_s(",n);
   if (r != Ok)
     return r;
 
   // Get action types
-  r = _getArray(str_buf, action_types,type_uint8,"action_types(",n);
+  r = _getArray(action_types,type_uint8,"action_types(",n);
   if (r != Ok)
     return r;
 
   // Get delays
-  r = _getArray(str_buf, delays_s,type_long,"delays_s(",n);
+  r = _getArray(delays_s,type_long,"delays_s(",n);
   if (r != Ok)
     return r;
 
@@ -520,26 +520,30 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
 */
 uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
 {
-  String str_buf;
-  str_buf.reserve(STR_BUFFER_SIZE);
-	uint8_t r = _post(&str_buf,"config_program.php","plc_number=" + String(PLC_ID) + "&operation=get&arduino=true");
+  char q [CHAR_BUFFER_SIZE];
+  sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
+	uint8_t r = _post("config_program.php",q);
   if (r != Ok)
     return r;
-  if (checkErrors(str_buf) != Ok)
+  if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity(str_buf))
+  if (!checkIntegrity())
     return Error_checksum;
   float float_buf[3];
   uint8_t i = 0;
   for(i = 0; i < 6; ++i)
   {
-    r = _getArray(str_buf, float_buf,type_float,"di" + String(i + 1) + "(",2);
+    memcpy(q,0,sizeof(q));
+    sprintf(q,"di%d(",i+1);
+    r = _getArray(float_buf,type_float,q,2);
     if (r != Ok)
       return r;
     dif[i] = float_buf[0];
     dic[i] = float_buf[1];
 
-    r = _getArray(str_buf, float_buf,type_float,"ai" + String(i + 1) + "(",3);
+    memcpy(q,0,sizeof(q));
+    sprintf(q,"ai%d(",i+1);
+    r = _getArray(float_buf,type_float,q,3);
     if (r != Ok)
       return r;
     aif[i] = float_buf[0];
@@ -561,7 +565,7 @@ uint8_t initEthernet()
   digitalWrite(4,HIGH);
   plcDebug("Connecting to ethernet");
   Ethernet.begin(mac /*, ip*/); // Without IP, about 20 seconds. With IP, about 1 second.
-  plcDebug("Connected to ethernet. IP = " + Ethernet.localIP());
+  plcDebug("Connected to ethernet.");
   return Ok;
 }
 

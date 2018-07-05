@@ -1,6 +1,8 @@
 #ifndef PLC_MONITOR_H
 #define PLC_MONITOR_H
 
+#include <plcshield.h>
+
 /*
  * PLC Monitor structures and actions
  *
@@ -12,9 +14,9 @@ float test_di[6];
 float test_ai[6];
 
 /* Ethernet connection configuration */
-#define PLC_ID 1
 #define PLC_IP { 192, 168, 100, 79 }
-#define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, 0x19 }
+#define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
+
 #include "plc_common.h"
 #include "plc_ethernet.h"
 
@@ -126,9 +128,18 @@ void _initPlcMonitor()
 {
   if(!plcDevice.initialized)
   {
+    plc_setup();  
+    plc_lcd.noBlink(); // Cursor does not blink  
+    plc_lcd.noCursor(); // Hide cursor
+    plc_lcd.clear(); // Clear the screen
+    plc_lcd.setCursor(0,0);
+    plc_lcd.print("PLC Monitor");
+    plc_lcd.setCursor(0,1);
+    plc_lcd.print("Connecting...");
+    Serial.begin(115200);
     _plcDeviceInit();
     initEthernet();
-    plcDevice.initialized = true;
+    plcDevice.initialized = true;    
   }
 }
 
@@ -152,8 +163,10 @@ uint8_t _plcGetConfig()
 	for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i++)
 	{
 		plcDevice.din[i].log_period_ms = di_freq[i] * 1000;
+    uint8_t previous_type = plcDevice.din[i].type;
 		plcDevice.din[i].type = di_count[i] ? input_Counter : input_Digital;
-
+    if (plcDevice.din[i].type == input_Counter && previous_type != input_Counter)
+      plcDevice.din[i].value = 0;
 		plcDevice.ain[i].log_period_ms = ai_freq[i] * 1000;
 		plcDevice.ain[i].gof = {ai_gain[i], ai_offs[i]};
 	}
@@ -402,18 +415,21 @@ void _printPlcDevice()
 /* Digital read */
 uint8_t _plcDigitalRead(uint8_t d)
 {
-	return test_di[d];
+  return plc_digitalRead(d+1);
+	/*return test_di[d];*/
 }
 
 /* Analog read */
 float _plcAnalogRead(uint8_t a)
 {
-	return test_ai[a];
+  return plc_analogRead(a+1);
+	/*return test_ai[a];*/
 }
 
 /* Digital output */
 void _plcDigitalWrite(uint8_t d, uint8_t v)
 {
+  plc_digitalWrite(d+1,v == 1 ? HIGH : LOW);
   plcDevice.dout[d].value = v;
 	return;
 }
@@ -605,15 +621,27 @@ uint8_t _updateActions()
 	return plcDevice.actionErrors = r;
 }
 
+/* Debug monitor */
+void lcdReport(uint8_t error_code)
+{
+  plc_lcd.clear();
+  plc_lcd.setCursor(0,0);
+  plc_lcd.print("PLC Monitor");
+  plc_lcd.setCursor(0,1);
+  plc_lcd.print("Warning = " + String(error_code));
+}
+
 /* Update plc */
 void updatePlc()
 {
-  ethernetMaintain();
+  uint8_t  r;
+  r |= ethernetMaintain();
   _updateTimestamps();
-	_updateIo();
-	// _updateActions();
-	_logInputs();
+	r |=_updateIo();
+  // _updateActions();
+	r |= _logInputs();
   _printPlcDevice(); 
+  lcdReport(r);
 }
 
 void testMonitor()
@@ -673,7 +701,7 @@ void mockInputs()
   }
 }
 
-void testLoop()
+void plc_testLoop()
 {
   mockInputs();
   updatePlc();

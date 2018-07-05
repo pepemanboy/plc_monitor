@@ -35,11 +35,20 @@ enum error_codes
 	Error_timeout = 1<<3, ///< Timeout error
 	Error_inexistent = 1<<4, ///< PLC does not exist in server
   Error_checksum = 1<<5, ///< Message comes with bad checksum
+  Error_chunked = 1<<6, ///< Message does not come chunked
 };
 
 void plcDebug(String s)
 {
   Serial.println("Debug: " + s);
+}
+
+/* Utilitarian functions */
+void strcat_c (char *str, char c)
+{
+  for (;*str;str++); // note the terminating semicolon here. 
+  *str++ = c; 
+  *str++ = 0;
 }
 
 #endif PLC_COMMON_H

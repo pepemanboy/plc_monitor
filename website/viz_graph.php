@@ -44,7 +44,7 @@ if (!$exists)
 	$query = "
 	CREATE TABLE " . $table_name . " (
 	timeStamp TIMESTAMP NOT NULL PRIMARY KEY,
-	val float(5,2) NOT NULL)";
+	val float(10,2) NOT NULL)";
 	$r = mysqli_query($link,$query);
 	if (!$r)
 		_exit(ERROR_QUERY, $link);
