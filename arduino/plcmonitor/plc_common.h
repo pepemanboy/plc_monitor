@@ -38,17 +38,53 @@ enum error_codes
   Error_chunked = 1<<6, ///< Message does not come chunked
 };
 
-void plcDebug(String s)
-{
-  Serial.println("Debug: " + s);
-}
-
 /* Utilitarian functions */
 void strcat_c (char *str, char c)
 {
   for (;*str;str++); // note the terminating semicolon here. 
   *str++ = c; 
   *str++ = 0;
+}
+
+
+
+/* Debug to serial */
+
+#define SERIAL_BAUDRATE 115200
+
+void Serial_begin()
+{
+  #ifdef DEBUG
+  static bool serial_initialized = false;
+  if(!serial_initialized)
+  {
+    Serial.begin(SERIAL_BAUDRATE);
+    serial_initialized = true;
+  }
+  #endif
+  return;  
+}
+void Serial_print(String s)
+{
+  #ifdef DEBUG
+  Serial_begin();
+  Serial.print(s);
+  #endif
+  return;
+}
+void Serial_println(String s = "")
+{
+  #ifdef DEBUG
+  Serial_begin();
+  Serial.println(s);
+  #endif
+  return;
+}
+
+void plcDebug(String s)
+{
+  Serial_println("Debug: " + s);
+  return;
 }
 
 #endif PLC_COMMON_H
