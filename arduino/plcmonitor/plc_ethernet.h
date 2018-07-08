@@ -312,11 +312,66 @@ uint8_t _post(const char * url, const char * params)
   return Ok;
 }
 
+/* Get resets
+ * pepemanboy.com/plcmonitor/reset_counter.php
+ * Args: plc_number = ID, operation = "get"
+ * Returns: resets(-1,-1,-1,-1,-1,-1)
+ *
+ * @param e placeholder for outputs array
+ * @return error code
+*/
+uint8_t getResets(int * rr)
+{
+  char q [CHAR_BUFFER_SIZE] = "";
+  sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
+  uint8_t r = _post("reset_counter.php",q);
+  if (r != Ok)
+    return r;  
+  if (checkErrors() != Ok)
+    return Error;
+  if (!checkIntegrity())
+    return Error_checksum;
+  
+  // Get resets
+  r = _getArray(rr,type_int,"reset(",6);
+  if (r != Ok)
+    return r;
+
+  return Ok;
+}
+
+/* Get digital inputs
+ * pepemanboy.com/plcmonitor/control_inputs.php
+ * Args: plc_number = ID, operation = "get", arduino = true
+ * Returns: di(0,0,0,0,0,0)
+ *
+ * @param e placeholder for outputs array
+ * @return error code
+*/
+uint8_t getDigitalInputs(int * di)
+{
+  char q [CHAR_BUFFER_SIZE] = "";
+  sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
+  uint8_t r = _post("control_inputs.php",q);
+  if (r != Ok)
+    return r;  
+  if (checkErrors() != Ok)
+    return Error;
+  if (!checkIntegrity())
+    return Error_checksum;
+  
+  // Get resets
+  r = _getArray(di,type_int,"di(",6);
+  if (r != Ok)
+    return r;
+
+  return Ok;
+}
+
 /* Get outputs
  * pepemanboy.com/plcmonitor/control_outputs.php
  * Args: plc_number = ID, operation = "get"
- * Returns: digiif (checkErrors(str_buf) != Ok)
-    return Error;tal_outputs(0,0,0,0,0,0,0)
+ * Returns: digital_outputs(0,0,0,0,0,0,0)
  *
  * @param e placeholder for outputs array
  * @return error code

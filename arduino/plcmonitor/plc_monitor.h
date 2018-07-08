@@ -136,7 +136,7 @@ void _initPlcMonitor()
     plc_lcd.print("PLC Monitor");
     plc_lcd.setCursor(0,1);
     plc_lcd.print("Connecting...");
-    Serial.begin(115200);
+    Serial_begin();
     _plcDeviceInit();
     initEthernet();
     plcDevice.initialized = true;    
@@ -260,6 +260,58 @@ uint8_t _plcGetOutputs()
 	return Ok;
 }
 
+/* Get counters from the server */
+uint8_t _plcGetCounters()
+{
+  _initPlcMonitor();
+  
+  // Execute only once
+  static bool b = false;
+  if(b) return Ok;
+  
+  int di[INPUT_COUNT];
+
+  uint8_t r = getDigitalInputs(di);
+  if (r != Ok)
+  {
+    plcDebug("Failed to get outputs. Error = " + String(r));
+    return r;  
+  }
+
+  for (uint8_t i = 0; i < OUTPUT_COUNT; i ++)
+  {
+    if (plcDevice.din[i].type == input_Counter)
+    {
+      plcDevice.din[i].value = di[i];
+    }
+  }
+
+  
+  b = true; // Execute only once
+  return Ok;  
+}
+
+/* Get reset counters from the server */
+uint8_t _plcResetCounters()
+{
+  _initPlcMonitor();
+  _plcGetCounters();
+
+  int rr[DIGITAL_INPUT_COUNT];
+  uint8_t r = getResets(rr);
+  if (r != Ok)
+  {
+    plcDebug("Failed to get resets. Error = " + String(r));
+    return r;  
+  }
+
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+  {
+    if(rr[i] < 0) continue;
+    plcDevice.din[i].value = rr[i];
+  }
+}
+
 /* Send outputs to server */
 uint8_t _plcSendOutputs()
 {
@@ -340,42 +392,42 @@ String _typeString(uint8_t n)
 void _printPlcDevice()
 {
   uint8_t i;
-  Serial.println("-------------------------------");
+  Serial_println("-------------------------------");
   // Plc info
-  Serial.print("PLC ID:" + String(plcDevice.id));
-  Serial.print(" timestamp: " + String(plcDevice.timeStamp));
-  Serial.println(" actions: " + String(plcDevice.actions_number));
+  Serial_print("PLC ID:" + String(plcDevice.id));
+  Serial_print(" timestamp: " + String(plcDevice.timeStamp));
+  Serial_println(" actions: " + String(plcDevice.actions_number));
   // Digital inputs
   for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
-    Serial.print("DI #" + String(plcDevice.din[i].number));
-    Serial.print(" Type: " + _typeString(plcDevice.din[i].type));
-    Serial.print(", Value: " + String(plcDevice.din[i].value));
-    Serial.print(", Log period ms: " + String(plcDevice.din[i].log_period_ms));
-    Serial.print(", Log elapsed ms: " + String(plcDevice.din[i].log_elapsed_ms));
-    Serial.print(", Reading: " + String(plcDevice.din[i].reading));
-    Serial.println(", Reading_: " + String(plcDevice.din[i].reading_));
+    Serial_print("DI #" + String(plcDevice.din[i].number));
+    Serial_print(" Type: " + _typeString(plcDevice.din[i].type));
+    Serial_print(", Value: " + String(plcDevice.din[i].value));
+    Serial_print(", Log period ms: " + String(plcDevice.din[i].log_period_ms));
+    Serial_print(", Log elapsed ms: " + String(plcDevice.din[i].log_elapsed_ms));
+    Serial_print(", Reading: " + String(plcDevice.din[i].reading));
+    Serial_println(", Reading_: " + String(plcDevice.din[i].reading_));
   }
 
   // Analog inputs
   for (i = 0; i < ANALOG_INPUT_COUNT; i ++)
   {
-    Serial.print("AI #" + String(plcDevice.ain[i].number));
-    Serial.print(" Type: " + _typeString(plcDevice.ain[i].type));
-    Serial.print(", Value: " + String(plcDevice.ain[i].value));
-    Serial.print(", Log period ms: " + String(plcDevice.ain[i].log_period_ms));
-    Serial.print(", Log elapsed ms: " + String(plcDevice.ain[i].log_elapsed_ms));
-    Serial.print(", Reading: " + String(plcDevice.ain[i].reading));
-    Serial.print(", Reading_: " + String(plcDevice.ain[i].reading_));
-    Serial.print(", Gain: " + String(plcDevice.ain[i].gof.g));
-    Serial.println(", Offset: " + String(plcDevice.ain[i].gof.o));
+    Serial_print("AI #" + String(plcDevice.ain[i].number));
+    Serial_print(" Type: " + _typeString(plcDevice.ain[i].type));
+    Serial_print(", Value: " + String(plcDevice.ain[i].value));
+    Serial_print(", Log period ms: " + String(plcDevice.ain[i].log_period_ms));
+    Serial_print(", Log elapsed ms: " + String(plcDevice.ain[i].log_elapsed_ms));
+    Serial_print(", Reading: " + String(plcDevice.ain[i].reading));
+    Serial_print(", Reading_: " + String(plcDevice.ain[i].reading_));
+    Serial_print(", Gain: " + String(plcDevice.ain[i].gof.g));
+    Serial_println(", Offset: " + String(plcDevice.ain[i].gof.o));
   }
 
   // Outputs
   for (i = 0; i < OUTPUT_COUNT; i ++)
   {
-    Serial.print("DO #" + String(plcDevice.dout[i].number));
-    Serial.println(" Value: " + String(plcDevice.dout[i].value));
+    Serial_print("DO #" + String(plcDevice.dout[i].number));
+    Serial_println(" Value: " + String(plcDevice.dout[i].value));
   }
 
   // Actions
@@ -384,32 +436,32 @@ void _printPlcDevice()
     // uint8_t action_type = plcDevice.actions[i].type;
     // if (action_type == action_None) continue;
     
-    Serial.print("Action #" + String(i));
-		Serial.print(" ID: " + String(plcDevice.actions[i].id));
-    Serial.print(" Type: " + String(plcDevice.actions[i].type));
-    Serial.print(", Input type: " +  _typeString(plcDevice.actions[i].input_type));
-    Serial.print(", Input number: " + String(plcDevice.actions[i].input_number));
-    Serial.print(", Output: " + String(plcDevice.actions[i].output));
-    Serial.print(", Threshold: " + String(plcDevice.actions[i].threshold));
-    Serial.print(", Threshold side: " + String(plcDevice.actions[i].threshold_side));
-    Serial.print(", Delay_Elapsed_ms: " + String(plcDevice.actions[i].delay_elapsed_ms));
-    Serial.print(", Delay_ms: " + String(plcDevice.actions[i].delay_ms));
-		Serial.print(", Notif: " + String(plcDevice.actions[i].notification_period_ms));
-		Serial.print(", Notif elapsed: " + String(plcDevice.actions[i].notification_elapsed_ms));
-		Serial.print(", Delay triggered: " + String(plcDevice.actions[i].delay_triggered));
-		Serial.print(", Delay finished: " + String(plcDevice.actions[i].delay_finished));
-		Serial.print(", Event triggered: " + String(plcDevice.actions[i].event_triggered));
-		Serial.println(", Permanent triggered: " + String(plcDevice.actions[i].permanent_triggered));
+    Serial_print("Action #" + String(i));
+		Serial_print(" ID: " + String(plcDevice.actions[i].id));
+    Serial_print(" Type: " + String(plcDevice.actions[i].type));
+    Serial_print(", Input type: " +  _typeString(plcDevice.actions[i].input_type));
+    Serial_print(", Input number: " + String(plcDevice.actions[i].input_number));
+    Serial_print(", Output: " + String(plcDevice.actions[i].output));
+    Serial_print(", Threshold: " + String(plcDevice.actions[i].threshold));
+    Serial_print(", Threshold side: " + String(plcDevice.actions[i].threshold_side));
+    Serial_print(", Delay_Elapsed_ms: " + String(plcDevice.actions[i].delay_elapsed_ms));
+    Serial_print(", Delay_ms: " + String(plcDevice.actions[i].delay_ms));
+		Serial_print(", Notif: " + String(plcDevice.actions[i].notification_period_ms));
+		Serial_print(", Notif elapsed: " + String(plcDevice.actions[i].notification_elapsed_ms));
+		Serial_print(", Delay triggered: " + String(plcDevice.actions[i].delay_triggered));
+		Serial_print(", Delay finished: " + String(plcDevice.actions[i].delay_finished));
+		Serial_print(", Event triggered: " + String(plcDevice.actions[i].event_triggered));
+		Serial_println(", Permanent triggered: " + String(plcDevice.actions[i].permanent_triggered));
   }
 
 	// Errors
-	Serial.print("Errors. Error io: " + String(plcDevice.ioErrors));
-	Serial.print(" Error actions: " + String(plcDevice.actionErrors));
-	Serial.println(" Error log: " + String(plcDevice.logErrors));
+	Serial_print("Errors. Error io: " + String(plcDevice.ioErrors));
+	Serial_print(" Error actions: " + String(plcDevice.actionErrors));
+	Serial_println(" Error log: " + String(plcDevice.logErrors));
 
-  Serial.println("-------------------------------");\
-  Serial.println();
-  Serial.println();
+  Serial_println("-------------------------------");\
+  Serial_println();
+  Serial_println();
 }
 
 /* Digital read */
@@ -491,6 +543,7 @@ uint8_t _updateIo()
 
   
   r |= _plcGetConfig();
+  r |= _plcResetCounters();
   
   // Digital inputs
   for(i = 0; i < DIGITAL_INPUT_COUNT; i ++)
@@ -651,32 +704,32 @@ void testMonitor()
   _printPlcDevice();
 
   // Connect
-  Serial.println();
-  Serial.println("Connecting to ethernet");
+  Serial_println();
+  Serial_println("Connecting to ethernet");
   initEthernet();
-  Serial.println("Connected");
-  Serial.println();
+  Serial_println("Connected");
+  Serial_println();
 
   // Get outputs
-  Serial.println("Modified ouptuts");
+  Serial_println("Modified ouptuts");
   r = _plcGetOutputs();
-  Serial.println("Error = " + String(r));
+  Serial_println("Error = " + String(r));
   _printPlcDevice();
 
   // Get config
-  Serial.println("Get configuration");
+  Serial_println("Get configuration");
   r = _plcGetConfig();
-  Serial.println("Error = " + String(r));
+  Serial_println("Error = " + String(r));
   _printPlcDevice();
 
   // Get actions
-  Serial.println("Get actions");
+  Serial_println("Get actions");
   r = _plcGetActions();
-  Serial.println("Error = " + String(r));
+  Serial_println("Error = " + String(r));
   _printPlcDevice();
 
   // Update io
-  Serial.println("Update io");
+  Serial_println("Update io");
   _updateIo();
   _printPlcDevice();  
 }
