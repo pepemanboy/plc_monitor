@@ -79,10 +79,6 @@ for($i = 0; $i < $number_of_actions; $i++)
           <input type='radio' class = 'viz-radio' name = 'viz-action-radios" . $index . "' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_PERMANENT . " >
         </div>
       </div>
-      <!-- Boton de reset -->
-      <div class='input-group-prepend'>
-        <button class='btn btn-outline-secondary' type='button' id = 'viz-action-reset-boton" . $index . "'>Reset</button>
-      </div>
       <!--Radio temporizador -->
       <div class='input-group-prepend'>
         <div class='input-group-text'>                  

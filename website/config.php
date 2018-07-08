@@ -39,6 +39,7 @@
     <!-- Boton de agregar nuevo -->
     <div class = "row">
       <button type="button" class="btn btn-success" id = "config-programar-boton">Configurar PLC</button>
+      <button disabled type="button" class="btn btn-warning config-reset-boton" id = "config-programar-boton">Reset contadores</button>
     </div>
     <!-- Inicia form de configuracion -->
     <form>
@@ -69,12 +70,13 @@
         <!-- Frecuencia -->
         <input type="number" class="form-control input-group-append" placeholder = "Intervalo secs" id = "freq-di' . $i . '">              
         <!-- Checkbox contador -->
-        <div class="input-group-append">
+        <div class="input-group-prepend">
         <div class="input-group-text">                  
         Contador
         <input class ="contador" type="checkbox" aria-label="Checkbox for following text input" id = "count-di' . $i . '">
         </div>
         </div>
+        <input disabled type="number" class="form-control input-group-append config-reset-input" placeholder = "Reset contador" id = "config-reset-input-' . $i . '"> 
         </div>
         </div>         
         <!-- Acaba entrada digital -->
@@ -151,7 +153,6 @@
         ';
       }
       ?> <!-- Acaban salidas -->
-    </div>
   </form> <!-- Acaba form de config -->
   <br><br><br>
 </div> <!-- Acaba container -->

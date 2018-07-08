@@ -43,15 +43,29 @@ function getConfig(n)
 	    if(!plcOk(err))
 	      return;
 
+	  	$(".config-reset-boton").attr("disabled", "disabled");
+
 	  	for(var i = 1; i <= 6; i++)
 	  	{
-	  		di = getPhpArray(data,"di" + i);	  		
-	  		ai = getPhpArray(data,"ai" + i);
-	  		dout = getPhpArray(data,"do" + i);
+	  		var di = getPhpArray(data,"di" + i);	  		
+	  		var ai = getPhpArray(data,"ai" + i);
+	  		var dout = getPhpArray(data,"do" + i);
 
 	  		$("#name-di" + i).val(di[0]);
 	  		$("#freq-di" + i).val(di[1]);
-	  		$("#count-di" + i).prop("checked",di[2] > 0 ? true : false);
+	  		var c = di[2] > 0 ? true : false;
+	  		$("#count-di" + i).prop("checked",c);
+
+	  		// Enable / disable reset things
+	  		if (!c)
+	  		{
+	  			$("#config-reset-input-" + i).attr("disabled", "disabled");
+	  		}
+	  		else
+	  		{
+	  			$("#config-reset-input-" + i).removeAttr("disabled");
+	  			$(".config-reset-boton").removeAttr("disabled");
+	  		}
 
 	  		$("#name-ai" + i).val(ai[0]);
 	  		$("#freq-ai" + i).val(ai[1]);
@@ -73,7 +87,7 @@ function setConfig(n)
 		return false;
 	}
 
-	configStatus("Pidiendo configuracion");
+	configStatus("Setting config");
 
 	var digital_inputs = new Array();
   	var analog_inputs = new Array();
@@ -113,8 +127,50 @@ function setConfig(n)
 	    configStatus(err);	    
 	    if(!plcOk(err))
 	      return;
+	  	getConfig(n);
 	  });    
 }
+
+// Reset counter
+$('.config-reset-boton').click(function(){
+	var v = Array();
+	var b = false;
+	for (var i = 0; i < 6; i ++)
+	{
+		v.push( $('#config-reset-input-' + (i+1)).val());
+		if (v[i] == "")
+		{
+			v[i] = -1;
+		}else
+		{
+			b = true;
+		}
+	}
+	if(!b)
+	{
+		alert("Escribe algun valor de reset");
+		return false;
+	}
+	configStatus("Sending reset");
+	$.post("reset_counter.php",
+	  {
+	    plc_number: g_plc,
+	    operation: "set",
+	    r1: v[0],
+	    r2: v[1],
+	    r3: v[2],
+	    r4: v[3],
+	    r5: v[4],
+	    r6: v[5],
+	  },
+	  function(data,status){
+	  	// alert(data);
+	  	var err = getPhpVariable(data, "error");    
+	    configStatus(err);	    
+	    if(!plcOk(err))
+	      return;
+	  });  
+});
 
 // Report input status
 function configStatus(status)

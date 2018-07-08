@@ -50,12 +50,12 @@
         <tbody>
           <!-- Empiezan entradas digitales -->
           <tr>
-            <th scope="row">Entradas digitales</th>
+            <th scope="row">Entradas digitales / contadores</th>
             <?php
             for ($i = 1; $i <= 6; $i++) {
               echo ' 
               <td id = "di',$i,'">
-              FALSE
+              0
               </td>
               ';
             }

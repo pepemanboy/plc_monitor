@@ -111,3 +111,11 @@ body {
 {
 	margin-left: 10px;
 }
+
+.config-reset-input{
+	max-width: 150px;
+}
+
+.config-reset-boton{
+	margin-left: 10px;
+}
