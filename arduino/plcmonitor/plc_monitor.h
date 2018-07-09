@@ -687,7 +687,6 @@ uint8_t _updateActions()
       case action_Delay:
         if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].delay_triggered)
         {
-          plcDebug("Writing high");
           plcDevice.actions[i].delay_triggered = true;
           _plcDigitalWrite(output, HIGH);
           r |= _plcSendOutputs();
@@ -695,15 +694,12 @@ uint8_t _updateActions()
         }
         if (!plcDevice.actions[i].delay_finished && plcDevice.actions[i].delay_triggered && (plcDevice.actions[i].delay_elapsed_ms > plcDevice.actions[i].delay_ms))
         {
-          plcDebug("Finished = " + String(plcDevice.actions[i].delay_finished) + " Triggered = " + String(plcDevice.actions[i].delay_triggered));
-          plcDebug("Writing low");
           _plcDigitalWrite(output, LOW);
           r |= _plcSendOutputs();
           plcDevice.actions[i].delay_finished = true;
         }    
-        if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].delay_finished)
+        if (!_thresholdPassed(&plcDevice.actions[i]) && (plcDevice.actions[i].delay_finished || ((plcDevice.dout[output].value == LOW )&& (plcDevice.actions[i].delay_triggered))))
         {
-          plcDebug("Resetting");
           plcDevice.actions[i].delay_finished = false;
           plcDevice.actions[i].delay_triggered = false;
         }
