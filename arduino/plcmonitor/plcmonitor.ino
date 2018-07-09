@@ -1,5 +1,5 @@
 #define PLC_ID 2
-#define DEBUG
+// #define DEBUG
 
 #include "plc_monitor.h"
 
