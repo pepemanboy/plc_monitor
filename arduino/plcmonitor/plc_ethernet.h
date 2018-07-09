@@ -443,7 +443,6 @@ uint8_t setInputs(int * di, int * ai)
     sprintf(p+strlen(p),"di%d=%d&ai%d=%d",i+1,di[i],i+1,ai[i]);
     if(i != 5) strcat(p,"&");
   }
-  plcDebug(p);
 	uint8_t r = _post("control_inputs.php", p);
   if (checkErrors() != Ok)
     return Error;

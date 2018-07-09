@@ -45,7 +45,7 @@ struct Action
   uint32_t delay_ms; ///< Time for trigger to activate
 	bool delay_triggered; ///< Delay triggered flag
   bool delay_finished; ///< Delay finished flag
-	uint32_t notification_period_ms; ///< Notification period
+	int32_t notification_period_ms; ///< Notification period
   uint32_t notification_elapsed_ms; ///< Elapsed ms since last notification was sent
 	bool permanent_triggered; ///< Permanent action triggered flag
 	bool event_triggered; ///< Event action triggered flag
@@ -710,7 +710,7 @@ uint8_t _updateActions()
         break;    
     }
     // Notifications
-    if (plcDevice.actions[i].notification_period_ms > 0)
+    if (plcDevice.actions[i].notification_period_ms != 0)
     {
       if (_thresholdPassed(&plcDevice.actions[i]))
       {
@@ -720,7 +720,7 @@ uint8_t _updateActions()
           plcDevice.actions[i].notification_elapsed_ms = 0;
           plcDevice.actions[i].notification_triggered = true;
         }
-        else if(plcDevice.actions[i].notification_elapsed_ms > plcDevice.actions[i].notification_period_ms)
+        else if((plcDevice.actions[i].notification_elapsed_ms > plcDevice.actions[i].notification_period_ms) && (plcDevice.actions[i].notification_period_ms > 0))
         {
           r |= _sendNotification(&plcDevice.actions[i]);
           plcDevice.actions[i].notification_elapsed_ms = 0;
