@@ -65,7 +65,7 @@
         <input type="text" class="form-control" placeholder = "Nombre" id = "name-di' . $i . '">
         <!-- Label frecuencia -->
         <div class="input-group-prepend">
-        <span class="input-group-text" id="">Freq:</span>
+        <span class="input-group-text" id="">Muestreo (s):</span>
         </div>
         <!-- Frecuencia -->
         <input type="number" class="form-control input-group-append" placeholder = "Intervalo secs" id = "freq-di' . $i . '">              
@@ -105,7 +105,7 @@
         <input type="text" class="form-control" placeholder = "Nombre" id = "name-ai' . $i . '">
         <!-- Label freq -->
         <div class="input-group-prepend">
-        <span class="input-group-text" id="">Freq:</span>
+        <span class="input-group-text" id="">Muestreo (s):</span>
         </div>
         <!-- Intervalo -->
         <input type="number" class="form-control" placeholder = "Intervalo secs" id = "freq-ai' . $i . '">   
