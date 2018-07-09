@@ -30,6 +30,11 @@ float test_ai[6];
 /* Clear object using pointer */
 #define clearObject(p) memset((p), 0, sizeof(*(p)))
 
+/* Error counter */
+#define MAX_CONTINUOUS_ERRORS 5
+int continuous_errors = 0;
+
+
 /* Action structure */
 typedef struct Action Action;
 struct Action
@@ -401,6 +406,9 @@ String _typeString(uint8_t n)
 /* Print device */
 void _printPlcDevice()
 {
+  #ifndef DEBUG
+  return;
+  #endif
   uint8_t i;
   Serial_println("-------------------------------");
   // Plc info
@@ -750,8 +758,19 @@ void updatePlc()
 	r |=_updateIo();
   r |= _updateActions();
 	r |= _logInputs();
-  _printPlcDevice(); 
+  _printPlcDevice();
+
   lcdReport(r);
+
+  // Error watchdog
+  if (r != Ok) 
+    continuous_errors ++;
+  else
+    continuous_errors = 0;
+  if (continuous_errors > MAX_CONTINUOUS_ERRORS)
+    softReset();
+  
+
 }
 
 void testMonitor()

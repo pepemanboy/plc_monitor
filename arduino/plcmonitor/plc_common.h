@@ -87,4 +87,7 @@ void plcDebug(String s)
   return;
 }
 
+/* Reset function */
+void(* softReset) (void) = 0;//declare reset function at address 0
+
 #endif PLC_COMMON_H
