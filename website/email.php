@@ -10,8 +10,8 @@ include_once("plc_util.php");
 $email = "pepe_ciro@hotmail.com";
 
 $message = "Jejejeje ";
-$subject = "Email de prueba";
-$header = "From: pepe@pepe.com";
+$subject = "Alerta";
+$header = "From: Alerta PLC Monitor";
 
 // send email
 mail($email,$subject,$message,$header);

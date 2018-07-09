@@ -36,6 +36,11 @@ $r = tableExists($link, $table_name, $exists);
 if ($r != OK)
 	_exit($r, $link);
 
+// Save arduino status
+$r = arduinoStatus($link, $plc_number);
+	if ($r != OK)
+		_exit($r, $link);	
+
 // Create table if it doesnt exist
 if (!$exists)
 {

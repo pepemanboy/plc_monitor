@@ -283,6 +283,7 @@ else if ($operation == "delete")
 
 else if ($operation == "email")
 {
+  echo("{");
   // Argument check
   if (!isset($_POST['action_id']))
     _exit(ERROR_ARGUMENTS, $link);

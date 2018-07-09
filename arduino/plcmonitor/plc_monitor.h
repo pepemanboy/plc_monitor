@@ -49,6 +49,7 @@ struct Action
   uint32_t notification_elapsed_ms; ///< Elapsed ms since last notification was sent
 	bool permanent_triggered; ///< Permanent action triggered flag
 	bool event_triggered; ///< Event action triggered flag
+  bool notification_triggered; ///< First notification sent flag
 };
 
 /* Gain Offset Structure */
@@ -231,8 +232,9 @@ uint8_t _plcGetActions()
     plcDevice.actions[i].delay_finished = e ? actions_[j].delay_finished : false;
 		plcDevice.actions[i].notification_period_ms = notification_interval_s[i] * 1000;
 		plcDevice.actions[i].notification_elapsed_ms = e ? actions_[j].notification_elapsed_ms : 0;
-		plcDevice.actions[i].permanent_triggered = e ? actions_[j].permanent_triggered : 0;
-		plcDevice.actions[i].event_triggered = e ? actions_[j].event_triggered : 0;
+		plcDevice.actions[i].permanent_triggered = e ? actions_[j].permanent_triggered : false;
+		plcDevice.actions[i].event_triggered = e ? actions_[j].event_triggered : false;
+    plcDevice.actions[i].notification_triggered = e ? actions_[j].notification_triggered : false;
 	}
 
 	return Ok;
@@ -374,7 +376,14 @@ uint8_t _plcLogInput(plc_in_t * input)
 uint8_t _sendNotification(Action * action)
 {
 	_initPlcMonitor();
-	return Ok;
+  uint8_t r = sendEmail(action->id);
+  if (r != Ok)
+  {
+    plcDebug("Failed to send notification. Error = " + String(r));
+    return r;
+  }
+  plcDebug("Sending notification");
+	return r;
 }
 
 /* Digital input types string name */
@@ -452,7 +461,8 @@ void _printPlcDevice()
 		Serial_print(", Delay triggered: " + String(plcDevice.actions[i].delay_triggered));
 		Serial_print(", Delay finished: " + String(plcDevice.actions[i].delay_finished));
 		Serial_print(", Event triggered: " + String(plcDevice.actions[i].event_triggered));
-		Serial_println(", Permanent triggered: " + String(plcDevice.actions[i].permanent_triggered));
+		Serial_print(", Permanent triggered: " + String(plcDevice.actions[i].permanent_triggered));
+    Serial_println(", Notification triggered: " + String(plcDevice.actions[i].notification_triggered));
   }
 
 	// Errors
@@ -465,18 +475,47 @@ void _printPlcDevice()
   Serial_println();
 }
 
+/* Mock inputs */
+void mockInputs()
+{
+  if (Serial.available())
+  {
+    String s = Serial.readString();
+    uint8_t input_type = s.indexOf("ai") < 0 ? input_Digital : input_Analog;
+    uint8_t input_number = s.substring(s.indexOf("i")+1,s.indexOf(",")).toInt()-1;
+    float value = s.substring(s.indexOf(",")+1).toFloat();
+    if(input_type == input_Analog)
+    {
+      test_ai[input_number] = value;
+    }
+    else
+    {
+      test_di[input_number] = value;
+    }
+  }
+}
+
+
 /* Digital read */
 uint8_t _plcDigitalRead(uint8_t d)
 {
-  // return plc_digitalRead(d+1);
-	return test_di[d];
+  #ifdef DEBUG
+  mockInputs();
+  return test_di[d];
+  #else
+  return plc_digitalRead(d+1);
+  #endif	
 }
 
 /* Analog read */
 float _plcAnalogRead(uint8_t a)
 {
-  // return plc_analogRead(a+1);
-	return test_ai[a];
+  #ifdef DEBUG
+  mockInputs();
+  return test_ai[a];
+  #else
+  return plc_analogRead(a+1);
+  #endif
 }
 
 /* Digital output */
@@ -614,6 +653,7 @@ uint8_t _updateActions()
   for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
   {
     uint8_t output = plcDevice.actions[i].output - 1;
+    if(output < 0) continue;
     switch (plcDevice.actions[i].type)
     {
       case action_None: 
@@ -624,6 +664,10 @@ uint8_t _updateActions()
           _plcDigitalWrite(output, HIGH);
           r |= _plcSendOutputs();
           plcDevice.actions[i].permanent_triggered = true;
+        }
+        if (plcDevice.dout[output].value == LOW && plcDevice.actions[i].permanent_triggered && !_thresholdPassed(&plcDevice.actions[i]))
+        {
+          plcDevice.actions[i].permanent_triggered = false;
         }
         break;
       case action_Event:
@@ -666,10 +710,26 @@ uint8_t _updateActions()
         break;    
     }
     // Notifications
-    if (plcDevice.actions[i].notification_period_ms > 0 && _thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].notification_elapsed_ms > plcDevice.actions[i].notification_period_ms)
+    if (plcDevice.actions[i].notification_period_ms > 0)
     {
-			r |= _sendNotification(&plcDevice.actions[i]);
-      plcDevice.actions[i].notification_elapsed_ms = 0;
+      if (_thresholdPassed(&plcDevice.actions[i]))
+      {
+        if(!plcDevice.actions[i].notification_triggered)
+        {
+          r |= _sendNotification(&plcDevice.actions[i]);
+          plcDevice.actions[i].notification_elapsed_ms = 0;
+          plcDevice.actions[i].notification_triggered = true;
+        }
+        else if(plcDevice.actions[i].notification_elapsed_ms > plcDevice.actions[i].notification_period_ms)
+        {
+          r |= _sendNotification(&plcDevice.actions[i]);
+          plcDevice.actions[i].notification_elapsed_ms = 0;
+        }   
+      }
+      else // Threshold not passed
+      {
+        plcDevice.actions[i].notification_triggered = false;
+      }         
     }
   }
 	return plcDevice.actionErrors = r;
@@ -692,7 +752,7 @@ void updatePlc()
   r |= ethernetMaintain();
   _updateTimestamps();
 	r |=_updateIo();
-  // _updateActions();
+  r |= _updateActions();
 	r |= _logInputs();
   _printPlcDevice(); 
   lcdReport(r);
@@ -735,29 +795,8 @@ void testMonitor()
   _printPlcDevice();  
 }
 
-/* Mock inputs */
-void mockInputs()
-{
-  if (Serial.available())
-  {
-    String s = Serial.readString();
-    uint8_t input_type = s.indexOf("ai") < 0 ? input_Digital : input_Analog;
-    uint8_t input_number = s.substring(s.indexOf("i")+1,s.indexOf(",")).toInt()-1;
-    float value = s.substring(s.indexOf(",")+1).toFloat();
-    if(input_type == input_Analog)
-    {
-      test_ai[input_number] = value;
-    }
-    else
-    {
-      test_di[input_number] = value;
-    }
-  }
-}
-
 void plc_testLoop()
 {
-  mockInputs();
   updatePlc();
   delay(1000);
 }

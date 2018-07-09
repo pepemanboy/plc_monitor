@@ -326,7 +326,6 @@ uint8_t getResets(int * rr)
   char q [CHAR_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
   uint8_t r = _post("reset_counter.php",q);
-  plcDebug(g_buf);
   if (r != Ok)
     return r;  
   if (checkErrors() != Ok)
@@ -444,6 +443,7 @@ uint8_t setInputs(int * di, int * ai)
     sprintf(p+strlen(p),"di%d=%d&ai%d=%d",i+1,di[i],i+1,ai[i]);
     if(i != 5) strcat(p,"&");
   }
+  plcDebug(p);
 	uint8_t r = _post("control_inputs.php", p);
   if (checkErrors() != Ok)
     return Error;
@@ -472,6 +472,29 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
     return Error;
   return r;
 }
+
+/* Send email
+ *  pepemanboy.com/plcmonitor/viz_actions.php
+ *  Args: plc_number = ID, operation = "email", action_id = x
+ *  Returns: error code
+ *  
+ *  @param action_id action to send
+ *  @return error code  
+ */
+ uint8_t sendEmail(uint8_t action_id)
+ {
+  char q [CHAR_BUFFER_SIZE] = "";
+  sprintf(q,"plc_number=%d&operation=email&action_id=%d", PLC_ID, action_id);
+  uint8_t r = _post("viz_action.php",q);
+  if (r != Ok)
+    return r;  
+  if (checkErrors() != Ok)
+    return Error;
+  if (!checkIntegrity())
+    return Error_checksum;
+
+  return Ok;
+ }
 
 /* Get actions
  * pepemanboy.com/plcmonitor/viz_actions.php
