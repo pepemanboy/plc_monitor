@@ -269,16 +269,16 @@ uint8_t _plcGetCounters()
   static bool b = false;
   if(b) return Ok;
   
-  int di[INPUT_COUNT];
+  int di[DIGITAL_INPUT_COUNT];
 
   uint8_t r = getDigitalInputs(di);
   if (r != Ok)
   {
-    plcDebug("Failed to get outputs. Error = " + String(r));
+    plcDebug("Failed to get counters. Error = " + String(r));
     return r;  
   }
 
-  for (uint8_t i = 0; i < OUTPUT_COUNT; i ++)
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
     if (plcDevice.din[i].type == input_Counter)
     {
@@ -310,6 +310,7 @@ uint8_t _plcResetCounters()
     if(rr[i] < 0) continue;
     plcDevice.din[i].value = rr[i];
   }
+  return Ok;
 }
 
 /* Send outputs to server */
@@ -338,13 +339,13 @@ uint8_t _plcSendInputs()
 {
 	_initPlcMonitor();
 	uint8_t i;
-	bool din[DIGITAL_INPUT_COUNT];
+	int din[DIGITAL_INPUT_COUNT];
 	int ain[ANALOG_INPUT_COUNT];
 
 	for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
 	{
-		din[i] = plcDevice.din[i].value == 1 ? true : false;
-		ain[i] = plcDevice.ain[i].reading;
+		din[i] = plcDevice.din[i].value;
+		ain[i] = plcDevice.ain[i].value;
 	}
 
 	uint8_t r = setInputs(din,ain);
@@ -467,15 +468,15 @@ void _printPlcDevice()
 /* Digital read */
 uint8_t _plcDigitalRead(uint8_t d)
 {
-  return plc_digitalRead(d+1);
-	/*return test_di[d];*/
+  // return plc_digitalRead(d+1);
+	return test_di[d];
 }
 
 /* Analog read */
 float _plcAnalogRead(uint8_t a)
 {
-  return plc_analogRead(a+1);
-	/*return test_ai[a];*/
+  // return plc_analogRead(a+1);
+	return test_ai[a];
 }
 
 /* Digital output */

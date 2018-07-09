@@ -86,6 +86,7 @@ if($operation == "get")
 		// Get row
 	    $row = mysqli_fetch_row($result);   
 
+	    echo("{");
 		// Output digital_inputs variable
 	    echo("resets("); 
 	    for($i = 0; $i < 6; $i++)

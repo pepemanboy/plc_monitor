@@ -92,24 +92,37 @@ if($operation == "get")
 		// Get row
 	    $row = mysqli_fetch_row($result);   
 
-		// Output digital_inputs variable
-	    echo("digital_inputs("); 
-	    for($i = 0; $i < 6; $i++)
+	    if(!isset($_POST['arduino']))
 	    {
-	    	echo($row[$i]);
-	    	if ($i != 5) echo (",");
-	    }
-	    echo(")");
+	    	// Output digital_inputs variable
+		    echo("digital_inputs("); 
+		    for($i = 0; $i < 6; $i++)
+		    {
+		    	echo($row[$i]);
+		    	if ($i != 5) echo (",");
+		    }
+		    echo(")");
 
-	    // Output analog_inputs variable
-	    echo("analog_inputs(");  
-	    for($i = 6; $i < 12; $i++)
+		    // Output analog_inputs variable
+		    echo("analog_inputs(");  
+		    for($i = 6; $i < 12; $i++)
+		    {
+		    	echo($row[$i]);
+		    	if ($i != 11) echo (",");
+		    }
+		    echo(")");
+	    }
+	    else // Arduino
 	    {
-	    	echo($row[$i]);
-	    	if ($i != 11) echo (",");
+	    	echo("{");
+	    	echo("di(");
+	    	for($i = 0; $i < 6; $i++)
+		    {
+		    	echo($row[$i]);
+		    	if ($i != 5) echo (",");
+		    }
+		    echo(")");
 	    }
-	    echo(")");
-
 	    // Free result
 	    mysqli_free_result($result);
 	}

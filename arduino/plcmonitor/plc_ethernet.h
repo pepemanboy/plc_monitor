@@ -296,6 +296,7 @@ uint8_t _post(const char * url, const char * params)
     c_ = b_;
   }
 
+  memset(g_buf,0,CHAR_BUFFER_SIZE);
   memcpy(g_buf,c_,strlen(c_));
 
   // Wait for server to terminate
@@ -325,6 +326,7 @@ uint8_t getResets(int * rr)
   char q [CHAR_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
   uint8_t r = _post("reset_counter.php",q);
+  plcDebug(g_buf);
   if (r != Ok)
     return r;  
   if (checkErrors() != Ok)
@@ -333,7 +335,7 @@ uint8_t getResets(int * rr)
     return Error_checksum;
   
   // Get resets
-  r = _getArray(rr,type_int,"reset(",6);
+  r = _getArray(rr,type_int,"resets(",6);
   if (r != Ok)
     return r;
 
@@ -433,7 +435,7 @@ uint8_t setOutputs(bool * dout)
  * @param di digital input array
  * @param analog input array
 */
-uint8_t setInputs(bool * di, int * ai)
+uint8_t setInputs(int * di, int * ai)
 {
   char p[CHAR_BUFFER_SIZE];
   sprintf(p,"plc_number=%d&operation=set&",PLC_ID);
