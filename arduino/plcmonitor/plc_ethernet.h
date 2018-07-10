@@ -19,11 +19,9 @@
 #endif // PLC_ID
 
 /* Device IP */
-/*
 #ifndef PLC_IP
 #error PLEASE DEFINE "PLC_IP" BEFORE INCLUDING PLC_ETHERNET.H
 #endif // IP
-*/
 
 /* MAC ADDRESS */
 #ifndef PLC_MAC
@@ -79,7 +77,8 @@ enum data_types
 /* Mantain ethernet connection */
 uint8_t ethernetMaintain()
 {
-  uint8_t r = Ethernet.maintain();
+  uint8_t r = Ok;
+  // r = Ethernet.maintain();
   return r; 
 }
 
@@ -643,7 +642,7 @@ uint8_t initEthernet()
   pinMode(4,OUTPUT);
   digitalWrite(4,HIGH);
   plcDebug("Connecting to ethernet");
-  Ethernet.begin(mac /*, ip*/); // Without IP, about 20 seconds. With IP, about 1 second.
+  Ethernet.begin(mac , ip); // Without IP, about 20 seconds. With IP, about 1 second.
   plcDebug("Connected to ethernet.");
   return Ok;
 }

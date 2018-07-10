@@ -14,7 +14,7 @@ float test_di[6];
 float test_ai[6];
 
 /* Ethernet connection configuration */
-#define PLC_IP { 192, 168, 100, 79 }
+#define PLC_IP {192, 168, 0, (50+PLC_ID)}
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
 
 #include "plc_common.h"
