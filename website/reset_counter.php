@@ -9,7 +9,7 @@ include_once("connect.php");
 include_once("plc_util.php");
 
 // Check for expected POST arguments
-if (empty($_POST['plc_number']) or empty($_POST['operation'])) 
+if (!isset($_POST['plc_number']) or !isset($_POST['operation'])) 
 {
     _exit(ERROR_ARGUMENTS);
 }

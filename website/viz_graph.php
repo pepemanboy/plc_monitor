@@ -8,7 +8,7 @@ include_once("connect.php");
 include_once("plc_util.php");
 
 //Check for expected POST arguments
-if (empty($_POST['signal_number']) or empty($_POST['signal_type']) or empty($_POST['plc_number']) or empty($_POST['operation']))
+if (!isset($_POST['signal_number']) or !isset($_POST['signal_type']) or !isset($_POST['plc_number']) or !isset($_POST['operation']))
 {
 	_exit(ERROR_ARGUMENTS, $link);
 }
@@ -69,7 +69,7 @@ if ($operation == "set")
 else
 {
 	// Check arguments
-	if (empty($_POST['date_start']) or empty($_POST['date_end'])) 
+	if (!isset($_POST['date_start']) or !isset($_POST['date_end'])) 
 		_exit(ERROR_ARGUMENTS, $link);
 
 	$date_start = $_POST['date_start'];

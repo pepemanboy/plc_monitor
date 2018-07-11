@@ -8,7 +8,7 @@ include_once("connect.php");
 include_once("plc_util.php");
 
 //Check for expected POST arguments
-if (empty($_POST['operation']) or empty($_POST['plc_number']))
+if (!isset($_POST['operation']) or !isset($_POST['plc_number']))
 {
 	_exit(ERROR_ARGUMENTS, $link);
 }
@@ -118,7 +118,7 @@ if($empty)
 // Set outputs
 if ($operation == "set")
 {
-	if (empty($_POST['di']) || empty($_POST['ai']) || empty($_POST['dout']) ) 
+	if (!isset($_POST['di']) || !isset($_POST['ai']) || !isset($_POST['dout']) ) 
 		_exit(ERROR_ARGUMENTS, $link);
 
 	// Fetch arguments

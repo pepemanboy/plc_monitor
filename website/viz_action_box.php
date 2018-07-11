@@ -9,7 +9,7 @@ include_once("connect.php");
 include_once("plc_util.php");
 
 //Check for expected POST arguments
-if ( empty($_POST['number_of_actions']) )
+if ( !isset($_POST['number_of_actions']) )
   _exit(ERROR_ARGUMENTS, $link);
 
 // Fetch arguments
@@ -19,7 +19,7 @@ echo("table(");
 for($i = 0; $i < $number_of_actions; $i++)
 {
   $index = $i + 1;
-  if (!empty($_POST['modal']))
+  if (!!isset($_POST['modal']))
     $index = 0;
   // Echo action
   echo("
