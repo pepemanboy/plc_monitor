@@ -36,6 +36,7 @@ enum error_codes
 	Error_inexistent = 1<<4, ///< PLC does not exist in server
   Error_checksum = 1<<5, ///< Message comes with bad checksum
   Error_chunked = 1<<6, ///< Message does not come chunked
+  Error_maintain = 1<<7, ///<Cannot maintain connection
 };
 
 /* Utilitarian functions */
@@ -90,4 +91,4 @@ void plcDebug(String s)
 /* Reset function */
 void(* softReset) (void) = 0;//declare reset function at address 0
 
-#endif PLC_COMMON_H
+#endif //PLC_COMMON_H
