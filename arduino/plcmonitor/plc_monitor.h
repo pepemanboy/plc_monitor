@@ -656,63 +656,64 @@ uint8_t _updateActions()
   for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
   {
     uint8_t output = plcDevice.actions[i].output - 1;
-    if(output < 0) continue;
-    switch (plcDevice.actions[i].type)
+    if(output > 0)
     {
-      case action_None: 
-        break;
-      case action_Permanent:
-        if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].permanent_triggered)
-        {
-          _plcDigitalWrite(output, HIGH);
-          send_outputs = true;
-          plcDevice.actions[i].permanent_triggered = true;
-        }
-        if (plcDevice.dout[output].value == LOW && plcDevice.actions[i].permanent_triggered && !_thresholdPassed(&plcDevice.actions[i]))
-        {
-          plcDevice.actions[i].permanent_triggered = false;
-        }
-        break;
-      case action_Event:
-        if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].event_triggered)
-        {
-          _plcDigitalWrite(output,HIGH);
-          send_outputs = true;
-          plcDevice.actions[i].event_triggered = true;
-        }
-        else if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].event_triggered)
-        {
-          _plcDigitalWrite(output,LOW);
-          send_outputs = true;
-          plcDevice.actions[i].event_triggered = false;
-        }
-        break;
-      case action_Delay:
-        if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].delay_triggered)
-        {
-          plcDevice.actions[i].delay_triggered = true;
-          _plcDigitalWrite(output, HIGH);
-          send_outputs = true;
-          plcDevice.actions[i].delay_elapsed_ms = 0;            
-        }
-        if (!plcDevice.actions[i].delay_finished && plcDevice.actions[i].delay_triggered && (plcDevice.actions[i].delay_elapsed_ms > plcDevice.actions[i].delay_ms))
-        {
-          _plcDigitalWrite(output, LOW);
-          send_outputs = true;
-          plcDevice.actions[i].delay_finished = true;
-        }    
-        if (!_thresholdPassed(&plcDevice.actions[i]) && (plcDevice.actions[i].delay_finished || ((plcDevice.dout[output].value == LOW )&& (plcDevice.actions[i].delay_triggered))))
-        {
-          plcDevice.actions[i].delay_finished = false;
-          plcDevice.actions[i].delay_triggered = false;
-        }
-        break;    
-    }
-
-    if(send_outputs)
-    {
-      r |= _plcSendOutputs();
-    }    
+      switch (plcDevice.actions[i].type)
+      {
+        case action_None: 
+          break;
+        case action_Permanent:
+          if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].permanent_triggered)
+          {
+            _plcDigitalWrite(output, HIGH);
+            send_outputs = true;
+            plcDevice.actions[i].permanent_triggered = true;
+          }
+          if (plcDevice.dout[output].value == LOW && plcDevice.actions[i].permanent_triggered && !_thresholdPassed(&plcDevice.actions[i]))
+          {
+            plcDevice.actions[i].permanent_triggered = false;
+          }
+          break;
+        case action_Event:
+          if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].event_triggered)
+          {
+            _plcDigitalWrite(output,HIGH);
+            send_outputs = true;
+            plcDevice.actions[i].event_triggered = true;
+          }
+          else if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].event_triggered)
+          {
+            _plcDigitalWrite(output,LOW);
+            send_outputs = true;
+            plcDevice.actions[i].event_triggered = false;
+          }
+          break;
+        case action_Delay:
+          if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].delay_triggered)
+          {
+            plcDevice.actions[i].delay_triggered = true;
+            _plcDigitalWrite(output, HIGH);
+            send_outputs = true;
+            plcDevice.actions[i].delay_elapsed_ms = 0;            
+          }
+          if (!plcDevice.actions[i].delay_finished && plcDevice.actions[i].delay_triggered && (plcDevice.actions[i].delay_elapsed_ms > plcDevice.actions[i].delay_ms))
+          {
+            _plcDigitalWrite(output, LOW);
+            send_outputs = true;
+            plcDevice.actions[i].delay_finished = true;
+          }    
+          if (!_thresholdPassed(&plcDevice.actions[i]) && (plcDevice.actions[i].delay_finished || ((plcDevice.dout[output].value == LOW )&& (plcDevice.actions[i].delay_triggered))))
+          {
+            plcDevice.actions[i].delay_finished = false;
+            plcDevice.actions[i].delay_triggered = false;
+          }
+          break;    
+      }
+      if(send_outputs)
+      {
+        r |= _plcSendOutputs();
+      }   
+    }     
           
     // Notifications
     if (plcDevice.actions[i].notification_period_ms != 0)
@@ -733,8 +734,7 @@ uint8_t _updateActions()
         {
           r |= _sendNotification(&plcDevice.actions[i]);                    
           plcDevice.actions[i].notification_elapsed_ms = 0;
-        }
-        
+        }        
       }
       else // Threshold not passed
       {
