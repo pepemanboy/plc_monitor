@@ -1,17 +1,16 @@
-#ifndef PLC_ETHERNET_H
-#define PLC_ETHERNET_H
-
 /*
  * PLC Server connectivity and communication library
  *
  * Author: pepemanboy
 */
 
+#ifndef PLC_ETHERNET_H
+#define PLC_ETHERNET_H
+
 #include <Ethernet.h>
 #include <SPI.h>
 #include <string.h>
 #include "plc_common.h"
-#include <MD5.h>
 
 /* PLC ID */
 #ifndef PLC_ID
@@ -29,18 +28,18 @@
 #endif // MAC
 
 /* Timeout settings */
-#define PLC_TIMEOUT_MS (1000)
-#define PLC_TIMEOUT_DELAY_MS (1)
+#define PLC_TIMEOUT_MS (3000)
+#define PLC_TIMEOUT_DELAY_MS (10)
 
 /* Delays */
 #define PLC_LOG_INPUT_DELAY_MS (500)
 
 /* Server settings */
-#define PLC_SERVER {192, 185, 131, 113}
-#define PLC_PORT 80
+#define PLC_SERVER {192, 185, 131, 113} /* Es la IP del servidor donde esta la pagina web*/
+#define PLC_PORT 80 /* Puerto HTTP */
 
 /* Device settings */
-const byte mac[] = PLC_MAC; // Mac Address unico. Calcomania atras del Arduino.
+uint8_t mac[] = PLC_MAC; // Mac Address unico.
 const byte ip[] = PLC_IP; // IP fija del Arduino. Ver Ip de computadora en red. Eg (192.168.1.55), y usar los primeros 3 numeros y el 4to numero escogerlo. Eg (192.168.1.69)
 
 /* Pepemanboy.com server */
@@ -52,14 +51,14 @@ const char comm_opening = '{';
 const char comm_closing = '}';
 
 /* Buffer size */
-#define STR_BUFFER_SIZE 500
-#define CHAR_BUFFER_SIZE 500
+#define QUERY_BUFFER_SIZE 200
+#define REPLY_BUFFER_SIZE 500
 
 /* Packet header end */
-char * header_end = "Connection: close";
+char header_end[] = "Connection: close";
 
 /* Global char buffer */
-char g_buf[CHAR_BUFFER_SIZE];
+char g_buf[REPLY_BUFFER_SIZE];
 
 /* Global ethernet client */
 EthernetClient client;
@@ -78,10 +77,11 @@ enum data_types
 uint8_t ethernetMaintain()
 {
   uint8_t r = Ok;
-  // r = Ethernet.maintain();
+  r = Ethernet.maintain() & 0x01 ? Error_maintain : Ok;
   return r; 
 }
 
+/* Todo: implement */
 bool checkIntegrity()
 {
   return true;
@@ -158,6 +158,8 @@ uint8_t _waitClientDisconnect()
 }
 
 /* Check for errors in response
+ *  
+ *  @return error code
  */
 uint8_t checkErrors()
 {
@@ -211,7 +213,7 @@ uint8_t _post(const char * url, const char * params)
   }
 
   // Buffer to store response
-  char char_buf[CHAR_BUFFER_SIZE] = "";
+  char char_buf[REPLY_BUFFER_SIZE] = "";
 
   while (client.connected())
   {
@@ -222,7 +224,7 @@ uint8_t _post(const char * url, const char * params)
     }
   }
   
-  char b_[500] = "";  
+  char b_[REPLY_BUFFER_SIZE] = "";  
   char * c_;
 
   if(strstr(char_buf,"Transfer-Encoding: chunked"))
@@ -295,7 +297,7 @@ uint8_t _post(const char * url, const char * params)
     c_ = b_;
   }
 
-  memset(g_buf,0,CHAR_BUFFER_SIZE);
+  memset(g_buf,0,REPLY_BUFFER_SIZE);
   memcpy(g_buf,c_,strlen(c_));
 
   // Wait for server to terminate
@@ -322,7 +324,7 @@ uint8_t _post(const char * url, const char * params)
 */
 uint8_t getResets(int * rr)
 {
-  char q [CHAR_BUFFER_SIZE] = "";
+  char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
   uint8_t r = _post("reset_counter.php",q);
   if (r != Ok)
@@ -350,7 +352,7 @@ uint8_t getResets(int * rr)
 */
 uint8_t getDigitalInputs(int * di)
 {
-  char q [CHAR_BUFFER_SIZE] = "";
+  char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
   uint8_t r = _post("control_inputs.php",q);
   if (r != Ok)
@@ -378,7 +380,7 @@ uint8_t getDigitalInputs(int * di)
 */
 uint8_t getOutputs(bool * o)
 {
-  char q [CHAR_BUFFER_SIZE] = "";
+  char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get",PLC_ID);
 	uint8_t r = _post("control_outputs.php",q);
   if (r != Ok)
@@ -411,7 +413,7 @@ uint8_t getOutputs(bool * o)
 */
 uint8_t setOutputs(bool * dout)
 {
-  char p [CHAR_BUFFER_SIZE] = "";
+  char p [QUERY_BUFFER_SIZE] = "";
   sprintf(p,"plc_number=%d&operation=set&arduino=true&",PLC_ID);
   
   for(uint8_t i = 0; i < 6; i ++)
@@ -435,7 +437,7 @@ uint8_t setOutputs(bool * dout)
 */
 uint8_t setInputs(int * di, int * ai)
 {
-  char p[CHAR_BUFFER_SIZE];
+  char p[QUERY_BUFFER_SIZE];
   sprintf(p,"plc_number=%d&operation=set&",PLC_ID);
   for(uint8_t i = 0; i < 6; i ++)
   {
@@ -459,7 +461,7 @@ uint8_t setInputs(int * di, int * ai)
 */
 uint8_t logInput(uint8_t n, uint8_t type, float val)
 {
-  char p[CHAR_BUFFER_SIZE] = "";
+  char p[QUERY_BUFFER_SIZE] = "";
   sprintf(p,"plc_number=%d&operation=set&signal_number=%d&signal_type=",PLC_ID,n);
   strcat(p,type == input_Analog ? "ai" : "di");
   strcat(p,"&value=");
@@ -481,7 +483,7 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
  */
  uint8_t sendEmail(uint8_t action_id)
  {
-  char q [CHAR_BUFFER_SIZE] = "";
+  char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=email&action_id=%d", PLC_ID, action_id);
   uint8_t r = _post("viz_action.php",q);
   if (r != Ok)
@@ -513,7 +515,7 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
 */
 uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbers, uint8_t * ids, float * thresholds, uint8_t * updowns, uint8_t * outputs, long * notification_interval_s, uint8_t * action_types, long * delays_s)
 {
-  char q [CHAR_BUFFER_SIZE] = "";
+  char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
 	uint8_t r = _post("viz_action.php",q);
   if (r != Ok)
@@ -598,7 +600,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
 */
 uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
 {
-  char q [CHAR_BUFFER_SIZE];
+  char q [QUERY_BUFFER_SIZE];
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
 	uint8_t r = _post("config_program.php",q);
   if (r != Ok)
@@ -646,105 +648,5 @@ uint8_t initEthernet()
   plcDebug("Connected to ethernet.");
   return Ok;
 }
-
-/* Test */
-/*
-void testEthernet()
-{  
-  uint8_t i = 0;
-  uint8_t r;
-  
-  // Initialization  
-  // Serial.begin(9600);
-  Serial.println("Ethernet begin");
-  initEthernet();
-  Serial.println(Ethernet.localIP());
-
-  // Conectivity test
-  Serial.println("Prueba");
-  r = _post("test.php", "txt=soy el pepemanboy");
-  Serial.println("Error = " + String(r));
-  Serial.println(str_buf);
-  Serial.println();
-  
-  // Get outputs
-  bool outputs[6];
-  Serial.println("Getting outputs");
-  r = getOutputs(outputs);
-  Serial.println("Error = " + String(r));
-  Serial.print("Outputs = ");
-  for(i = 0; i < 6; i ++)
-  {
-    Serial.print(outputs[i]);
-    if(i != 5)  Serial.print(",");
-  }
-  Serial.println();  
-  Serial.println();
-
-  // Set inputs 
-  bool din[] = {1,0,1,1,0,0};
-  int ain[] = {1,2,4,8,16,32};
-  Serial.println("Set inputs");
-  r = setInputs(din,ain);
-  Serial.println("Error = " + String(r));
-  Serial.println();
-
-  // Log inputs
-  float x = 0;
-  for(i = 0; i < 10; i ++)
-  {
-    Serial.println("Logging input");
-    r = logInput(3,1,sin(x));
-    x = x + 0.1;
-    Serial.println("Error = " + String(r));
-    delay(500);
-  } 
-  Serial.println();
-
-  // Get config
-  int dif[6];
-  uint8_t dic[6];
-  int aif[6];
-  float aig[6];
-  float aio[6];
-  Serial.println("Querying config");
-  r = getConfig(dif,dic,aif,aig,aio);
-  Serial.println("Error = " + String(r));
-  for (i = 0; i < 6; i ++)
-  {
-    Serial.println("DI" + String(i+1) + " freq = " + String(dif[i]) + " counter = " + String(dic[i]));
-    Serial.println("AI" + String(i+1) + " freq = " + String(aif[i]) + " gain = " + String(aig[i]) + " offs = " + String(aio[i]));
-  }
-  Serial.println();
-
-  // Get actions
-  uint8_t MAX_ACTIONS = 6;
-  uint8_t n;
-  uint8_t inputs_types[MAX_ACTIONS];
-  uint8_t inputs_numbers[MAX_ACTIONS];
-  uint8_t ids[MAX_ACTIONS];
-  float thresholds[MAX_ACTIONS];
-  uint8_t updowns[MAX_ACTIONS];
-  uint8_t outputs2[MAX_ACTIONS];
-  long notification_interval_s[MAX_ACTIONS];
-  uint8_t action_types[MAX_ACTIONS];
-  long delays_s[MAX_ACTIONS];
-  Serial.println("Querying actions");
-  r = getActions(&n,inputs_types, inputs_numbers,ids,thresholds,updowns,outputs2,notification_interval_s,action_types,delays_s);
-  Serial.println("N = " + String(n));
-  Serial.println("Error = " + String(r));
-  for (i = 0; i < n; ++i)
-  {
-    Serial.print("input type = " + String(inputs_types[i]));
-    Serial.print(" input number = " + String(inputs_numbers[i]));  
-    Serial.print(" th = " + String(thresholds[i]));
-    Serial.print(" ud = " + String(updowns[i]));
-    Serial.print(" output = " + String(outputs2[i]));
-    Serial.print(" notif = " + String(notification_interval_s[i]));
-    Serial.print(" at = " + String(action_types[i]));
-    Serial.println(" d = " + String(delays_s[i]));
-  }
-	Serial.println();
-}*/
 
 #endif // PLC_ETHERNET_H
