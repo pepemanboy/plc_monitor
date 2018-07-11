@@ -30,10 +30,11 @@
 
 /* Timeout settings */
 #define PLC_TIMEOUT_MS (3000) /* Tiempo para esperar a que cargue una pagina antes de reportar error */
-#define PLC_TIMEOUT_DELAY_MS (1)
+#define PLC_TIMEOUT_DELAY_MS (10)
 
 /* Delays */
-#define PLC_LOG_INPUT_DELAY_MS (500)
+#define PLC_LOG_INPUT_DELAY_MS (0)
+#define PLC_POST_DELAY (0)
 
 /* Server settings */
 #define PLC_SERVER {192, 185, 131, 113} /* Es la IP del servidor donde esta la pagina web*/
@@ -334,18 +335,18 @@ uint8_t _post(const char * url, const char * params)
 
   // Disconnect
   client.stop();
-  delay(100);
+  delay(PLC_POST_DELAY);
   return Ok;
 }
 
 /* Retry post request until valid */
-uint8_t _retryPost(const char * url, const char * params)
+uint8_t _retryPost(const char * url, const char * params, const char * msg)
 {
   uint8_t r = Error;
   while (r != Ok)
   {
     r = _post(url,params);
-    lcdReport(r);
+    lcdText(String(msg) + errorString(r));
     if (r != Ok) ethernetWatchdog(); // Veces totales que puede fallar
   }
   return r;
@@ -363,7 +364,7 @@ uint8_t getResets(int * rr)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
-  uint8_t r = _retryPost("reset_counter.php",q);
+  uint8_t r = _retryPost("reset_counter.php",q,"cnt_res: ");
   if (r != Ok)
     return r;  
   if (checkErrors() != Ok)
@@ -391,7 +392,7 @@ uint8_t getDigitalInputs(int * di)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
-  uint8_t r = _retryPost("control_inputs.php",q);
+  uint8_t r = _retryPost("control_inputs.php",q,"get_in: ");
   if (r != Ok)
     return r;  
   if (checkErrors() != Ok)
@@ -419,7 +420,7 @@ uint8_t getOutputs(bool * o)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get",PLC_ID);
-	uint8_t r = _retryPost("control_outputs.php",q);
+	uint8_t r = _retryPost("control_outputs.php",q,"get_out: ");
   if (r != Ok)
     return r;
   if (checkErrors() != Ok)
@@ -458,7 +459,7 @@ uint8_t setOutputs(bool * dout)
     sprintf(p+strlen(p),"do%d=%d",i+1,dout[i] ? 1 : 0);
     if(i != 5) strcat(p,"&");
   }
-  uint8_t r = _retryPost("control_outputs.php", p);  
+  uint8_t r = _retryPost("control_outputs.php", p,"set_out: ");  
   if (checkErrors() != Ok)
     return Error;
   return r;
@@ -481,7 +482,7 @@ uint8_t setInputs(int * di, int * ai)
     sprintf(p+strlen(p),"di%d=%d&ai%d=%d",i+1,di[i],i+1,ai[i]);
     if(i != 5) strcat(p,"&");
   }
-	uint8_t r = _retryPost("control_inputs.php", p);
+	uint8_t r = _retryPost("control_inputs.php", p, "set_in: ");
   if (checkErrors() != Ok)
     return Error;
   return r;
@@ -503,7 +504,7 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
   strcat(p,type == input_Analog ? "ai" : "di");
   strcat(p,"&value=");
   dtostrf(val,3,2,p+strlen(p));
-	uint8_t r = _retryPost("viz_graph.php", p);
+	uint8_t r = _retryPost("viz_graph.php", p, "log_in: ");
 	delay(PLC_LOG_INPUT_DELAY_MS);
   if (checkErrors() != Ok)
     return Error;
@@ -522,7 +523,7 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
  {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=email&action_id=%d", PLC_ID, action_id);
-  uint8_t r = _retryPost("viz_action.php",q);
+  uint8_t r = _retryPost("viz_action.php",q, "send_em: ");
   if (r != Ok)
     return r;  
   if (checkErrors() != Ok)
@@ -554,7 +555,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
-	uint8_t r = _retryPost("viz_action.php",q);
+	uint8_t r = _retryPost("viz_action.php",q, "get_ac: ");
   if (r != Ok)
     return r;  
   if (checkErrors() != Ok)
@@ -639,7 +640,7 @@ uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
 {
   char q [QUERY_BUFFER_SIZE];
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
-	uint8_t r = _retryPost("config_program.php",q);
+	uint8_t r = _retryPost("config_program.php",q, "get_cfg: ");
   if (r != Ok)
     return r;
   if (checkErrors() != Ok)

@@ -147,7 +147,7 @@ void _initPlcMonitor()
     delay(500);
     _startupSequence();
     lcdText("All set!");
-    delay(2000);
+    delay(500);
     plcDevice.initialized = true;    
   }
 }
@@ -763,7 +763,7 @@ uint8_t updatePlc()
 
   ethernetResetWatchdog(); 
   _printPlcDevice();
-  lcdText("Period complete");
+  lcdText("complete");
   delay(500);
   return r;
 }
