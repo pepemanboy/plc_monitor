@@ -1,3 +1,10 @@
+/*
+ * PLC Server common definitions
+ *
+ * Author: pepemanboy
+ * Email: pepe_ciro@hotmail.com
+*/
+
 #ifndef PLC_COMMON_H
 #define PLC_COMMON_H
 

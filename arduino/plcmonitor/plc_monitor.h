@@ -2,10 +2,13 @@
  * PLC Monitor structures and actions
  *
  * Author: pepemanboy
+ * Email: pepe_ciro@hotmail.com
 */
 
 #ifndef PLC_MONITOR_H
 #define PLC_MONITOR_H
+
+// #define DEBUG
 
 /* Test variables */
 float test_di[6];
@@ -15,6 +18,7 @@ float test_ai[6];
 #define PLC_IP {192, 168, 0, (50+PLC_ID)}
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
 
+#include "plc_common.h"
 #include "plc_ethernet.h"
 
 /* PLC Configuration */
@@ -26,10 +30,6 @@ float test_ai[6];
 
 /* Clear object using pointer */
 #define clearObject(p) memset((p), 0, sizeof(*(p)))
-
-/* Error counter for watchdog*/
-#define MAX_CONTINUOUS_ERRORS 5
-int continuous_errors = 0;
 
 /* Action structure */
 typedef struct Action Action;
@@ -525,7 +525,7 @@ float _plcAnalogRead(uint8_t a)
 /* Digital output */
 void _plcDigitalWrite(uint8_t d, uint8_t v)
 {
-  plc_digitalWrite(d+1,v == 1 ? HIGH : LOW);
+  plc_digitalWrite(d+1,v == 0 ? LOW : HIGH);
   plcDevice.dout[d].value = v;
 	return;
 }

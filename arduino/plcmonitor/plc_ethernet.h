@@ -2,6 +2,7 @@
  * PLC Server connectivity and communication library
  *
  * Author: pepemanboy
+ * Email: pepe_ciro@hotmail.com
 */
 
 #ifndef PLC_ETHERNET_H
