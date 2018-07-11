@@ -3,6 +3,8 @@
 
 #include <plcshield.h>
 
+#define SERIAL_BAUDRATE 115200
+
 /* Input types */
 enum
 {
@@ -41,7 +43,7 @@ enum error_codes
   Error_maintain = 1<<7, ///<Cannot maintain connection
 };
 
-/* Utilitarian functions */
+/* Concatenate a string and a character*/
 void strcat_c (char *str, char c)
 {
   for (;*str;str++); // note the terminating semicolon here. 
@@ -49,12 +51,8 @@ void strcat_c (char *str, char c)
   *str++ = 0;
 }
 
-
-
-/* Debug to serial */
-
-#define SERIAL_BAUDRATE 115200
-
+/* Debug to serial functions */
+/* Open serial port */
 void Serial_begin()
 {
   #ifdef DEBUG
@@ -67,6 +65,8 @@ void Serial_begin()
   #endif
   return;  
 }
+
+/* Print to serial */
 void Serial_print(String s)
 {
   #ifdef DEBUG
@@ -75,6 +75,8 @@ void Serial_print(String s)
   #endif
   return;
 }
+
+/* Print line to serial */
 void Serial_println(String s = "")
 {
   #ifdef DEBUG
@@ -84,6 +86,7 @@ void Serial_println(String s = "")
   return;
 }
 
+/* Debug auxiliary function */
 void plcDebug(String s)
 {
   Serial_println("Debug: " + s);
