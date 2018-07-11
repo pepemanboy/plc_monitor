@@ -1,15 +1,13 @@
-#ifndef PLC_MONITOR_H
-#define PLC_MONITOR_H
-
-#include <plcshield.h>
-
 /*
  * PLC Monitor structures and actions
  *
  * Author: pepemanboy
 */
 
-/* Test */
+#ifndef PLC_MONITOR_H
+#define PLC_MONITOR_H
+
+/* Test variables */
 float test_di[6];
 float test_ai[6];
 
@@ -17,7 +15,6 @@ float test_ai[6];
 #define PLC_IP {192, 168, 0, (50+PLC_ID)}
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
 
-#include "plc_common.h"
 #include "plc_ethernet.h"
 
 /* PLC Configuration */
@@ -30,10 +27,9 @@ float test_ai[6];
 /* Clear object using pointer */
 #define clearObject(p) memset((p), 0, sizeof(*(p)))
 
-/* Error counter */
+/* Error counter for watchdog*/
 #define MAX_CONTINUOUS_ERRORS 5
 int continuous_errors = 0;
-
 
 /* Action structure */
 typedef struct Action Action;
@@ -98,15 +94,18 @@ struct PlcDevice
   plc_do_t dout[OUTPUT_COUNT]; ///< Digital outputs
 	Action actions[MAX_ACTIONS]; ///< Actions
   uint8_t actions_number; ///< Number of actions
-  uint32_t timeStamp;
-	uint8_t logErrors;
-	uint8_t ioErrors;
-	uint8_t actionErrors;
-	bool initialized;
+  uint32_t timeStamp; ///< Timestamp
+	uint8_t logErrors; ///< Logging errors
+	uint8_t ioErrors; ///< IO errors
+	uint8_t actionErrors; ///< action errors
+	bool initialized; ///< Initialized flag
 };
 
-/* Global variables */
+/* Global plcDevice */
 PlcDevice plcDevice;
+
+/* Function prototype declarations */
+uint8_t _startupSequence();
 
 /* Initialize plcDevice */
 void _plcDeviceInit()
@@ -138,13 +137,17 @@ void _initPlcMonitor()
     plc_lcd.noBlink(); // Cursor does not blink  
     plc_lcd.noCursor(); // Hide cursor
     plc_lcd.clear(); // Clear the screen
-    plc_lcd.setCursor(0,0);
-    plc_lcd.print("PLC Monitor");
-    plc_lcd.setCursor(0,1);
-    plc_lcd.print("Connecting...");
+    lcdText("Connecting...");
     Serial_begin();
     _plcDeviceInit();
     initEthernet();
+    lcdText("Connected!...");
+    delay(500);
+    lcdText("Configuring...");
+    delay(500);
+    _startupSequence();
+    lcdText("All set!");
+    delay(500);
     plcDevice.initialized = true;    
   }
 }
@@ -272,10 +275,6 @@ uint8_t _plcGetCounters()
 {
   _initPlcMonitor();
   
-  // Execute only once
-  static bool b = false;
-  if(b) return Ok;
-  
   int di[DIGITAL_INPUT_COUNT];
 
   uint8_t r = getDigitalInputs(di);
@@ -293,8 +292,6 @@ uint8_t _plcGetCounters()
     }
   }
 
-  
-  b = true; // Execute only once
   return Ok;  
 }
 
@@ -302,7 +299,6 @@ uint8_t _plcGetCounters()
 uint8_t _plcResetCounters()
 {
   _initPlcMonitor();
-  _plcGetCounters();
 
   int rr[DIGITAL_INPUT_COUNT];
   uint8_t r = getResets(rr);
@@ -568,27 +564,25 @@ void _updateTimestamps()
 uint8_t _logInputs()
 {  
 	_initPlcMonitor();
-	uint8_t r = 0;
+	uint8_t r = Ok;
   for (uint8_t i = 0; i < INPUT_COUNT; i++)
   {  
     if (plcDevice.in[i].log_period_ms == 0) continue; // No logging
     if (plcDevice.in[i].log_elapsed_ms > plcDevice.in[i].log_period_ms)
     {
-			r |= _plcLogInput(&plcDevice.in[i]);
-			plcDevice.in[i].log_elapsed_ms = 0;
+      r |= _plcLogInput(&plcDevice.in[i]);
+      plcDevice.in[i].log_elapsed_ms = 0;
     }
   }
 	return plcDevice.logErrors = r;
 }
-
 
 /* Update io */
 uint8_t _updateIo()
 {  
 	_initPlcMonitor();
 	uint8_t i;
-	uint8_t r = 0;
-
+	uint8_t r = Ok;
   
   r |= _plcGetConfig();
   r |= _plcResetCounters();
@@ -655,7 +649,8 @@ bool _thresholdPassed(Action * action)
 uint8_t _updateActions()
 {
 	_initPlcMonitor();
-	uint8_t r = 0;
+	uint8_t r = Ok;
+  bool send_outputs = false;
   
   r |= _plcGetActions();
   for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
@@ -670,7 +665,7 @@ uint8_t _updateActions()
         if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].permanent_triggered)
         {
           _plcDigitalWrite(output, HIGH);
-          r |= _plcSendOutputs();
+          send_outputs = true;
           plcDevice.actions[i].permanent_triggered = true;
         }
         if (plcDevice.dout[output].value == LOW && plcDevice.actions[i].permanent_triggered && !_thresholdPassed(&plcDevice.actions[i]))
@@ -682,13 +677,13 @@ uint8_t _updateActions()
         if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].event_triggered)
         {
           _plcDigitalWrite(output,HIGH);
-          r |= _plcSendOutputs();
+          send_outputs = true;
           plcDevice.actions[i].event_triggered = true;
         }
         else if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].event_triggered)
         {
           _plcDigitalWrite(output,LOW);
-          r |= _plcSendOutputs();
+          send_outputs = true;
           plcDevice.actions[i].event_triggered = false;
         }
         break;
@@ -697,13 +692,13 @@ uint8_t _updateActions()
         {
           plcDevice.actions[i].delay_triggered = true;
           _plcDigitalWrite(output, HIGH);
-          r |= _plcSendOutputs();
+          send_outputs = true;
           plcDevice.actions[i].delay_elapsed_ms = 0;            
         }
         if (!plcDevice.actions[i].delay_finished && plcDevice.actions[i].delay_triggered && (plcDevice.actions[i].delay_elapsed_ms > plcDevice.actions[i].delay_ms))
         {
           _plcDigitalWrite(output, LOW);
-          r |= _plcSendOutputs();
+          send_outputs = true;
           plcDevice.actions[i].delay_finished = true;
         }    
         if (!_thresholdPassed(&plcDevice.actions[i]) && (plcDevice.actions[i].delay_finished || ((plcDevice.dout[output].value == LOW )&& (plcDevice.actions[i].delay_triggered))))
@@ -713,22 +708,33 @@ uint8_t _updateActions()
         }
         break;    
     }
+
+    if(send_outputs)
+    {
+      r |= _plcSendOutputs();
+    }    
+          
     // Notifications
     if (plcDevice.actions[i].notification_period_ms != 0)
     {
       if (_thresholdPassed(&plcDevice.actions[i]))
       {
+        bool b = false;
         if(!plcDevice.actions[i].notification_triggered)
-        {
-          r |= _sendNotification(&plcDevice.actions[i]);
-          plcDevice.actions[i].notification_elapsed_ms = 0;
+        {          
+          b = true;
           plcDevice.actions[i].notification_triggered = true;
         }
         else if((plcDevice.actions[i].notification_elapsed_ms > plcDevice.actions[i].notification_period_ms) && (plcDevice.actions[i].notification_period_ms > 0))
         {
-          r |= _sendNotification(&plcDevice.actions[i]);
-          plcDevice.actions[i].notification_elapsed_ms = 0;
+          b = true;
         }   
+        if (b) // Send notification
+        {
+          r |= _sendNotification(&plcDevice.actions[i]);                    
+          plcDevice.actions[i].notification_elapsed_ms = 0;
+        }
+        
       }
       else // Threshold not passed
       {
@@ -736,84 +742,46 @@ uint8_t _updateActions()
       }         
     }
   }
+  
 	return plcDevice.actionErrors = r;
 }
 
-/* Debug monitor */
-void lcdReport(uint8_t error_code)
+/* Startup sequence */
+uint8_t _startupSequence()
 {
-  plc_lcd.clear();
-  plc_lcd.setCursor(0,0);
-  plc_lcd.print("PLC Monitor");
-  plc_lcd.setCursor(0,1);
-  plc_lcd.print("Warning = " + String(error_code));
+  uint8_t r = Error;
+  while (r != Ok)
+  {
+    r = Ok;
+    r |= _plcGetConfig();    
+    r |= _plcResetCounters(); // Dismiss
+    r |= _plcGetCounters();     
+    r |= _plcGetActions();  
+    r |= _plcGetOutputs();    
+  }
+  return r;
 }
+
 
 /* Update plc */
-void updatePlc()
-{
-  uint8_t  r;
-  r |= ethernetMaintain();
+uint8_t updatePlc()
+{  
+  ethernetMaintain();  
   _updateTimestamps();
-	r |=_updateIo();
+  
+  uint8_t  r;
+	r |= _updateIo();
   r |= _updateActions();
 	r |= _logInputs();
+ 
   _printPlcDevice();
-
-  lcdReport(r);
-
-  // Error watchdog
-  if (r != Ok) 
-    continuous_errors ++;
-  else
-    continuous_errors = 0;
-  if (continuous_errors > MAX_CONTINUOUS_ERRORS)
-    softReset();
-  
-
+  return r;
 }
 
-void testMonitor()
-{
-  uint8_t r;
-  _plcDeviceInit();
-  _printPlcDevice();
-
-  // Connect
-  Serial_println();
-  Serial_println("Connecting to ethernet");
-  initEthernet();
-  Serial_println("Connected");
-  Serial_println();
-
-  // Get outputs
-  Serial_println("Modified ouptuts");
-  r = _plcGetOutputs();
-  Serial_println("Error = " + String(r));
-  _printPlcDevice();
-
-  // Get config
-  Serial_println("Get configuration");
-  r = _plcGetConfig();
-  Serial_println("Error = " + String(r));
-  _printPlcDevice();
-
-  // Get actions
-  Serial_println("Get actions");
-  r = _plcGetActions();
-  Serial_println("Error = " + String(r));
-  _printPlcDevice();
-
-  // Update io
-  Serial_println("Update io");
-  _updateIo();
-  _printPlcDevice();  
-}
-
-void plc_testLoop()
+void plc_mainLoop()
 {
   updatePlc();
-  delay(1000);
+  delay(100);
 }
 
 #endif // PLC_MONITOR_H

@@ -8,5 +8,5 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  plc_testLoop();
+  plc_mainLoop();
 }

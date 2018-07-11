@@ -1,6 +1,8 @@
 #ifndef PLC_COMMON_H
 #define PLC_COMMON_H
 
+#include <plcshield.h>
+
 /* Input types */
 enum
 {
@@ -90,5 +92,28 @@ void plcDebug(String s)
 
 /* Reset function */
 void(* softReset) (void) = 0;//declare reset function at address 0
+
+/* Watchdog function */
+uint8_t plcWatchDog()
+{
+  softReset();
+  return Error;
+}
+
+/* Debug monitor through lcd */
+void lcdText(String s)
+{
+  plc_lcd.clear();
+  plc_lcd.setCursor(0,0);
+  plc_lcd.print("PLC Monitor" + String(PLC_ID));
+  plc_lcd.setCursor(0,1);
+  plc_lcd.print(s);
+}
+
+/* Report error code in lcd */
+void lcdReport(uint8_t error_code)
+{
+  lcdText("Warning " + String(error_code));
+}
 
 #endif //PLC_COMMON_H
