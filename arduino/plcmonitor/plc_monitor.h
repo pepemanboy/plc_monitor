@@ -8,14 +8,14 @@
 #ifndef PLC_MONITOR_H
 #define PLC_MONITOR_H
 
-// #define DEBUG
+#define DEBUG
 
 /* Test variables */
 float test_di[6];
 float test_ai[6];
 
 /* Ethernet connection configuration */
-#define PLC_IP {192, 168, 0, (50+PLC_ID)}
+#define PLC_IP {192, 168, 1, (50+PLC_ID)}
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
 
 #include "plc_common.h"
@@ -147,7 +147,7 @@ void _initPlcMonitor()
     delay(500);
     _startupSequence();
     lcdText("All set!");
-    delay(500);
+    delay(2000);
     plcDevice.initialized = true;    
   }
 }
@@ -155,7 +155,6 @@ void _initPlcMonitor()
 /* Get config from server */
 uint8_t _plcGetConfig()
 {
-	_initPlcMonitor();
 	int di_freq[6];
 	uint8_t di_count[6];
 	int ai_freq[6];
@@ -186,7 +185,6 @@ uint8_t _plcGetConfig()
 /* Get actions from server */
 uint8_t _plcGetActions()
 {
-	_initPlcMonitor();
 	uint8_t n; // Number of actions
 	uint8_t inputs_types[MAX_ACTIONS];
 	uint8_t inputs_numbers[MAX_ACTIONS];
@@ -251,7 +249,6 @@ uint8_t _plcGetActions()
 /* Get outputs from server */
 uint8_t _plcGetOutputs()
 {
-	_initPlcMonitor();
 	uint8_t i;
 	bool outputs[OUTPUT_COUNT];
 
@@ -273,7 +270,6 @@ uint8_t _plcGetOutputs()
 /* Get counters from the server */
 uint8_t _plcGetCounters()
 {
-  _initPlcMonitor();
   
   int di[DIGITAL_INPUT_COUNT];
 
@@ -298,7 +294,6 @@ uint8_t _plcGetCounters()
 /* Get reset counters from the server */
 uint8_t _plcResetCounters()
 {
-  _initPlcMonitor();
 
   int rr[DIGITAL_INPUT_COUNT];
   uint8_t r = getResets(rr);
@@ -319,7 +314,6 @@ uint8_t _plcResetCounters()
 /* Send outputs to server */
 uint8_t _plcSendOutputs()
 {
-  _initPlcMonitor();
   uint8_t i;
   bool dout[OUTPUT_COUNT];
 
@@ -340,7 +334,6 @@ uint8_t _plcSendOutputs()
 /* Send inputs to server */
 uint8_t _plcSendInputs()
 {
-	_initPlcMonitor();
 	uint8_t i;
 	int din[DIGITAL_INPUT_COUNT];
 	int ain[ANALOG_INPUT_COUNT];
@@ -363,7 +356,6 @@ uint8_t _plcSendInputs()
 /* Log input to server */
 uint8_t _plcLogInput(plc_in_t * input)
 {
-	_initPlcMonitor();
 	uint8_t r = logInput(input->number, input->type == input_Analog ? input_Analog : input_Digital , input->value);
 	if (r != Ok)
   {
@@ -376,7 +368,6 @@ uint8_t _plcLogInput(plc_in_t * input)
 /* Send email notification */
 uint8_t _sendNotification(Action * action)
 {
-	_initPlcMonitor();
   uint8_t r = sendEmail(action->id);
   if (r != Ok)
   {
@@ -539,7 +530,6 @@ void _applyGof(plc_in_t * in)
 /* Update timestamps */
 void _updateTimestamps()
 {
-	_initPlcMonitor();
   uint32_t t = millis(); // new timestamp
   uint32_t e = t - plcDevice.timeStamp; // elapsed
   plcDevice.timeStamp = t; // update timestamp
@@ -563,7 +553,6 @@ void _updateTimestamps()
 /* Log inputs */
 uint8_t _logInputs()
 {  
-	_initPlcMonitor();
 	uint8_t r = Ok;
   for (uint8_t i = 0; i < INPUT_COUNT; i++)
   {  
@@ -580,7 +569,6 @@ uint8_t _logInputs()
 /* Update io */
 uint8_t _updateIo()
 {  
-	_initPlcMonitor();
 	uint8_t i;
 	uint8_t r = Ok;
   
@@ -648,7 +636,6 @@ bool _thresholdPassed(Action * action)
 /* Update actions */
 uint8_t _updateActions()
 {
-	_initPlcMonitor();
 	uint8_t r = Ok;
   bool send_outputs = false;
   
@@ -753,10 +740,10 @@ uint8_t _startupSequence()
   while (r != Ok)
   {
     r = Ok;
-    r |= _plcGetConfig();    
+    r |= _plcGetConfig();
     r |= _plcResetCounters(); // Dismiss
-    r |= _plcGetCounters();     
-    r |= _plcGetActions();  
+    r |= _plcGetCounters();  
+    r |= _plcGetActions(); 
     r |= _plcGetOutputs();    
   }
   return r;
@@ -765,7 +752,7 @@ uint8_t _startupSequence()
 
 /* Update plc */
 uint8_t updatePlc()
-{  
+{ 
   ethernetMaintain();  
   _updateTimestamps();
   
@@ -773,15 +760,22 @@ uint8_t updatePlc()
 	r |= _updateIo();
   r |= _updateActions();
 	r |= _logInputs();
- 
+
+  ethernetResetWatchdog(); 
   _printPlcDevice();
+  lcdText("Period complete");
+  delay(500);
   return r;
+}
+
+void plc_init()
+{
+  _initPlcMonitor();
 }
 
 void plc_mainLoop()
 {
   updatePlc();
-  delay(100);
 }
 
 #endif // PLC_MONITOR_H

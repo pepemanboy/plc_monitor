@@ -103,27 +103,37 @@ void plcDebug(String s)
 /* Reset function */
 void(* softReset) (void) = 0;//declare reset function at address 0
 
-/* Watchdog function */
-uint8_t plcWatchDog()
-{
-  softReset();
-  return Error;
-}
-
 /* Debug monitor through lcd */
 void lcdText(String s)
 {
   plc_lcd.clear();
   plc_lcd.setCursor(0,0);
-  plc_lcd.print("PLC Monitor" + String(PLC_ID));
+  plc_lcd.print("PLC Monitor " + String(PLC_ID));
   plc_lcd.setCursor(0,1);
   plc_lcd.print(s);
+}
+
+/* Error code string */
+String errorString(uint8_t e)
+{
+  switch(e)
+  {
+    case Ok: return "Ok";
+    case Error: return "Error";
+    case Error_disconnect: return "Disc";
+    case Error_connect: return "Conn";
+    case Error_timeout: return "Tout";
+    case Error_inexistent: return "Inex";
+    case Error_checksum: return "Chsm";
+    case Error_maintain: return "Mntn";
+  }
+  return String(e);
 }
 
 /* Report error code in lcd */
 void lcdReport(uint8_t error_code)
 {
-  lcdText("Warning " + String(error_code));
+  lcdText("Warning " + errorString(error_code));
 }
 
 #endif //PLC_COMMON_H

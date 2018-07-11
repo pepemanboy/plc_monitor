@@ -30,7 +30,7 @@
 
 /* Timeout settings */
 #define PLC_TIMEOUT_MS (3000) /* Tiempo para esperar a que cargue una pagina antes de reportar error */
-#define PLC_TIMEOUT_DELAY_MS (10)
+#define PLC_TIMEOUT_DELAY_MS (1)
 
 /* Delays */
 #define PLC_LOG_INPUT_DELAY_MS (500)
@@ -40,7 +40,11 @@
 #define PLC_PORT 80 /* Puerto HTTP */
 
 /* Retry settings */
-#define PLC_MAX_RETRY 5
+#define PLC_MAX_RETRY (5)
+#define PLC_MAX_ERRORS (5)
+
+/* Module errors */
+uint8_t ethernet_error_count = 0;
 
 /* Device settings */
 uint8_t mac[] = PLC_MAC; // Mac Address unico.
@@ -76,6 +80,22 @@ enum data_types
   type_long, ///< Long
   type_ulong, ///< Unsigned long
 };
+
+/* Ethernet watchdog */
+uint8_t ethernetWatchdog()
+{
+  if (++ ethernet_error_count > PLC_MAX_ERRORS)
+  {
+    lcdText("Be right back!");
+    delay(1000);
+    softReset();
+  }
+}
+
+uint8_t ethernetResetWatchdog()
+{
+  ethernet_error_count = 0;
+}
 
 /* Mantain ethernet connection */
 uint8_t ethernetMaintain()
@@ -322,12 +342,11 @@ uint8_t _post(const char * url, const char * params)
 uint8_t _retryPost(const char * url, const char * params)
 {
   uint8_t r = Error;
-  uint8_t i = PLC_MAX_RETRY;
   while (r != Ok)
   {
     r = _post(url,params);
     lcdReport(r);
-    if (!(--i)) return plcWatchDog();
+    if (r != Ok) ethernetWatchdog(); // Veces totales que puede fallar
   }
   return r;
 }
