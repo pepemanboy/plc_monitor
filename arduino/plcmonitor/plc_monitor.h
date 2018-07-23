@@ -8,7 +8,7 @@
 #ifndef PLC_MONITOR_H
 #define PLC_MONITOR_H
 
-#define DEBUG
+// #define DEBUG
 
 /* Test variables */
 float test_di[6];
@@ -768,6 +768,19 @@ uint8_t updatePlc()
   return r;
 }
 
+/* Display analog inputs */
+uint8_t displayRaw()
+{
+  plc_lcd.clear(); // Clear the screen 
+  for(uint8_t i = 1; i <= 6; i ++){
+    plc_lcd.setCursor(((i-1)%3)*4,(i-1)/3); // Set the cursor in Column 0, Row 0 of the LCD  
+    String s =  String(plc_analogRead(i), DEC); 
+    plc_lcd.print(s); // Print this text where the cursor is
+  }
+  delay(500);
+  return Ok;
+}
+
 void plc_init()
 {
   _initPlcMonitor();
@@ -775,6 +788,12 @@ void plc_init()
 
 void plc_mainLoop()
 {
+  plcDebug("Button 1 = " + String(plc_buttonRead(1)));
+  if (plc_buttonRead(1)) 
+  {    
+    displayRaw();
+    return;
+  }
   updatePlc();
 }
 
