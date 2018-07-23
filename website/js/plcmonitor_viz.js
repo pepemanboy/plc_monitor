@@ -576,7 +576,6 @@ function addAction(plc_number)
 
 	// Action type
 	var at = Number($('input[name=viz-action-radios0]:checked').attr("data-action-type"));
-	alert("At = " + at);
 
 	$.post("viz_action.php",
 	{

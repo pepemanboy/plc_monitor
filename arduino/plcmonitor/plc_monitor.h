@@ -15,7 +15,7 @@ float test_di[6];
 float test_ai[6];
 
 /* Ethernet connection configuration */
-#define PLC_IP {192, 168, 1, (50+PLC_ID)}
+#define PLC_IP {192, 168, 0, (50+PLC_ID)}
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
 
 #include "plc_common.h"
@@ -643,7 +643,7 @@ uint8_t _updateActions()
   for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
   {
     uint8_t output = plcDevice.actions[i].output - 1;
-    if(output > 0)
+    if(output >= 0)
     {
       switch (plcDevice.actions[i].type)
       {
