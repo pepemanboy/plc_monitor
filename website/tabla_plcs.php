@@ -128,7 +128,8 @@ else if ($operation == "delete")
 	$table_config = $suffix . "config";
 	$table_actions = $suffix . "actions";
 	$table_status = $suffix . "status";
-	$tables = array($table_config, $table_inputs, $table_outputs, $table_actions, $table_status);
+	$table_reset = $suffix . "reset";
+	$tables = array($table_config, $table_inputs, $table_outputs, $table_actions, $table_status, $table_reset);
 	for($i = 1; $i <= 6; $i ++)
 		array_push($tables, $suffix . "di". $i, $suffix . "ai". $i);
 
