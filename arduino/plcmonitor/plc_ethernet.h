@@ -1,5 +1,7 @@
 /*
  * PLC Server connectivity and communication library
+ * 
+ * Do not modify.
  *
  * Author: pepemanboy
  * Email: pepe_ciro@hotmail.com

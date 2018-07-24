@@ -1,5 +1,7 @@
 /*
  * PLC Server common definitions
+ * 
+ * Do not modify.
  *
  * Author: pepemanboy
  * Email: pepe_ciro@hotmail.com
@@ -8,6 +10,7 @@
 #ifndef PLC_COMMON_H
 #define PLC_COMMON_H
 
+#include "plc_config.h"
 #include <plcshield.h>
 
 #define SERIAL_BAUDRATE 115200
