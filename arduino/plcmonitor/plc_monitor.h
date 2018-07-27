@@ -17,8 +17,10 @@ float test_di[6];
 float test_ai[6];
 
 /* Ethernet connection configuration */
-#define PLC_IP {192, 168, 0, (50+PLC_ID)}
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
+
+/* Functions to export */
+uint8_t _internalUpdate();
 
 #include "plc_common.h"
 #include "plc_ethernet.h"
@@ -101,6 +103,7 @@ struct PlcDevice
 	uint8_t ioErrors; ///< IO errors
 	uint8_t actionErrors; ///< action errors
 	bool initialized; ///< Initialized flag
+  bool sendOutputs; ///< Pending to send outputs
 };
 
 /* Global plcDevice */
@@ -108,6 +111,7 @@ PlcDevice plcDevice;
 
 /* Function prototype declarations */
 uint8_t _startupSequence();
+uint8_t _checkActions();
 
 /* Initialize plcDevice */
 void _plcDeviceInit()
@@ -568,25 +572,19 @@ uint8_t _logInputs()
 	return plcDevice.logErrors = r;
 }
 
-/* Update io */
-uint8_t _updateIo()
-{  
-	uint8_t i;
-	uint8_t r = Ok;
-  
-  r |= _plcGetConfig();
-  r |= _plcResetCounters();
-  
+/* Read inputs */
+uint8_t _readInputs()
+{
   // Digital inputs
-  for(i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+  for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
-		plcDevice.din[i].reading_ = plcDevice.din[i].reading; // Store previous reading
-		plcDevice.din[i].reading = _plcDigitalRead(i);
-		if (plcDevice.din[i].type == input_Digital)
+    plcDevice.din[i].reading_ = plcDevice.din[i].reading; // Store previous reading
+    plcDevice.din[i].reading = _plcDigitalRead(i);
+    if (plcDevice.din[i].type == input_Digital)
     {
       plcDevice.din[i].value = plcDevice.din[i].reading;
-		}
-		else // Counter
+    }
+    else // Counter
     {
       if (plcDevice.din[i].reading_ == 0 && plcDevice.din[i].reading == 1) // Rising edge
         plcDevice.din[i].value++;
@@ -594,22 +592,51 @@ uint8_t _updateIo()
   }
 
   // Analog inputs
-  for (i = 0; i < ANALOG_INPUT_COUNT; i++)
+  for (uint8_t i = 0; i < ANALOG_INPUT_COUNT; i++)
   {
-		plcDevice.ain[i].reading_ = plcDevice.ain[i].reading;
-		plcDevice.ain[i].reading = _plcAnalogRead(i);
-		_applyGof(&plcDevice.ain[i]);
-	}
+    plcDevice.ain[i].reading_ = plcDevice.ain[i].reading;
+    plcDevice.ain[i].reading = _plcAnalogRead(i);
+    _applyGof(&plcDevice.ain[i]);
+  }
+
+  return Ok;
+}
+
+/* Set outputs */
+uint8_t _setOutputs()
+{
+  // Outputs
+  for (uint8_t i = 0; i < OUTPUT_COUNT; i++)
+  {
+    _plcDigitalWrite(i, plcDevice.dout[i].value);
+  }
+
+  return Ok;
+}
+
+/* Internal update */
+uint8_t _internalUpdate()
+{
+  _updateTimestamps();
+  _readInputs();
+  _checkActions();
+}
+
+/* Update io */
+uint8_t _updateIo()
+{  
+	uint8_t i;
+	uint8_t r = Ok;
+
+  r |= _plcGetConfig();
+  r |= _plcResetCounters();
 
 	// Update to/from server
 	r |= _plcSendInputs();
 	r |= _plcGetOutputs();
 
-  // Outputs
-  for (i = 0; i < OUTPUT_COUNT; i++)
-  {
-		_plcDigitalWrite(i, plcDevice.dout[i].value);
-	}
+  _setOutputs();
+  
  return plcDevice.ioErrors = r;
 }
 
@@ -635,13 +662,11 @@ bool _thresholdPassed(Action * action)
     return _actionInputValue(action) < action->threshold;
 }
 
-/* Update actions */
-uint8_t _updateActions()
+/* Check actions. Return true if need to send outputs */
+uint8_t _checkActions()
 {
-	uint8_t r = Ok;
   bool send_outputs = false;
   
-  r |= _plcGetActions();
   for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
   {
     uint8_t output = plcDevice.actions[i].output - 1;
@@ -698,12 +723,29 @@ uint8_t _updateActions()
           }
           break;    
       }
-      if(send_outputs)
-      {
-        r |= _plcSendOutputs();
-      }   
-    }     
-          
+    }      
+  } 
+  plcDevice.sendOutputs = send_outputs;
+
+  return Ok;
+}
+
+/* Update actions */
+uint8_t _updateActions()
+{
+	uint8_t r = Ok;
+  
+  r |= _plcGetActions();
+  
+  _checkActions();    
+  if(plcDevice.sendOutputs)
+  {
+    r |= _plcSendOutputs();
+  }  
+
+  // Send notifications
+  for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
+  {          
     // Notifications
     if (plcDevice.actions[i].notification_period_ms != 0)
     {
@@ -756,7 +798,6 @@ uint8_t _startupSequence()
 uint8_t updatePlc()
 { 
   ethernetMaintain();  
-  _updateTimestamps();
   
   uint8_t  r;
 	r |= _updateIo();
@@ -765,8 +806,8 @@ uint8_t updatePlc()
 
   ethernetResetWatchdog(); 
   _printPlcDevice();
-  lcdText("complete");
-  delay(500);
+  // lcdText("complete");
+  // delay(500);
   return r;
 }
 

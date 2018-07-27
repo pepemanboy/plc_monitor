@@ -14,6 +14,7 @@
 #include <SPI.h>
 #include <string.h>
 #include "plc_common.h"
+#include "plc_monitor.h"
 
 /* PLC ID */
 #ifndef PLC_ID
@@ -39,7 +40,7 @@
 #define PLC_POST_DELAY (0)
 
 /* Server settings */
-#define PLC_SERVER {192, 185, 131, 113} /* Es la IP del servidor donde esta la pagina web*/
+#define PLC_SERVER {74, 220, 202, 42} /* Es la IP del servidor donde esta la pagina web*/
 #define PLC_PORT 80 /* Puerto HTTP */
 
 /* Retry settings */
@@ -66,7 +67,7 @@ const char comm_closing = '}';
 #define REPLY_BUFFER_SIZE 500
 
 /* Packet header end */
-char header_end[] = "Connection: close";
+char header_end[] = "Vary: Accept-Encoding";
 
 /* Global char buffer */
 char g_buf[REPLY_BUFFER_SIZE];
@@ -74,20 +75,11 @@ char g_buf[REPLY_BUFFER_SIZE];
 /* Global ethernet client */
 EthernetClient client;
 
-/* Data types */
-enum data_types
+/* Ethernet watchdog for consecutive errors*/
+uint8_t ethernetWatchdog(bool b)
 {
-  type_int = 1, ///< Int 32
-  type_float, ///< Float
-  type_uint8, ///< Uint 8
-  type_long, ///< Long
-  type_ulong, ///< Unsigned long
-};
-
-/* Ethernet watchdog */
-uint8_t ethernetWatchdog()
-{
-  if (++ ethernet_error_count > PLC_MAX_ERRORS)
+  ethernet_error_count = b ? ethernet_error_count + 1 : 0;
+  if (ethernet_error_count > PLC_MAX_ERRORS)
   {
     lcdText("Be right back!");
     delay(1000);
@@ -208,6 +200,7 @@ bool isHex(char x)
 */
 uint8_t _post(const char * url, const char * params)
 {
+  _internalUpdate();
   // Connect to server
   uint8_t r = client.connect(SERVER, PORT);
   if (r != 1)
@@ -217,14 +210,14 @@ uint8_t _post(const char * url, const char * params)
   }
 
   // Send request
-  client.print(F("POST /plcmonitor/"));
+  client.print(F("POST /scada/"));
   client.print(url);
   client.println(F(" HTTP/1.1"));
-  client.println(F("Host: www.pepemanboy.com"));
+  client.println(F("Host: www.dplastico.com"));
   client.println(F("User-Agent: Arduino/1.0"));
   client.println(F("Connection: close"));
   client.println(F("Content-Type: application/x-www-form-urlencoded;"));
-  client.println(F("Authorization: Basic cGVwZW1hbmJveTpwZXBlMTk5NSo=")); // Base 64 encoded user:pass
+  client.println(F("Authorization: Basic aXZhbnJ2OlRla2xhZG8lMjc1MzA4")); // Base 64 encoded user:pass
   client.print(F("Content-Length: "));
   client.println(strlen(params));
   client.println();
@@ -261,8 +254,16 @@ uint8_t _post(const char * url, const char * params)
     int i = 0;
 
     char *a_;
-    a_ = strstr(char_buf,"Connection: close") + 17;
-    while(!isHex(*a_))
+    // a_ = strstr(char_buf,"Connection: close") + 17;
+    
+    a_ = strstr(char_buf, header_end) + strlen(header_end);    
+    if(!a_)
+      return Error;
+
+    char *b_; // End of char_buf
+    b_ = char_buf + strlen(char_buf);
+
+    while(!isHex(*a_) && a_ <= b_)
       a_++;
     
     while(true)
@@ -349,7 +350,7 @@ uint8_t _retryPost(const char * url, const char * params, const char * msg)
   {
     r = _post(url,params);
     lcdText(String(msg) + errorString(r));
-    if (r != Ok) ethernetWatchdog(); // Veces totales que puede fallar
+    ethernetWatchdog(r != Ok && r != Error_chunked); // Veces totales que puede fallar
   }
   return r;
 }
