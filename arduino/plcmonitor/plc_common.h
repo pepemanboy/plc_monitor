@@ -53,10 +53,20 @@ enum error_codes
   Error_maintain = 1<<7, ///<Cannot maintain connection
 };
 
+/* Data types */
+enum data_types
+{
+  type_int = 1, ///< Int 32
+  type_float, ///< Float
+  type_uint8, ///< Uint 8
+  type_long, ///< Long
+  type_ulong, ///< Unsigned long
+};
+
 /* Concatenate a string and a character*/
 void strcat_c (char *str, char c)
 {
-  for (;*str;str++); // note the terminating semicolon here. 
+  for (;*str;str++);
   *str++ = c; 
   *str++ = 0;
 }
@@ -99,7 +109,9 @@ void Serial_println(String s = "")
 /* Debug auxiliary function */
 void plcDebug(String s)
 {
+  #ifdef DEBUG
   Serial_println("Debug: " + s);
+  #endif
   return;
 }
 
@@ -128,15 +140,10 @@ String errorString(uint8_t e)
     case Error_timeout: return "Tout";
     case Error_inexistent: return "Inex";
     case Error_checksum: return "Chsm";
+    case Error_chunked: return "Chnk";
     case Error_maintain: return "Mntn";
   }
   return String(e);
-}
-
-/* Report error code in lcd */
-void lcdReport(uint8_t error_code)
-{
-  lcdText("Warning " + errorString(error_code));
 }
 
 #endif //PLC_COMMON_H
