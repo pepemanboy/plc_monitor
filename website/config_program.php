@@ -36,6 +36,14 @@ $r = tableExists($link, $table_name, $exists);
 if ($r != OK)
 	_exit($r, $link);
 
+// Update arduino time
+if(isset($_POST['arduino']))
+{
+	$r = arduinoStatus($link, $plc_number);
+	if ($r != OK)
+		_exit($r, $link);
+}
+
 // Create table if it doesnt exist
 if (!$exists)
 {

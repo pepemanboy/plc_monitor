@@ -160,9 +160,9 @@ else if ($operation == "delete")
 }
 else if ($operation == "exists")
 {	
-	$r = arduinoStatus($link, 1);
-	if ($r != OK)
-		_exit($r, $link);	
+	// $r = arduinoStatus($link, 1);
+	// if ($r != OK)
+		// _exit($r, $link);	
 	echo("{");
 	// Check for arguments
 	if (!isset($_POST['plc_number'])) 
