@@ -17,7 +17,7 @@ float test_di[6];
 float test_ai[6];
 
 /* Ethernet connection configuration */
-#define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x08, PLC_ID }
+#define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
 
 /* Functions to export */
 uint8_t _internalUpdate();

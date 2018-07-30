@@ -39,10 +39,6 @@
 #define PLC_LOG_INPUT_DELAY_MS (0)
 #define PLC_POST_DELAY (0)
 
-/* Server settings */
-#define PLC_SERVER {74, 220, 202, 42} /* Es la IP del servidor donde esta la pagina web*/
-#define PLC_PORT 80 /* Puerto HTTP */
-
 /* Retry settings */
 #define PLC_MAX_RETRY (5)
 #define PLC_MAX_ERRORS (5)
@@ -53,6 +49,9 @@ uint8_t ethernet_error_count = 0;
 /* Device settings */
 uint8_t mac[] = PLC_MAC; // Mac Address unico.
 const byte ip[] = PLC_IP; // IP fija del Arduino. Ver Ip de computadora en red. Eg (192.168.1.55), y usar los primeros 3 numeros y el 4to numero escogerlo. Eg (192.168.1.69)
+const byte dns[] = PLC_DNS; // DNS para conectar al modem. Eg 8.8.8.8 (Google)
+const byte gateway[] = PLC_GATEWAY; // Gateway del modem
+const byte subnet[] = PLC_SUBNET; // Subnet del modem
 
 /* Pepemanboy.com server */
 const byte SERVER[] = PLC_SERVER; // 20x faster to use ip than name.
@@ -67,7 +66,7 @@ const char comm_closing = '}';
 #define REPLY_BUFFER_SIZE 500
 
 /* Packet header end */
-char header_end[] = "Vary: Accept-Encoding";
+char header_end[] = "Connection: close";
 
 /* Global char buffer */
 char g_buf[REPLY_BUFFER_SIZE];
@@ -205,15 +204,16 @@ uint8_t _post(const char * url, const char * params)
   uint8_t r = client.connect(SERVER, PORT);
   if (r != 1)
   {
+    plcDebug("Error de conexion");
     client.stop();
     return Error_connect;
   }
 
   // Send request
-  client.print(F("POST /scada/"));
+  client.print(F("POST /"));
   client.print(url);
   client.println(F(" HTTP/1.1"));
-  client.println(F("Host: www.dplastico.com"));
+  client.println(F("Host: www.dplastico-scada.com"));
   client.println(F("User-Agent: Arduino/1.0"));
   client.println(F("Connection: close"));
   client.println(F("Content-Type: application/x-www-form-urlencoded;"));
@@ -241,6 +241,7 @@ uint8_t _post(const char * url, const char * params)
     {
       char c = client.read();
       strcat_c(char_buf,c);
+      Serial.print(c);
     }
   }
   
@@ -685,7 +686,7 @@ uint8_t initEthernet()
   pinMode(4,OUTPUT);
   digitalWrite(4,HIGH);
   plcDebug("Connecting to ethernet");
-  Ethernet.begin(mac , ip); // Without IP, about 20 seconds. With IP, about 1 second.
+  Ethernet.begin(mac , ip, dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
   plcDebug("Connected to ethernet.");
   return Ok;
 }

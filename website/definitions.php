@@ -8,9 +8,9 @@ if(!defined("DEFINITIONS"))
 	define("SERVER", "localhost");
 	// define("USERNAME", "pepemanb_pepeman");
 	// define("PASSWORD", "pepe1995*");
-	define("USERNAME", "ivanrvco_sc_ivan");
+	define("USERNAME", "dplastic_sc_ivan");
 	define("PASSWORD", "Kristal$737733");
-	define("DATABASE", "ivanrvco_dplastico_scada");
+	define("DATABASE", "dplastic_dplastico_scada");
 	define("TABLE_PREFIX", "plc");
 	define("MAIN_TABLE", "plcs");
 

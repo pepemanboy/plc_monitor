@@ -94,6 +94,7 @@
         </div>
       </div>
     </div> <!-- Acaba modal agregar -->
+    <br><br>
   </div> <!-- Acaba container -->
   <!-- Inicia JavaScript -->
   <!-- primero jQuery, despues Popper.js, despues Bootstrap, despues propio -->
