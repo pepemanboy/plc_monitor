@@ -16,9 +16,6 @@
 float test_di[6];
 float test_ai[6];
 
-/* Ethernet connection configuration */
-#define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
-
 /* Functions to export */
 uint8_t _internalUpdate();
 
@@ -831,7 +828,6 @@ void plc_init()
 
 void plc_mainLoop()
 {
-  plcDebug("Button 1 = " + String(plc_buttonRead(1)));
   if (plc_buttonRead(1)) 
   {    
     displayRaw();

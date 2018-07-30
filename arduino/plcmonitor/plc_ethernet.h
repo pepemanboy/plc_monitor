@@ -66,7 +66,7 @@ const char comm_closing = '}';
 #define REPLY_BUFFER_SIZE 500
 
 /* Packet header end */
-char header_end[] = "Connection: close";
+char header_end[] = PLC_WEBSITE_USERPASS;
 
 /* Global char buffer */
 char g_buf[REPLY_BUFFER_SIZE];
@@ -213,11 +213,13 @@ uint8_t _post(const char * url, const char * params)
   client.print(F("POST /"));
   client.print(url);
   client.println(F(" HTTP/1.1"));
-  client.println(F("Host: www.dplastico-scada.com"));
+  client.print(F("Host: "));
+  client.println(F(PLC_WEBSITE));
   client.println(F("User-Agent: Arduino/1.0"));
   client.println(F("Connection: close"));
   client.println(F("Content-Type: application/x-www-form-urlencoded;"));
-  client.println(F("Authorization: Basic aXZhbnJ2OlRla2xhZG8lMjc1MzA4")); // Base 64 encoded user:pass
+  client.print(F("Authorization: Basic ")); // Base 64 encoded user:pass
+  client.println(F(PLC_WEBSITE_USERPASS));
   client.print(F("Content-Length: "));
   client.println(strlen(params));
   client.println();
