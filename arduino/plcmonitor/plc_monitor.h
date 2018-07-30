@@ -161,9 +161,9 @@ void _initPlcMonitor()
 /* Get config from server */
 uint8_t _plcGetConfig()
 {
-	int di_freq[6];
+	uint32_t di_freq[6];
 	uint8_t di_count[6];
-	int ai_freq[6];
+	uint32_t ai_freq[6];
 	float ai_gain[6];
 	float ai_offs[6];
 

@@ -640,7 +640,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
  * @param aio analog input offsets
  * @return error code
 */
-uint8_t getConfig(int * dif, uint8_t * dic, int * aif, float * aig, float * aio)
+uint8_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, float * aio)
 {
   char q [QUERY_BUFFER_SIZE];
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
