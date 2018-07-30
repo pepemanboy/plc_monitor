@@ -11,13 +11,16 @@
 #define PLC_CONFIG_H
 
 /** PLC ID PREVIOUSLY DEFINED ON THE WEBSITE */
-#define PLC_ID 12
+#define PLC_ID 13
+
+/** PLC MAC ADDRESS */
+#define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
+
+/** DEFINE IF DYNAMIC IP IS PREFERRED */
+// #define PLC_DYNAMIC_IP
 
 /** PLC IP */
 #define PLC_IP {192, 168, 1, 42}
-
-/* PLC MAC ADDRESS */
-#define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
 
 /** MODEM DNS */
 #define PLC_DNS { 8, 8, 8, 8}
@@ -40,7 +43,12 @@
 /** BASE 64 ENCODED USER:PASS FROM WEBSITE */
 #define PLC_WEBSITE_USERPASS "aXZhbnJ2OlRla2xhZG8lMjc1MzA4"
 
+/*** ADVANCED CONFIGURATION ***/
+
 /** HTTP REQUEST HEADER END FROM SERVER */
 #define PLC_SERVER_HEADER_END "Connection: close"
+
+/** ENABLE DEBUGGING. ONLY ADVANCED USE */
+// #define DEBUG
 
 #endif // PLC_CONFIG_H

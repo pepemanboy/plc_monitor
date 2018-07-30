@@ -66,7 +66,7 @@ const char comm_closing = '}';
 #define REPLY_BUFFER_SIZE 500
 
 /* Packet header end */
-char header_end[] = PLC_WEBSITE_USERPASS;
+char header_end[] = PLC_SERVER_HEADER_END;
 
 /* Global char buffer */
 char g_buf[REPLY_BUFFER_SIZE];
@@ -243,7 +243,7 @@ uint8_t _post(const char * url, const char * params)
     {
       char c = client.read();
       strcat_c(char_buf,c);
-      Serial.print(c);
+      // Serial.print(c);
     }
   }
   
@@ -688,7 +688,11 @@ uint8_t initEthernet()
   pinMode(4,OUTPUT);
   digitalWrite(4,HIGH);
   plcDebug("Connecting to ethernet");
+  #ifdef PLC_DYNAMIC_IP
+  Ethernet.begin(mac);
+  #else
   Ethernet.begin(mac , ip, dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
+  #endif
   plcDebug("Connected to ethernet.");
   return Ok;
 }

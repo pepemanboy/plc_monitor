@@ -10,8 +10,6 @@
 #ifndef PLC_MONITOR_H
 #define PLC_MONITOR_H
 
-// #define DEBUG
-
 /* Test variables */
 float test_di[6];
 float test_ai[6];
@@ -828,11 +826,12 @@ void plc_init()
 
 void plc_mainLoop()
 {
+  /*
   if (plc_buttonRead(1)) 
   {    
     displayRaw();
     return;
-  }
+  }*/
   updatePlc();
 }
 
