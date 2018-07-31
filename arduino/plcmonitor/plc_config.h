@@ -11,7 +11,7 @@
 #define PLC_CONFIG_H
 
 /** PLC ID PREVIOUSLY DEFINED ON THE WEBSITE */
-#define PLC_ID 13
+#define PLC_ID 10
 
 /** PLC MAC ADDRESS */
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
@@ -20,7 +20,7 @@
 // #define PLC_DYNAMIC_IP
 
 /** PLC IP */
-#define PLC_IP {192, 168, 1, 42}
+#define PLC_IP {192, 168, 1, (20+PLC_ID)}
 
 /** MODEM DNS */
 #define PLC_DNS { 8, 8, 8, 8}
@@ -40,6 +40,9 @@
 /** WEBSITE */
 #define PLC_WEBSITE "www.dplastico-scada.com"
 
+/** WEBSITE DIRECTORY */
+#define PLC_WEBSITE_DIRECTORY "/"
+
 /** BASE 64 ENCODED USER:PASS FROM WEBSITE */
 #define PLC_WEBSITE_USERPASS "aXZhbnJ2OlRla2xhZG8lMjc1MzA4"
 
@@ -50,5 +53,6 @@
 
 /** ENABLE DEBUGGING. ONLY ADVANCED USE */
 // #define DEBUG
+// #define DEBUG_REQUEST
 
 #endif // PLC_CONFIG_H

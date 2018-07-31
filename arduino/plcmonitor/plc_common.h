@@ -10,6 +10,7 @@
 #ifndef PLC_COMMON_H
 #define PLC_COMMON_H
 
+#include <Ethernet.h>
 #include "plc_config.h"
 #include <plcshield.h>
 
@@ -123,7 +124,8 @@ void lcdText(String s)
 {
   plc_lcd.clear();
   plc_lcd.setCursor(0,0);
-  plc_lcd.print("PLC Monitor " + String(PLC_ID));
+  // plc_lcd.print("PLC Monitor " + String(PLC_ID));
+  plc_lcd.print(Ethernet.localIP());
   plc_lcd.setCursor(0,1);
   plc_lcd.print(s);
 }

@@ -10,7 +10,6 @@
 #ifndef PLC_ETHERNET_H
 #define PLC_ETHERNET_H
 
-#include <Ethernet.h>
 #include <SPI.h>
 #include <string.h>
 #include "plc_common.h"
@@ -210,7 +209,8 @@ uint8_t _post(const char * url, const char * params)
   }
 
   // Send request
-  client.print(F("POST /"));
+  client.print(F("POST "));
+  client.print(F(PLC_WEBSITE_DIRECTORY));
   client.print(url);
   client.println(F(" HTTP/1.1"));
   client.print(F("Host: "));
@@ -243,7 +243,9 @@ uint8_t _post(const char * url, const char * params)
     {
       char c = client.read();
       strcat_c(char_buf,c);
-      // Serial.print(c);
+      #ifdef DEBUG_REQUEST
+      Serial.print(c);
+      #endif
     }
   }
   
