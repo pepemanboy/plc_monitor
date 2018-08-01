@@ -104,7 +104,24 @@ else if ($operation == "get")
 	$format = $_POST['format'];
 	if($format == "table") 
 	{
-		printTable($ids, $names, $status);
+		printTable($ids, $names, $status);		
+		$n = count($ids);
+		echo("status_(");
+		for($i = 0; $i < $n; $i++)
+		{
+			echo($status[$i]);
+			if($i < $n - 1)
+				echo(",");
+		}
+		echo(")");
+		echo("ids_(");
+		for($i = 0; $i < $n; $i++)
+		{
+			echo($ids[$i]);
+			if($i < $n - 1)
+				echo(",");
+		}
+		echo(")");
 	}
 	else
 	{
@@ -198,7 +215,7 @@ function printTable($ids, $names, $status)
 		echo("<tr id = 'admin-row-" . $id . "'>
 	      <th scope='row'>". $id ."</th>
 	      <td>" . $name . "</td>
-	      <td>" . $stat . "</td>
+	      <td>" . $stat . " <span id = 'admin-status-badge-" . $id . "' class='badge badge-success'>OK</span> </td>
 	      <td>
 	        <button type='button' class='btn btn-danger admin-borrar-boton' data-plc-number = '" . $id . "' id = 'admin-borrar-boton-" . $id . "' data-toggle='modal' data-target='#admin-borrar-modal'>Borrar</button>
 	      </td>

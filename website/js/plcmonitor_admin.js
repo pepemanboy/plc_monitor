@@ -102,7 +102,19 @@ function updateTable()
         alert("table error");
         return;
       }
-      $("#admin-plc-table").html(table.val);    
+      $("#admin-plc-table").html(table.val);  
+      var dates = getPhpArray(data, "status_");  
+      var ids = getPhpArray(data,"ids_");
+      for(var i = 0; i < dates.length; i ++)
+      {
+        var d = moment(dates[i], 'YYYY-MM-DD HH:mm:ss');
+        var current = moment();
+        var diff = current.diff(d);
+        if (isNaN(diff) || diff > 300000)
+        {
+          $("#admin-status-badge-" + ids[i]).hide();
+        }
+      }
     }); 
 }
 
