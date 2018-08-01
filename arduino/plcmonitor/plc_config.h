@@ -17,7 +17,7 @@
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
 
 /** DEFINE IF DYNAMIC IP IS PREFERRED */
-// #define PLC_DYNAMIC_IP
+#define PLC_DYNAMIC_IP
 
 /** PLC IP */
 #define PLC_IP {192, 168, 1, (20+PLC_ID)}

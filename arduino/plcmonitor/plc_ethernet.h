@@ -92,9 +92,22 @@ uint8_t ethernetResetWatchdog()
 
 /* Mantain ethernet connection */
 uint8_t ethernetMaintain()
-{
-  uint8_t r = Ok;
-  r = Ethernet.maintain() & 0x01 ? Error_maintain : Ok;
+{  
+  uint8_t m = 0;
+  m = Ethernet.maintain();
+  if (m != 0)
+  {
+    switch(m)
+    {
+      case 1: lcdText("Renew fail"); break;
+      case 2: lcdText("Renew success"); break;
+      case 3: lcdText("Rebind fail"); break;
+      case 4: lcdText("Rebind success"); break;
+    }
+    delay(500);
+  }
+  
+  uint8_t r = m & 0x01 ? Error_maintain : Ok;
   return r; 
 }
 
@@ -691,7 +704,13 @@ uint8_t initEthernet()
   digitalWrite(4,HIGH);
   plcDebug("Connecting to ethernet");
   #ifdef PLC_DYNAMIC_IP
-  Ethernet.begin(mac);
+  uint8_t r = Ethernet.begin(mac);
+  if (r != 1)
+  {
+    lcdText("DHCP Error");
+    delay(1000);
+    softReset();
+  }
   #else
   Ethernet.begin(mac , ip, dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
   #endif

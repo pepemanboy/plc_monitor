@@ -779,6 +779,7 @@ uint8_t _startupSequence()
   while (r != Ok)
   {
     r = Ok;
+    ethernetMaintain();
     r |= _plcGetConfig();
     r |= _plcResetCounters(); // Dismiss
     r |= _plcGetCounters();  
@@ -792,17 +793,15 @@ uint8_t _startupSequence()
 /* Update plc */
 uint8_t updatePlc()
 { 
-  ethernetMaintain();  
+  uint8_t r;
   
-  uint8_t  r;
+  r = ethernetMaintain();    
 	r |= _updateIo();
   r |= _updateActions();
 	r |= _logInputs();
 
   ethernetResetWatchdog(); 
   _printPlcDevice();
-  // lcdText("complete");
-  // delay(500);
   return r;
 }
 
@@ -826,12 +825,11 @@ void plc_init()
 
 void plc_mainLoop()
 {
-  /*
   if (plc_buttonRead(1)) 
   {    
     displayRaw();
     return;
-  }*/
+  }
   updatePlc();
 }
 

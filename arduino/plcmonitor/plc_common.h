@@ -119,13 +119,21 @@ void plcDebug(String s)
 /* Reset function */
 void(* softReset) (void) = 0;//declare reset function at address 0
 
+/* Display address */
+String displayAddress(IPAddress a)
+{
+  if (a)
+    return String((uint8_t)a[0]) + "." + String((uint8_t)a[1]) + "." + String((uint8_t)a[2]) + "." + String((uint8_t)a[3]);
+  else
+    return "0.0.0.0";
+}
+
 /* Debug monitor through lcd */
 void lcdText(String s)
 {
   plc_lcd.clear();
   plc_lcd.setCursor(0,0);
-  // plc_lcd.print("PLC Monitor " + String(PLC_ID));
-  plc_lcd.print(Ethernet.localIP());
+  plc_lcd.print("PLC Monitor " + String(PLC_ID));
   plc_lcd.setCursor(0,1);
   plc_lcd.print(s);
 }
