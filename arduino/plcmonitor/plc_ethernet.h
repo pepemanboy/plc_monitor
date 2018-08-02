@@ -46,7 +46,7 @@
 uint8_t ethernet_error_count = 0;
 
 /* Device settings */
-uint8_t mac[] = PLC_MAC; // Mac Address unico.
+const uint8_t mac[] = PLC_MAC; // Mac Address unico.
 const byte ip[] = PLC_IP; // IP fija del Arduino. Ver Ip de computadora en red. Eg (192.168.1.55), y usar los primeros 3 numeros y el 4to numero escogerlo. Eg (192.168.1.69)
 const byte dns[] = PLC_DNS; // DNS para conectar al modem. Eg 8.8.8.8 (Google)
 const byte gateway[] = PLC_GATEWAY; // Gateway del modem
@@ -65,7 +65,7 @@ const char comm_closing = '}';
 #define REPLY_BUFFER_SIZE 500
 
 /* Packet header end */
-char header_end[] = PLC_SERVER_HEADER_END;
+const char header_end[] = PLC_SERVER_HEADER_END;
 
 /* Global char buffer */
 char g_buf[REPLY_BUFFER_SIZE];
@@ -127,26 +127,28 @@ bool checkIntegrity()
  */
 uint8_t _getArray(void * arr, uint8_t type, const char * key, uint8_t n)
 {
-  String str_buf = String(g_buf);
-  int a,b;
-  b = str_buf.indexOf(key);
-  if (b < 0)
+  char * b;
+  char * a;
+  b = strstr(g_buf,key);
+  if (!b)
     return Error;
-  a = b + strlen(key);
-  uint8_t i;
-  for(i = 0; i < n; ++i)
+  b = b + strlen(key);
+  for(uint8_t i = 0; i < n; ++i)
   {
-    b = i < n - 1 ? str_buf.indexOf(',',a) : str_buf.indexOf(')',a);
-    if (b < 0)
+    char * d_ =  1 < n - 1 ? "," : ")";
+    char d = d_[0];
+    a = strtok(b,d_);
+    if (!a) 
       return Error;
     switch(type)
     {
-      case type_uint8: ((uint8_t *)arr)[i] = (uint8_t)str_buf.substring(a,b).toInt(); break;
-      case type_int: ((int *)arr)[i] = str_buf.substring(a,b).toInt(); break;
-      case type_float: ((float *)arr)[i] = str_buf.substring(a,b).toFloat(); break;
-      case type_long: ((long *)arr)[i] = (long)str_buf.substring(a,b).toInt(); break;
+      case type_uint8: ((uint8_t *)arr)[i] = (uint8_t)strtol(a,0,10); break;
+      case type_int: ((int *)arr)[i] = (int)strtol(a,0,10); break;
+      case type_float: ((float *)arr)[i] = (float)atof(a); break;
+      case type_long: ((long *)arr)[i] = (long)strtol(a,0,10); break;
     }
-    a = b + 1;
+    b = a + strlen(a) + 1;
+    memset(a+strlen(a),d,1); // Restore token  
   }
   return Ok;
 }
@@ -367,7 +369,12 @@ uint8_t _retryPost(const char * url, const char * params, const char * msg)
   while (r != Ok)
   {
     r = _post(url,params);
-    lcdText(String(msg) + errorString(r));
+    char es[10];
+    errorString(r,es);
+    char lcd_buf[PLC_LCD_BUFFER_SIZE] = "";
+    strcat(lcd_buf, msg);
+    strcat(lcd_buf, es);
+    lcdText(lcd_buf);
     ethernetWatchdog(r != Ok && r != Error_chunked); // Veces totales que puede fallar
   }
   return r;

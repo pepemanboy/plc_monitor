@@ -11,7 +11,7 @@
 #define PLC_CONFIG_H
 
 /** PLC ID PREVIOUSLY DEFINED ON THE WEBSITE */
-#define PLC_ID 10
+#define PLC_ID (11)
 
 /** PLC MAC ADDRESS */
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
@@ -35,7 +35,7 @@
 #define PLC_SERVER {162, 241, 2, 107} /* Es la IP del servidor donde esta la pagina web*/
 
 /** SERVER HTTP PORT */
-#define PLC_PORT 80 
+#define PLC_PORT (80) 
 
 /** WEBSITE */
 #define PLC_WEBSITE "www.dplastico-scada.com"

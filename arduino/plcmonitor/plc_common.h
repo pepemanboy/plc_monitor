@@ -117,43 +117,37 @@ void plcDebug(String s)
 }
 
 /* Reset function */
-void(* softReset) (void) = 0;//declare reset function at address 0
+void(* softReset) (void) = 0; //declare reset function at address 0
 
-/* Display address */
-String displayAddress(IPAddress a)
-{
-  if (a)
-    return String((uint8_t)a[0]) + "." + String((uint8_t)a[1]) + "." + String((uint8_t)a[2]) + "." + String((uint8_t)a[3]);
-  else
-    return "0.0.0.0";
-}
-
+#define PLC_LCD_BUFFER_SIZE 17
 /* Debug monitor through lcd */
-void lcdText(String s)
+void lcdText(const char * s)
 {
   plc_lcd.clear();
   plc_lcd.setCursor(0,0);
-  plc_lcd.print("PLC Monitor " + String(PLC_ID));
+  char buf[PLC_LCD_BUFFER_SIZE] = "";
+  sprintf(buf,"PLC Monitor %d", PLC_ID);
+  plc_lcd.print(buf);
   plc_lcd.setCursor(0,1);
   plc_lcd.print(s);
 }
 
 /* Error code string */
-String errorString(uint8_t e)
+void errorString(uint8_t e, char * s)
 {
   switch(e)
   {
-    case Ok: return "Ok";
-    case Error: return "Error";
-    case Error_disconnect: return "Disc";
-    case Error_connect: return "Conn";
-    case Error_timeout: return "Tout";
-    case Error_inexistent: return "Inex";
-    case Error_checksum: return "Chsm";
-    case Error_chunked: return "Chnk";
-    case Error_maintain: return "Mntn";
-  }
-  return String(e);
+    case Ok: strcpy(s, "Ok"); break;
+    case Error: strcpy(s, "Error"); break;
+    case Error_disconnect: strcpy(s, "Disc"); break;
+    case Error_connect: strcpy(s, "Conn"); break;
+    case Error_timeout: strcpy(s, "Tout"); break;
+    case Error_inexistent: strcpy(s, "Inex"); break;
+    case Error_checksum: strcpy(s, "Chsm"); break;
+    case Error_chunked: strcpy(s, "Chnk"); break;
+    case Error_maintain: strcpy(s, "Mntn"); break;
+    default: sprintf(s,"%d",e);
+  }  
 }
 
 #endif //PLC_COMMON_H
