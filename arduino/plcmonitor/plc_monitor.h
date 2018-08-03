@@ -107,6 +107,7 @@ PlcDevice plcDevice;
 /* Function prototype declarations */
 uint8_t _startupSequence();
 uint8_t _checkActions();
+uint8_t _setOutputs();
 
 /* Initialize plcDevice */
 void _plcDeviceInit()
@@ -145,8 +146,8 @@ void _initPlcMonitor()
     lcdText("Connected!...");
     delay(500);
     lcdText("Configuring...");
-    delay(500);
     _startupSequence();
+    delay(500);
     lcdText("All set!");
     delay(500);
     plcDevice.initialized = true;    
@@ -264,6 +265,8 @@ uint8_t _plcGetOutputs()
 	{
 		plcDevice.dout[i].value = outputs[i] ? 1 : 0;
 	}
+
+  _setOutputs();
 
 	return Ok;
 }
@@ -784,7 +787,7 @@ uint8_t _startupSequence()
     r |= _plcResetCounters(); // Dismiss
     r |= _plcGetCounters();  
     r |= _plcGetActions(); 
-    r |= _plcGetOutputs();    
+    r |= _plcGetOutputs();
   }
   return r;
 }
