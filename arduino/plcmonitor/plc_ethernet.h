@@ -257,6 +257,8 @@ uint8_t _post(const char * url, const char * params)
   {
     while (client.available())
     {
+      if(strlen(char_buf) >= sizeof(char_buf)-1)
+        return Error_overflow;
       char c = client.read();
       strcat_c(char_buf,c);
       #ifdef DEBUG_REQUEST
@@ -275,7 +277,6 @@ uint8_t _post(const char * url, const char * params)
     int i = 0;
 
     char *a_;
-    // a_ = strstr(char_buf,"Connection: close") + 17;
     
     a_ = strstr(char_buf, header_end) + strlen(header_end);    
     if(!a_)
