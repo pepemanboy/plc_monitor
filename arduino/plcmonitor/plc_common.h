@@ -49,7 +49,7 @@ enum error_codes
 	Error_connect = 1<<2, ///< Connect error
 	Error_timeout = 1<<3, ///< Timeout error
 	Error_inexistent = 1<<4, ///< PLC does not exist in server
-  Error_checksum = 1<<5, ///< Message comes with bad checksum
+  Error_overflow = 1<<5, ///< Overflow error
   Error_chunked = 1<<6, ///< Message does not come chunked
   Error_maintain = 1<<7, ///<Cannot maintain connection
 };
@@ -133,8 +133,9 @@ void lcdText(const char * s)
 }
 
 /* Error code string */
-void errorString(uint8_t e, char * s)
+uint8_t errorString(uint8_t e, char * s)
 {
+  if (!s) return Error;
   switch(e)
   {
     case Ok: strcpy(s, "Ok"); break;
@@ -143,11 +144,12 @@ void errorString(uint8_t e, char * s)
     case Error_connect: strcpy(s, "Conn"); break;
     case Error_timeout: strcpy(s, "Tout"); break;
     case Error_inexistent: strcpy(s, "Inex"); break;
-    case Error_checksum: strcpy(s, "Chsm"); break;
+    case Error_overflow: strcpy(s, "Ovfl"); break;
     case Error_chunked: strcpy(s, "Chnk"); break;
     case Error_maintain: strcpy(s, "Mntn"); break;
     default: sprintf(s,"%d",e);
   }  
+  return Ok;
 }
 
 #endif //PLC_COMMON_H

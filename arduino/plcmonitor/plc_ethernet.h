@@ -46,7 +46,7 @@
 uint8_t ethernet_error_count = 0;
 
 /* Device settings */
-const uint8_t mac[] = PLC_MAC; // Mac Address unico.
+uint8_t mac[] = PLC_MAC; // Mac Address unico.
 const byte ip[] = PLC_IP; // IP fija del Arduino. Ver Ip de computadora en red. Eg (192.168.1.55), y usar los primeros 3 numeros y el 4to numero escogerlo. Eg (192.168.1.69)
 const byte dns[] = PLC_DNS; // DNS para conectar al modem. Eg 8.8.8.8 (Google)
 const byte gateway[] = PLC_GATEWAY; // Gateway del modem
@@ -85,6 +85,7 @@ uint8_t ethernetWatchdog(bool b)
   }
 }
 
+/* Reset ethernet watchdog */
 uint8_t ethernetResetWatchdog()
 {
   ethernet_error_count = 0;
@@ -105,16 +106,9 @@ uint8_t ethernetMaintain()
       case 4: lcdText("Rebind success"); break;
     }
     delay(500);
-  }
-  
+  }  
   uint8_t r = m & 0x01 ? Error_maintain : Ok;
   return r; 
-}
-
-/* Todo: implement */
-bool checkIntegrity()
-{
-  return true;
 }
 
 /*  Get an array from str_buf
@@ -129,17 +123,24 @@ uint8_t _getArray(void * arr, uint8_t type, const char * key, uint8_t n)
 {
   char * b;
   char * a;
+  char * ending = g_buf + sizeof(g_buf);
   b = strstr(g_buf,key);
   if (!b)
     return Error;
   b = b + strlen(key);
   for(uint8_t i = 0; i < n; ++i)
   {
-    char * d_ =  1 < n - 1 ? "," : ")";
-    char d = d_[0];
+    char d = 1 < n - 1 ? ',' : ')';
+    char d_[2] = "";
+    strcat_c(d_,d);
+        
+    if (b > ending)
+      return Error;
+      
     a = strtok(b,d_);
     if (!a) 
       return Error;
+      
     switch(type)
     {
       case type_uint8: ((uint8_t *)arr)[i] = (uint8_t)strtol(a,0,10); break;
@@ -397,8 +398,6 @@ uint8_t getResets(int * rr)
     return r;  
   if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity())
-    return Error_checksum;
   
   // Get resets
   r = _getArray(rr,type_int,"resets(",6);
@@ -425,8 +424,6 @@ uint8_t getDigitalInputs(int * di)
     return r;  
   if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity())
-    return Error_checksum;
   
   // Get resets
   r = _getArray(di,type_int,"di(",6);
@@ -453,8 +450,6 @@ uint8_t getOutputs(bool * o)
     return r;
   if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity())
-    return Error_checksum;
     
   char * p;
   p = strstr(g_buf,"digital_outputs(");
@@ -556,8 +551,6 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
     return r;  
   if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity())
-    return Error_checksum;
 
   return Ok;
  }
@@ -588,8 +581,6 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
     return r;  
   if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity())
-    return Error_checksum;
 
   // Get n
   char * p;
@@ -673,8 +664,7 @@ uint8_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, fl
     return r;
   if (checkErrors() != Ok)
     return Error;
-  if (!checkIntegrity())
-    return Error_checksum;
+
   float float_buf[3];
   uint8_t i = 0;
   for(i = 0; i < 6; ++i)
