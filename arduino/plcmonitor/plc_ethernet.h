@@ -48,7 +48,7 @@ uint8_t ethernet_error_count = 0;
 /* Device settings */
 uint8_t mac[] = PLC_MAC; // Mac Address unico.
 const byte ip[] = PLC_IP; // IP fija del Arduino. Ver Ip de computadora en red. Eg (192.168.1.55), y usar los primeros 3 numeros y el 4to numero escogerlo. Eg (192.168.1.69)
-const byte dns[] = PLC_DNS; // DNS para conectar al modem. Eg 8.8.8.8 (Google)
+const byte plc_dns[] = PLC_DNS; // DNS para conectar al modem. Eg 8.8.8.8 (Google)
 const byte gateway[] = PLC_GATEWAY; // Gateway del modem
 const byte subnet[] = PLC_SUBNET; // Subnet del modem
 
@@ -214,10 +214,18 @@ bool isHex(char x)
 */
 uint8_t _post(const char * url, const char * params)
 {
+  uint8_t r;
+  
+  r = ethernetMaintain(); 
+  if (r != Ok)
+    return r;   
+    
   _internalUpdate();
   // Connect to server
+  #ifdef PLC_ETHERNET_VERSION_2
   client.setConnectionTimeout(PLC_TIMEOUT_MS);
-  uint8_t r = client.connect(SERVER, PORT);
+  #endif
+  r = client.connect(SERVER, PORT);
   if (r != 1)
   {
     plcDebug("Error de conexion");
@@ -732,7 +740,7 @@ uint8_t initEthernet()
     softReset();
   }
   #else
-  Ethernet.begin(mac , ip, dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
+  Ethernet.begin(mac , ip, plc_dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
   #endif
   plcDebug("Connected to ethernet.");
   return Ok;

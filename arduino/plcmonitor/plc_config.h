@@ -55,4 +55,7 @@
 // #define DEBUG
 // #define DEBUG_REQUEST
 
+/** ETHERNET LIBRARY VERSION */
+// #define PLC_ETHERNET_VERSION_2
+
 #endif // PLC_CONFIG_H

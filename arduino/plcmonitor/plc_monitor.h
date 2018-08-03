@@ -775,7 +775,6 @@ uint8_t _startupSequence()
   while (r != Ok)
   {
     r = Ok;
-    ethernetMaintain();
     r |= _plcGetConfig();
     r |= _plcResetCounters(); // Dismiss
     r |= _plcGetCounters();  
@@ -789,9 +788,8 @@ uint8_t _startupSequence()
 /* Update plc */
 uint8_t updatePlc()
 { 
-  uint8_t r;
+  uint8_t r = Ok;
   
-  r = ethernetMaintain();    
 	r |= _updateIo();
   r |= _updateActions();
 	r |= _logInputs();
