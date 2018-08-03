@@ -20,13 +20,6 @@ uint8_t _internalUpdate();
 #include "plc_common.h"
 #include "plc_ethernet.h"
 
-/* PLC Configuration */
-#define ANALOG_INPUT_COUNT (6)
-#define DIGITAL_INPUT_COUNT (6)
-#define INPUT_COUNT (ANALOG_INPUT_COUNT + DIGITAL_INPUT_COUNT)
-#define OUTPUT_COUNT (6)
-#define MAX_ACTIONS		(20)
-
 /* Clear object using pointer */
 #define clearObject(p) memset((p), 0, sizeof(*(p)))
 

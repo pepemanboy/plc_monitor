@@ -270,6 +270,9 @@ uint8_t _post(const char * url, const char * params)
   char b_[REPLY_BUFFER_SIZE] = "";  
   char * c_;
 
+  char *ending; // End of char_buf
+  ending = char_buf + strlen(char_buf);
+
   if(strstr(char_buf,"Transfer-Encoding: chunked"))
   {
     char n_[4] = "";
@@ -282,10 +285,7 @@ uint8_t _post(const char * url, const char * params)
     if(!a_)
       return Error;
 
-    char *b_; // End of char_buf
-    b_ = char_buf + strlen(char_buf);
-
-    while(!isHex(*a_) && a_ <= b_)
+    while(!isHex(*a_) && a_ <= ending)
       a_++;
     
     while(true)
@@ -296,12 +296,12 @@ uint8_t _post(const char * url, const char * params)
       // Number of following bytes
       while(*a_ != '\r')
       {
-        strcat_c(n_,*a_);
-        if (++i > 500)
+        if (a_ > ending)
         {
           client.stop();
-          return Error;
+          return Error_overflow;
         }
+        strcat_c(n_,*a_);
         a_++;
       }
       
@@ -312,12 +312,12 @@ uint8_t _post(const char * url, const char * params)
       a_+=2;
       while(*a_ != '\r')
       {
-        strcat_c(b_,*a_);      
-        if (++i > 500)
+        if (a_ > ending)
         {
           client.stop();
-          return Error;
+          return Error_overflow;
         }
+        strcat_c(b_,*a_);             
         a_++;
       }
       a_+=2;    
@@ -325,6 +325,11 @@ uint8_t _post(const char * url, const char * params)
     // Remove opening and closing braces
     c_ = b_;  
     c_++;
+    if(strlen(c_) < 1)
+    {
+      client.stop();
+      return Error_overflow;
+    }
     c_[strlen(c_)-1] = '\0';
   }
   else // Not chunked
@@ -336,11 +341,24 @@ uint8_t _post(const char * url, const char * params)
       return Error_chunked;
     }
     p++;
+    if (p > ending)
+    {
+      client.stop();
+      return Error_overflow;
+    }
+    
     p = strtok(p,"}");
+    
     if (!p)
     {
       client.stop();
       return Error_chunked;
+    }
+    
+    if (strlen(p) > sizeof(b_) - strlen(b_) - 1)
+    {
+      client.stop();
+      return Error_overflow;
     }
     strcat(b_,p);
     memset(p+strlen(p),'}',1); // Restore token  
@@ -377,7 +395,7 @@ uint8_t _retryPost(const char * url, const char * params, const char * msg)
     strcat(lcd_buf, msg);
     strcat(lcd_buf, es);
     lcdText(lcd_buf);
-    ethernetWatchdog(r != Ok && r != Error_chunked); // Veces totales que puede fallar
+    ethernetWatchdog(r != Ok); // Veces totales que puede fallar
   }
   return r;
 }
@@ -401,7 +419,7 @@ uint8_t getResets(int * rr)
     return Error;
   
   // Get resets
-  r = _getArray(rr,type_int,"resets(",6);
+  r = _getArray(rr,type_int,"resets(",DIGITAL_INPUT_COUNT);
   if (r != Ok)
     return r;
 
@@ -427,7 +445,7 @@ uint8_t getDigitalInputs(int * di)
     return Error;
   
   // Get resets
-  r = _getArray(di,type_int,"di(",6);
+  r = _getArray(di,type_int,"di(",DIGITAL_INPUT_COUNT);
   if (r != Ok)
     return r;
 
@@ -453,15 +471,18 @@ uint8_t getOutputs(bool * o)
     return Error;
     
   char * p;
+  char * ending = g_buf + strlen(g_buf);
   p = strstr(g_buf,"digital_outputs(");
   if (!p)
     return Error;
     
   p += strlen("digital_outputs(");
-  for (uint8_t i = 0; i < 6; i ++)
+  for (uint8_t i = 0; i < OUTPUT_COUNT; i ++)
   {
+    if (p > ending)
+      return Error_overflow;
     o[i] = *p == '1';
-    if (i < 5) p += 2;
+    if (i < (OUTPUT_COUNT - 1)) p += 2;
   }
   return Ok;
 }
@@ -478,10 +499,10 @@ uint8_t setOutputs(bool * dout)
   char p [QUERY_BUFFER_SIZE] = "";
   sprintf(p,"plc_number=%d&operation=set&arduino=true&",PLC_ID);
   
-  for(uint8_t i = 0; i < 6; i ++)
+  for(uint8_t i = 0; i < OUTPUT_COUNT; i ++)
   {
     sprintf(p+strlen(p),"do%d=%d",i+1,dout[i] ? 1 : 0);
-    if(i != 5) strcat(p,"&");
+    if(i != (OUTPUT_COUNT - 1)) strcat(p,"&");
   }
   uint8_t r = _retryPost("control_outputs.php", p,"set_out: ");  
   if (checkErrors() != Ok)
@@ -501,10 +522,10 @@ uint8_t setInputs(int * di, int * ai)
 {
   char p[QUERY_BUFFER_SIZE];
   sprintf(p,"plc_number=%d&operation=set&",PLC_ID);
-  for(uint8_t i = 0; i < 6; i ++)
+  for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
     sprintf(p+strlen(p),"di%d=%d&ai%d=%d",i+1,di[i],i+1,ai[i]);
-    if(i != 5) strcat(p,"&");
+    if(i != (DIGITAL_INPUT_COUNT - 1)) strcat(p,"&");
   }
 	uint8_t r = _retryPost("control_inputs.php", p, "set_in: ");
   if (checkErrors() != Ok)
@@ -668,7 +689,7 @@ uint8_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, fl
 
   float float_buf[3];
   uint8_t i = 0;
-  for(i = 0; i < 6; ++i)
+  for(i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
     memcpy(q,0,sizeof(q));
     sprintf(q,"di%d(",i+1);
