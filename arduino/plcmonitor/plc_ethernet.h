@@ -216,6 +216,7 @@ uint8_t _post(const char * url, const char * params)
 {
   _internalUpdate();
   // Connect to server
+  client.setConnectionTimeout(PLC_TIMEOUT_MS);
   uint8_t r = client.connect(SERVER, PORT);
   if (r != 1)
   {
