@@ -130,7 +130,7 @@ uint8_t _getArray(void * arr, uint8_t type, const char * key, uint8_t n)
   b = b + strlen(key);
   for(uint8_t i = 0; i < n; ++i)
   {
-    char d = 1 < n - 1 ? ',' : ')';
+    char d = i < (n - 1) ? ',' : ')';
     char d_[2] = "";
     strcat_c(d_,d);
         
