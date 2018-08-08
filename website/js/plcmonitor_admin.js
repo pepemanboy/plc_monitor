@@ -110,7 +110,7 @@ function updateTable()
         var d = moment(dates[i], 'YYYY-MM-DD HH:mm:ss');
         var current = moment();
         var diff = current.diff(d);
-        if (isNaN(diff) || diff > 300000)
+        if (isNaN(diff) || diff > 60000)
         {
           $("#admin-status-badge-" + ids[i]).hide();
         }

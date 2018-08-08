@@ -45,6 +45,8 @@
     <!-- Boton de agregar nuevo -->
     <div class = "row">
       <button type="button" class="btn btn-success" data-toggle='modal' data-target='#admin-agregar-modal'>Agregar PLC</button>
+      <button type="button" class="btn btn-info admin-respaldar-senales-boton" data-toggle='modal' data-target='#admin-agregar-modal'>Respaldar senales</button>
+      <button type="button" class="btn btn-warning admin-borrar-senales-boton" data-toggle='modal' data-target='#admin-agregar-modal'>Borrar senales</button>
     </div>
     <!-- Debug row -->
     <div id = "debug-row"></div> 

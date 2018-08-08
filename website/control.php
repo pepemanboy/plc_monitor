@@ -25,7 +25,7 @@
       <h2>Control de dispositivo </h2>
       <!-- Dropdown senales -->
       <div class="dropdown dropdown-visualizador-senales">
-        <a class="btn btn-info dropdown-toggle plc-dropdown-menu" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <a class="btn btn-info dropdown-toggle plc-dropdown-menu" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display='static'>
           Selecciona un PLC
         </a>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
