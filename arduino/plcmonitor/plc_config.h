@@ -11,13 +11,13 @@
 #define PLC_CONFIG_H
 
 /** PLC ID PREVIOUSLY DEFINED ON THE WEBSITE */
-#define PLC_ID (11)
+#define PLC_ID (13)
 
 /** PLC MAC ADDRESS */
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
 
 /** DEFINE IF DYNAMIC IP IS PREFERRED */
-#define PLC_DYNAMIC_IP
+// #define PLC_DYNAMIC_IP
 
 /** PLC IP */
 #define PLC_IP {192, 168, 1, (20+PLC_ID)}
@@ -56,6 +56,6 @@
 // #define DEBUG_REQUEST
 
 /** ETHERNET LIBRARY VERSION */
-// #define PLC_ETHERNET_VERSION_2
+#define PLC_ETHERNET_VERSION_2
 
 #endif // PLC_CONFIG_H

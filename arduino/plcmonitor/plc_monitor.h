@@ -133,7 +133,9 @@ void _initPlcMonitor()
     plc_lcd.noCursor(); // Hide cursor
     plc_lcd.clear(); // Clear the screen
     lcdText("Connecting...");
+    #ifdef DEBUG
     Serial_begin();
+    #endif
     _plcDeviceInit();
     initEthernet();
     lcdText("Connected!...");
@@ -159,7 +161,7 @@ uint8_t _plcGetConfig()
 	uint8_t r = getConfig(di_freq, di_count, ai_freq, ai_gain, ai_offs);
 	if(r != Ok)
   {
-    plcDebug("Failed to get config, error = " + String(r));
+    plcDebug("Failed to get config, error = ", r);
     return r;
   }
 
@@ -194,7 +196,7 @@ uint8_t _plcGetActions()
 	uint8_t r = getActions(&n,inputs_types, inputs_numbers,ids,thresholds,updowns,outputs,notification_interval_s,action_types,delays_s);
 	if(r != Ok)
   {
-    plcDebug("Failed to get actions. Error = " + String(r));
+    plcDebug("Failed to get actions. Error = ", r);
     return r;
   }
 
@@ -250,7 +252,7 @@ uint8_t _plcGetOutputs()
 	uint8_t r = getOutputs(outputs);
 	if (r != Ok)
   {
-    plcDebug("Failed to get outputs. Error = " + String(r));
+    plcDebug("Failed to get outputs. Error = ", r);
     return r;    
   }
 
@@ -273,7 +275,7 @@ uint8_t _plcGetCounters()
   uint8_t r = getDigitalInputs(di);
   if (r != Ok)
   {
-    plcDebug("Failed to get counters. Error = " + String(r));
+    plcDebug("Failed to get counters. Error = ", r);
     return r;  
   }
 
@@ -296,7 +298,7 @@ uint8_t _plcResetCounters()
   uint8_t r = getResets(rr);
   if (r != Ok)
   {
-    plcDebug("Failed to get resets. Error = " + String(r));
+    plcDebug("Failed to get resets. Error = ", r);
     return r;  
   }
 
@@ -322,7 +324,7 @@ uint8_t _plcSendOutputs()
   uint8_t r = setOutputs(dout);
   if (r != Ok)
   {
-    plcDebug("Failed to send outputs. Error = " + String(r));
+    plcDebug("Failed to send outputs. Error = ", r);
     return r;
   }
   return Ok;
@@ -344,7 +346,7 @@ uint8_t _plcSendInputs()
 	uint8_t r = setInputs(din,ain);
 	if (r != Ok)
   {
-    plcDebug("Failed to send inputs. Error = " + String(r));
+    plcDebug("Failed to send inputs. Error = ", r);
     return r;
   }
   return Ok;
@@ -356,7 +358,7 @@ uint8_t _plcLogInput(plc_in_t * input)
 	uint8_t r = logInput(input->number, input->type == input_Analog ? input_Analog : input_Digital , input->value);
 	if (r != Ok)
   {
-    plcDebug("Failed to log input. Error = " + String(r));
+    plcDebug("Failed to log input. Error = ", r);
     return r;
   }
   return Ok;
@@ -368,7 +370,7 @@ uint8_t _sendNotification(Action * action)
   uint8_t r = sendEmail(action->id);
   if (r != Ok)
   {
-    plcDebug("Failed to send notification. Error = " + String(r));
+    plcDebug("Failed to send notification. Error = ", r);
     return r;
   }
   plcDebug("Sending notification");
@@ -392,7 +394,7 @@ void _printPlcDevice()
 {
   #ifndef DEBUG
   return;
-  #endif
+  #else
   uint8_t i;
   Serial_println("-------------------------------");
   // Plc info
@@ -465,6 +467,7 @@ void _printPlcDevice()
   Serial_println("-------------------------------");\
   Serial_println();
   Serial_println();
+  #endif
 }
 
 /* Mock inputs */
@@ -805,8 +808,9 @@ uint8_t displayRaw()
   plc_lcd.clear(); // Clear the screen 
   for(uint8_t i = 1; i <= 6; i ++){
     plc_lcd.setCursor(((i-1)%3)*4,(i-1)/3); // Set the cursor in Column 0, Row 0 of the LCD  
-    String s =  String(plc_analogRead(i), DEC); 
-    plc_lcd.print(s); // Print this text where the cursor is
+    char buf[PLC_LCD_BUFFER_SIZE] = "";
+    sprintf(buf,"%d",plc_analogRead(i));
+    plc_lcd.print(buf); // Print this text where the cursor is
   }
   delay(500);
   return Ok;

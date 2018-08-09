@@ -78,7 +78,7 @@ void strcat_c (char *str, char c)
   *str++ = c; 
   *str++ = 0;
 }
-
+#ifdef DEBUG
 /* Debug to serial functions */
 /* Open serial port */
 void Serial_begin()
@@ -113,12 +113,13 @@ void Serial_println(String s = "")
   #endif
   return;
 }
+#endif
 
 /* Debug auxiliary function */
-void plcDebug(String s)
+void plcDebug(const char * s, int32_t n = 0)
 {
   #ifdef DEBUG
-  Serial_println("Debug: " + s);
+  Serial_println("Debug: " + String(s) + String(n));
   #endif
   return;
 }
