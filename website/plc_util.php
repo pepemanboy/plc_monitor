@@ -180,6 +180,73 @@ function echoChecksum(&$checksum_str, $str)
 }
 
 /* Get Arduino status */
+function logPowerOn(&$connection, $id, $operation = "set")
+{
+	if(!$connection)
+		return ERROR_CONNECTION;
+
+	// Table name
+	$table_name = "plc" . $id . "_poweron";
+
+	// Query table existent
+	$exists = False;
+	$r = tableExists($connection, $table_name, $exists); 
+	if ($r != OK)
+		return $r;
+
+	// Create table if it doesnt exist
+	if (!$exists)
+	{
+		$query = "
+		CREATE TABLE " . $table_name . " (
+		timeStamp TIMESTAMP NOT NULL PRIMARY KEY)
+		";
+		$r = mysqli_query($connection,$query);
+		if (!$r)
+			return ERROR_QUERY;
+	}
+
+	if ($operation == "set")
+	{
+		// Log
+		$query = "INSERT INTO " . $table_name . " (timeStamp) values (NULL)";
+		$r = mysqli_query($connection,$query);
+		if (!$r)
+			return ERROR_QUERY;
+	}
+	else if ($operation == "get")
+	{
+		$query = "SELECT timeStamp FROM " . $table_name . " ORDER BY timeStamp";
+		$result = mysqli_query($connection, $query);
+	   	if (!$result)
+	   		_exit(ERROR_QUERY,$link);
+	   	
+	   	if (($n = mysqli_num_rows($result)) > 0) {
+		    // output data of each row
+		    $ts = array();
+		    $i = 0;
+		    while($row = mysqli_fetch_assoc($result)) 
+		    {
+		    	$ts[$i] = $row["timeStamp"];
+		        $i = $i + 1;
+		    }
+
+		    // Return values
+		    echo("powerons(");
+		    for($i = 0; $i < $n; $i++)
+		    {
+		    	echo($ts[$i]);
+		    	if($i < $n - 1)
+		    		echo(",");
+		    }
+		    echo(")");
+		    mysqli_free_result($result);
+		}
+	}
+	return OK;
+}
+
+/* Get Arduino status */
 function arduinoStatus(&$connection, $id, $operation = "set", &$status = NULL)
 {
 	// Check connection

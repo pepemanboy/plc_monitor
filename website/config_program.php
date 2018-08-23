@@ -42,7 +42,21 @@ if(isset($_POST['arduino']))
 	$r = arduinoStatus($link, $plc_number);
 	if ($r != OK)
 		_exit($r, $link);
+
+	// Get resets
+	if (isset($_POST['poweron']))
+	{
+		$poweron = (int)$_POST['poweron'];
+		if($poweron == 1)
+		{
+			$r = logPowerOn($link, $plc_number);
+			if ($r != OK)
+				_exit($r, $link);
+		}		
+	}
 }
+
+
 
 // Create table if it doesnt exist
 if (!$exists)

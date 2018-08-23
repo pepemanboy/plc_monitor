@@ -20,6 +20,9 @@
           <li class="nav-item">
             <a class="nav-link" href="config.php" id = "navbar-item-config">Configuracion</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="debug.php" id = "navbar-item-debug">Debug</a>
+          </li>
         </ul>
       </div>
     </nav>

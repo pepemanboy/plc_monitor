@@ -28,7 +28,7 @@ function getPhpArr(response_str, variable_str)
 		ret.error = true;
 	if(str.empty)
 		ret.empty = true;
-	else	
+	if (!str.error && !str.empty)	
 		ret.val = str.val.split(',');	
 	return ret;
 }
