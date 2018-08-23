@@ -73,6 +73,9 @@ char g_buf[REPLY_BUFFER_SIZE];
 /* Global ethernet client */
 EthernetClient client;
 
+/* Power on variable */
+uint8_t g_power_on = 1;
+
 /* Ethernet watchdog for consecutive errors*/
 uint8_t ethernetWatchdog(bool b)
 {
@@ -689,7 +692,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
 uint8_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, float * aio)
 {
   char q [QUERY_BUFFER_SIZE];
-  sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
+  sprintf(q,"plc_number=%d&operation=get&arduino=true&poweron=%d",PLC_ID,g_power_on);
 	uint8_t r = _retryPost("config_program.php",q, "get_cfg: ");
   if (r != Ok)
     return r;
@@ -717,6 +720,7 @@ uint8_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, fl
     aig[i] = float_buf[1];
     aio[i] = float_buf[2];
   }
+  g_power_on = 0;
   return Ok;
 }
 
