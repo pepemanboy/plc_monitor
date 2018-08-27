@@ -91,7 +91,7 @@ struct PlcDevice
 	uint8_t ioErrors; ///< IO errors
 	uint8_t actionErrors; ///< action errors
 	bool initialized; ///< Initialized flag
-  bool sendOutputs; ///< Pending to send outputs
+  bool pendingOutputs[OUTPUT_COUNT]; ///< Pending to send outputs from actions
 };
 
 /* Global plcDevice */
@@ -258,7 +258,8 @@ uint8_t _plcGetOutputs()
 
 	for (i = 0; i < OUTPUT_COUNT; i ++)
 	{
-		plcDevice.dout[i].value = outputs[i] ? 1 : 0;
+    if(!plcDevice.pendingOutputs[i])
+		  plcDevice.dout[i].value = outputs[i] ? 1 : 0;
 	}
 
   _setOutputs();
@@ -312,7 +313,17 @@ uint8_t _plcResetCounters()
 
 /* Send outputs to server */
 uint8_t _plcSendOutputs()
-{
+{  
+  // Check if there are pending outputs to send
+  bool b = false;
+  for (uint8_t i = 0; i < OUTPUT_COUNT; ++i)
+    if(plcDevice.pendingOutputs[i])
+    {
+      b = true;
+      break;
+    }
+  if (!b) return Ok;
+  
   uint8_t i;
   bool dout[OUTPUT_COUNT];
 
@@ -327,6 +338,8 @@ uint8_t _plcSendOutputs()
     plcDebug("Failed to send outputs. Error = ", r);
     return r;
   }
+
+  memset(&plcDevice.pendingOutputs,0,sizeof(plcDevice.pendingOutputs));
   return Ok;
 }
 
@@ -658,9 +671,7 @@ bool _thresholdPassed(Action * action)
 
 /* Check actions. Return true if need to send outputs */
 uint8_t _checkActions()
-{
-  bool send_outputs = false;
-  
+{  
   for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
   {
     uint8_t output = plcDevice.actions[i].output - 1;
@@ -674,7 +685,7 @@ uint8_t _checkActions()
           if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].permanent_triggered)
           {
             _plcDigitalWrite(output, HIGH);
-            send_outputs = true;
+            plcDevice.pendingOutputs[output] = true;
             plcDevice.actions[i].permanent_triggered = true;
           }
           if (plcDevice.dout[output].value == LOW && plcDevice.actions[i].permanent_triggered && !_thresholdPassed(&plcDevice.actions[i]))
@@ -686,13 +697,13 @@ uint8_t _checkActions()
           if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].event_triggered)
           {
             _plcDigitalWrite(output,HIGH);
-            send_outputs = true;
+            plcDevice.pendingOutputs[output] = true;
             plcDevice.actions[i].event_triggered = true;
           }
           else if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].event_triggered)
           {
             _plcDigitalWrite(output,LOW);
-            send_outputs = true;
+            plcDevice.pendingOutputs[output] = true;
             plcDevice.actions[i].event_triggered = false;
           }
           break;
@@ -701,13 +712,13 @@ uint8_t _checkActions()
           {
             plcDevice.actions[i].delay_triggered = true;
             _plcDigitalWrite(output, HIGH);
-            send_outputs = true;
+            plcDevice.pendingOutputs[output] = true;
             plcDevice.actions[i].delay_elapsed_ms = 0;            
           }
           if (!plcDevice.actions[i].delay_finished && plcDevice.actions[i].delay_triggered && (plcDevice.actions[i].delay_elapsed_ms > plcDevice.actions[i].delay_ms))
           {
             _plcDigitalWrite(output, LOW);
-            send_outputs = true;
+            plcDevice.pendingOutputs[output] = true;
             plcDevice.actions[i].delay_finished = true;
           }    
           if (!_thresholdPassed(&plcDevice.actions[i]) && (plcDevice.actions[i].delay_finished || ((plcDevice.dout[output].value == LOW )&& (plcDevice.actions[i].delay_triggered))))
@@ -719,7 +730,6 @@ uint8_t _checkActions()
       }
     }      
   } 
-  plcDevice.sendOutputs = send_outputs;
 
   return Ok;
 }
@@ -730,12 +740,9 @@ uint8_t _updateActions()
 	uint8_t r = Ok;
   
   r |= _plcGetActions();
-  
-  _checkActions();    
-  if(plcDevice.sendOutputs)
-  {
-    r |= _plcSendOutputs();
-  }  
+  _checkActions();  
+
+  r |= _plcSendOutputs();
 
   // Send notifications
   for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
