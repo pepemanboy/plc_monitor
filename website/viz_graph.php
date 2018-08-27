@@ -66,7 +66,7 @@ if ($operation == "set")
 		_exit(ERROR_QUERY, $link);
 }
 // Get values
-else
+else if ($operation == "get")
 {
 	// Check arguments
 	if (!isset($_POST['date_start']) or !isset($_POST['date_end'])) 
@@ -80,6 +80,51 @@ else
  		WHERE timeStamp >='" . $date_start . "'
    		AND timeStamp < '" . $date_end . "' 
    		ORDER BY timeStamp";
+
+   	$result = mysqli_query($link, $query);
+   	if (!$result)
+   		_exit(ERROR_QUERY,$link);
+   	
+   	if (($n = mysqli_num_rows($result)) > 0) {
+	    // output data of each row
+	    $values = array();
+	    $dates = array();
+	    $i = 0;
+	    while($row = mysqli_fetch_assoc($result)) 
+	    {
+	        $values[$i] = $row["val"];
+	        $dates[$i] = $row["timeStamp"];
+	        $i = $i + 1;
+	    }
+
+	    // Return values
+	    echo("values(");
+	    for($i = 0; $i < $n; $i++)
+	    {
+	    	echo($values[$i]);
+	    	if($i < $n - 1)
+	    		echo(",");
+	    }
+	    echo(")");
+
+	    // Return dates
+	    echo("dates(");
+	    for($i = 0; $i < $n; $i++)
+	    {
+	    	echo($dates[$i]);
+	    	if($i < $n - 1)
+	    		echo(",");
+	    }
+	    echo(")");
+	    mysqli_free_result($result);
+	}
+}
+
+// Get values
+else if ($operation == "get_backup")
+{
+	// Query inputs
+	$query = "SELECT * FROM " . $table_name . "	ORDER BY timeStamp";
 
    	$result = mysqli_query($link, $query);
    	if (!$result)

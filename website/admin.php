@@ -45,8 +45,8 @@
     <!-- Boton de agregar nuevo -->
     <div class = "row">
       <button type="button" class="btn btn-success" data-toggle='modal' data-target='#admin-agregar-modal'>Agregar PLC</button>
-      <button type="button" class="btn btn-info admin-respaldar-senales-boton" data-toggle='modal' data-target='#admin-agregar-modal'>Respaldar senales</button>
-      <button type="button" class="btn btn-warning admin-borrar-senales-boton" data-toggle='modal' data-target='#admin-agregar-modal'>Borrar senales</button>
+      <button type="button" class="btn btn-info admin-respaldar-senales-boton" id="admin-respaldar-senales-boton">Respaldar senales</button>
+      <button type="button" class="btn btn-warning admin-borrar-senales-boton" id="admin-borrar-senales-boton" data-toggle='modal' data-target='#admin-borrar-senales-modal'>Borrar senales</button>
     </div>
     <!-- Debug row -->
     <div id = "debug-row"></div> 
@@ -96,6 +96,26 @@
         </div>
       </div>
     </div> <!-- Acaba modal agregar -->
+    <!-- Modal borrar senales -->
+    <div class="modal fade" id="admin-borrar-senales-modal" tabindex="-1" role="dialog" aria-labelledby="admin-borrar-senales-modal-titulo" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="admin-borrar-senales-modal-titulo">Precaución</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id = "admin-borrar-senales-modal-body">
+            ¿Estás seguro que deseas borrar todas las senales?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" id = "admin-borrar-senales-modal-boton">Borrar</button>
+          </div>
+        </div>
+      </div>
+    </div> <!-- Acaba modal borrar senales -->
     <br><br>
   </div> <!-- Acaba container -->
   <!-- Inicia JavaScript -->
@@ -105,6 +125,8 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.4/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.14/moment-timezone-with-data-2012-2022.min.js"></script>
+  <script src = "js/jszip.min.js"> </script>
+  <script src = "js/FileSaver.js"> </script>
   <script src = "js/plcmonitor_util.js"> </script>
   <script src = "js/plcmonitor_admin.js"> </script>
   <!-- Acaba Javascript -->

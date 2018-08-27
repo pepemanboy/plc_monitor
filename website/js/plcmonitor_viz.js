@@ -191,66 +191,6 @@ function updateChart(dates, values, title)
     $("#chartContainer").CanvasJSChart(options);
 }
 
-function arraysToPoints(dates, values)
-{
-	var points = [];
-	for(var i = 0; i < dates.length; i ++)
-		points.push({fecha: dates[i], valor: values[i]});
-	return points;	
-}
-
-function convertArrayOfObjectsToCSV(args) {
-	var result, ctr, keys, columnDelimiter, lineDelimiter, data;
-
-	data = args.data || null;
-	if (data == null || !data.length) {
-		return null;
-	}
-
-	columnDelimiter = args.columnDelimiter || ',';
-	lineDelimiter = args.lineDelimiter || '\n';
-
-	keys = Object.keys(data[0]);
-
-	result = '';
-	result += keys.join(columnDelimiter);
-	result += lineDelimiter;
-
-	data.forEach(function(item) {
-		ctr = 0;
-		keys.forEach(function(key) {
-			if (ctr > 0) result += columnDelimiter;
-
-			result += item[key];
-			ctr++;
-		});
-		result += lineDelimiter;
-	});
-
-	return result;
-}
-
-function downloadCSV(args) {
-	var data, filename, link;
-
-	var csv = convertArrayOfObjectsToCSV({
-		data: arraysToPoints(g_dates,g_values)
-	});
-	if (csv == null) return;
-
-	filename = args.filename || 'export.csv';
-
-	if (!csv.match(/^data:text\/csv/i)) {
-		csv = 'data:text/csv;charset=utf-8,' + csv;
-	}
-	data = encodeURI(csv);
-
-	link = document.createElement('a');
-	link.setAttribute('href', data);
-	link.setAttribute('download', filename);
-	link.click();
-}
-
 // Obtener acciones. N es el numero de plc
 function getActions(plc_number, signal_number, signal_type)
 {

@@ -47,7 +47,7 @@ if (!$exists)
   CREATE TABLE " . $table_name . " (
   id int NOT NULL AUTO_INCREMENT,
   input VARCHAR(10) NOT NULL,
-  threshold float(5,2) NOT NULL,
+  threshold float(12,2) NOT NULL,
   updown BIT NOT NULL,
   output int(11) NOT NULL,
   email VARCHAR(200) NOT NULL,

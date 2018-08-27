@@ -39,6 +39,7 @@ $('.button-do').click(function(){
     $(this).text('OFF');
   else
     $(this).text('ON');
+  updateButtonColors();
 });
 
 // Recibir
@@ -118,6 +119,7 @@ function getOutputs(n)
     {
       $("#do" + (i+1)).text(digital_outputs[i] ? "ON" : "OFF");
     }
+    updateButtonColors();
   }); 
   return true;
 }
@@ -163,4 +165,24 @@ function inputsStatus(status)
 function outputsStatus(status)
 {
   $("#control-outputs-indicator").text("Outputs status: " + status);
+}
+
+// Update button colors
+function updateButtonColors()
+{
+  for(var i = 1; i <= 6; i ++)
+  {
+    // OFF
+    if($("#do" + i).text() == "OFF")
+    {
+      $("#do"+i).removeClass("btn-success");
+      $("#do"+i).addClass("btn-secondary");
+    }
+    // ON
+    else
+    {
+      $("#do"+i).removeClass("btn-secondary");
+      $("#do"+i).addClass("btn-success");
+    }
+  }
 }
