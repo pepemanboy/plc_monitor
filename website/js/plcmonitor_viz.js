@@ -180,6 +180,15 @@ function updateChart(dates, values, title)
     	title:{
     		text: title
     	},
+    	toolTip: {
+	      	contentFormatter: function (e) {
+	          var content = "";
+	          for (var i = 0; i < e.entries.length; i++){
+	            content = CanvasJS.formatDate(e.entries[i].dataPoint.x, "D/MMM/YYYY HH:mm:ss");       
+	          }       
+	          return content;
+	        }
+	      },
     	zoomEnabled: true,
     	animationEnabled: true,
     	axisY: {
