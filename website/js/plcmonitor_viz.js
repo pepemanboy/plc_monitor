@@ -22,6 +22,18 @@ $( document ).ready(function() {
   $("#navbar-item-viz").addClass("active");
   $("#navbar-item-viz").attr("href", "#");
   updateChart([],[],"Gráfica");
+
+  // Default dates
+  today = new Date();
+  today_10 = new Date();
+  today_10.setDate(today_10.getDate() - 10);
+  $('#datetimepicker2').datetimepicker({ date: today });
+  $('#datetimepicker1').datetimepicker({ 
+  	date: new Date(today_10)
+  });
+
+  // $("#datetimepicker2").datetimepicker("setDate", moment().format('YYYY-MM-DD HH:mm:ss'));
+
 });
 
 // Cuando se pica algun plc en el dropdown, actualizar g_plc
@@ -100,6 +112,18 @@ $("#viz-visualizar-fechas-boton").click(function(){
 	// No dates
 	if($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "" )
 		return false;
+
+	if(g_plc <= 0)
+	{
+		vizStatus("Selecciona un plc");
+		return false;
+	}
+
+	if(g_signal_number <= 0)
+	{
+		vizStatus("Selecciona una senal");
+		return false;
+	}
 
 	// Cambiar a formato de base de datos
 	var fecha1 = moment($("#datetimepicker1").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
