@@ -1,43 +1,49 @@
 /** 
-Javascript para admin.php
+* Javascript for admin.php
+*
+* @author Pepe Melendez
 */
 
-// Variables globales
-g_plc = 0;
-g_signals = Array();
-g_ids = Array();
-g_progress = 0;
+/* Global variables */
+g_plc = 0; ///< Selected PLC
+g_signals = Array(); ///< Signals to backup
+g_ids = Array(); ///< Ids to backup
+g_progress = 0; ///< Backup progress
 
-// Variables a cargar cuando el documento cargue
+/**
+* On document load.
+*/
 $( document ).ready(function() {
-  // Menu de pagina actual activo
+  // Active navbar item
   $("#navbar-item-admin").addClass("active");
   $("#navbar-item-admin").attr("href", "#");
-  // Actualizar tabla de plcs
+  // Update PLC table
   updateTable();
 });
 
-// Boton de borrar en una fila. Mostrar modal
+/**
+* Delete row button. Show modal.
+*/
 $(document).on("click" , '.admin-borrar-boton', function(){
   var n = $(this).attr("data-plc-number");
   g_plc = n;
   $("#admin-borrar-modal-body").text("¿Estás seguro que deseas borrar el PLC " + n + "?");
 });
 
-// Borrar un PLC
+/**
+* Delete PLC from table.
+* @param  {int} PLC ID.
+*/
 function deletePlc(n){
-  // Proteccion de argumento
   if(n < 1)
     return;
   adminStatus("Borrando PLC");
-  // Post request 
   $.post("tabla_plcs.php",
   {
     operation: "delete",
     plc_number: n
   },
   function(data,status){
-    // Checar errores
     var err = getPhpVar(data, "error").val;
     adminStatus(err);
     if(plcOk(err))
@@ -45,13 +51,17 @@ function deletePlc(n){
   });      
 }
 
-// Boton de borrar PLC dentro de modal
+/**
+* Delete button inside modal. Delete PLC from table.
+*/
 $('#admin-borrar-modal-boton').click(function(){
   $('#admin-borrar-modal').modal('hide');
   deletePlc(g_plc);
 });
 
-// Boton de agregar plc dentro de modal
+/**
+* Add PLC button inside modal.
+*/
 $('#admin-agregar-modal-boton').click(function(){
   var txt = $('#admin-agregar-modal-input').val();
   if (!txt) 
@@ -65,9 +75,11 @@ $('#admin-agregar-modal-boton').click(function(){
   }
 });
 
-// Agregar un plc 
+/**
+* Add plc to table.
+* @param {string} nombre_plc Name of the new PLC.
+*/
 function addPlc(nombre_plc){
-  // Checar argumentos
   if(!nombre_plc)
     return;
   adminStatus("Agregando PLC");
@@ -86,7 +98,9 @@ function addPlc(nombre_plc){
   });    
 }
 
-// Actualizar tabla
+/**
+* Update PLC html table.
+*/
 function updateTable()
 {
   $.post("tabla_plcs.php",
@@ -96,7 +110,6 @@ function updateTable()
     },
     function(data,status){
       var err = getPhpVar(data, "error").val;
-      // adminStatus(err);
       if(!plcOk(err))
         return;
       var table = getPhpVar(data, "table");
@@ -121,39 +134,18 @@ function updateTable()
     }); 
 }
 
-// Prueba
-function existsTest()
-{
-  $.post("tabla_plcs.php",
-    {
-      operation: "exists",
-      plc_number: 2,
-    },
-    function(data,status){
-      var err = getPhpVar(data, "error").val;
-      // adminStatus(err);
-      if(!plcOk(err))
-        return;
-      var exists = getPhpVar(data, "exists");
-      if(exists.error)
-        return; 
-      alert("Exists = " + exists.val); 
-    }); 
-}
-
-// Reportar status
+/**
+* Report status of admin module.
+* @param {string} status Status of admin module
+*/
 function adminStatus(status)
 {
   $("#admin-status-indicator").text("Status: " + status);
 }
 
-// Debug in a row
-function debugText(txt)
-{
-  $("#debug-row").text(txt);
-}
-
-// Boton de respaldar senales
+/**
+* Backup signals button.
+*/
 $('#admin-respaldar-senales-boton').click(function(){
   adminStatus("Respaldando...");
   $("#admin-respaldar-senales-boton").addClass("disabled");
@@ -186,6 +178,13 @@ $('#admin-respaldar-senales-boton').click(function(){
     }); 
 });
 
+/**
+* Get PLC signal
+* @param {int}  index Index of g_signals to save the signal
+* @param {int}  plc_number PLC ID
+* @param {int}  signal_number Signal number [1-6]
+* @param {int}  signal_type Signal type [di,ai]
+*/
 function getSignal(index, plc_number, signal_number, signal_type)
 {
   $.post(
@@ -197,7 +196,6 @@ function getSignal(index, plc_number, signal_number, signal_type)
     operation: "get_backup",
   },
   function(data,status){
-    // console.log("Status = " + status);
     var err = getPhpVariable(data, "error"); 
     if (!plcOk(err))
       return;
@@ -211,8 +209,6 @@ function getSignal(index, plc_number, signal_number, signal_type)
     {
       g_signals[index].di[signal_number] = {dates: dates, values: values};
     }
-    // console.log("plc number " + plc_number + " signal number " + signal_number + ' signal type ' + signal_type);
-    // console.log("backupfinished = " + backupFinished());
     backupFinished();
     g_progress += 1/(g_signals.length * 12) * 100;
     $("#admin-respaldar-senales-boton").text("Respaldando " + g_progress.toFixed(2) + "%");
@@ -221,6 +217,9 @@ function getSignal(index, plc_number, signal_number, signal_type)
   }); 
 }
 
+/**
+* On backup finished.
+*/
 function backupFinished()
 {
   for(var i = 0; i < g_signals.length; i ++)
@@ -233,6 +232,9 @@ function backupFinished()
   return true;
 }
 
+/**
+* Download zip file of backup.
+*/
 function downloadZip()
 {
   var zip = new JSZip();
@@ -264,7 +266,6 @@ function downloadZip()
       }      
     }
   }
-
   adminStatus("Respaldado OK");
   $("#admin-respaldar-senales-boton").text("Respaldar senales");
 
@@ -277,15 +278,22 @@ function downloadZip()
 }
 
 
-// Boton de borrar senales
+/**
+* Delete signals button.
+*/
 $('#admin-borrar-senales-boton').click(function(){
 });
 
-// Boton de borrar senales adentro del modal
+/**
+* Delete signals button inside modal.
+*/
 $("#admin-borrar-senales-modal-boton").click(function(){
   alert("adentro del modal de borrar todo");
 });
 
+/**
+* AJAX error handler.
+*/
 $( document ).ajaxError(function() {
   adminStatus("Ajax Error");
   $("#admin-respaldar-senales-boton").removeClass("disabled");
