@@ -1,8 +1,23 @@
+/**
+*	PLC Monitor utilities
+*
+*	@author Pepe Melendez
+*/
+
 /* Action types */
 const ACTION_NONE = 0;
 const ACTION_PERMANENT = 1;
 const ACTION_EVENT = 2;
 const ACTION_DELAY = 3;
+
+/**
+*	Set active navbar item.
+*	@param {string} item_name name of the item
+*/
+function activeNavbarItem(item_name)
+{
+	$("#navbar-item-" + item_name).addClass("active").attr("href", "#");
+}
 
 function getPhpVariable(response_str, variable_str)
 {

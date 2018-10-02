@@ -11,23 +11,20 @@ g_ids = Array(); ///< Ids to backup
 g_progress = 0; ///< Backup progress
 
 /**
-* On document load.
+* On document load. Set active navbar item, update table.
 */
 $( document ).ready(function() {
-  // Active navbar item
-  $("#navbar-item-admin").addClass("active");
-  $("#navbar-item-admin").attr("href", "#");
-  // Update PLC table
+  activeNavbarItem("admin");
   updateTable();
+  getDatabaseSize();
 });
 
 /**
 * Delete row button. Show modal.
 */
 $(document).on("click" , '.admin-borrar-boton', function(){
-  var n = $(this).attr("data-plc-number");
-  g_plc = n;
-  $("#admin-borrar-modal-body").text("¿Estás seguro que deseas borrar el PLC " + n + "?");
+  g_plc = $(this).attr("data-plc-number");
+  $("#admin-borrar-modal-body").text("¿Estás seguro que deseas borrar el PLC " + g_plc + "?");
 });
 
 /**
@@ -121,6 +118,7 @@ function updateTable()
       $("#admin-plc-table").html(table.val);  
       var dates = getPhpArray(data, "status_");  
       var ids = getPhpArray(data,"ids_");
+      // Check if PLC is online and display an "OK" badge
       for(var i = 0; i < dates.length; i ++)
       {
         var d = moment(dates[i], 'YYYY-MM-DD HH:mm:ss');
@@ -299,3 +297,25 @@ $( document ).ajaxError(function() {
   $("#admin-respaldar-senales-boton").removeClass("disabled");
   $("#admin-respaldar-senales-boton").text("Respaldar senales");
 });
+
+/**
+* Get database size.
+* @return {int} database size
+*/
+function getDatabaseSize()
+{
+  $.post("tabla_plcs.php",
+  {
+    operation: "megabytes"
+  },
+  function(data,status){
+    var err = getPhpVar(data, "error").val;
+    if(!plcOk(err))
+    {
+      $("#admin-megabytes-boton").text("Espacio: Err");
+      return;
+    }
+    var mb = getPhpVariable(data, "megabytes");
+    $("#admin-megabytes-boton").text("Espacio: " + mb + " MB");
+  }); 
+}

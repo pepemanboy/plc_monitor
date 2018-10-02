@@ -201,6 +201,33 @@ else if ($operation == "exists")
 
 	echo("exists(" . $exists . ")");
 }
+else if ($operation == "megabytes")
+{
+	echo("{");
+	// Query
+	$query = "
+	SELECT  SUM(ROUND(((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024 ), 2)) AS 'SIZE IN MB'
+	FROM INFORMATION_SCHEMA.TABLES
+	WHERE TABLE_SCHEMA = '" . DATABASE . "'";
+	$result = mysqli_query($link, $query);
+	if (!$result)
+		_exit(ERROR_QUERY,$link);
+
+	$mb = 0;
+	if (($n = mysqli_num_rows($result)) > 0) 
+	{
+		// Save data of each row
+		$row = mysqli_fetch_assoc($result);
+		$mb = $row["SIZE IN MB"];
+		mysqli_free_result($result);
+		echo("megabytes(" . $mb . ")");
+	}
+	else
+	{
+		mysqli_free_result($result);
+		_exit(ERROR_QUERY,$link);
+	}
+}
 
 // Format the output as table
 function printTable($ids, $names, $status)

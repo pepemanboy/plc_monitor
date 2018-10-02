@@ -47,6 +47,8 @@
       <button type="button" class="btn btn-success" data-toggle='modal' data-target='#admin-agregar-modal'>Agregar PLC</button>
       <button type="button" class="btn btn-info admin-respaldar-senales-boton" id="admin-respaldar-senales-boton">Respaldar senales</button>
       <button type="button" class="btn btn-warning admin-borrar-senales-boton" id="admin-borrar-senales-boton" data-toggle='modal' data-target='#admin-borrar-senales-modal'>Borrar senales</button>
+      <button type="button" class="btn btn-secondary admin-megabytes-boton disabled" id="admin-megabytes-boton">Espacio: 10MB</button>
+
     </div>
     <!-- Debug row -->
     <div id = "debug-row"></div> 
