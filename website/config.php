@@ -1,5 +1,6 @@
 <!doctype html>
-<!-- admin.php -->
+<!-- config.php -->
+<?php include_once("user_control.php"); validateSession(); ?>
 <html lang="en">
 <head>
   <!-- Meta tags requeridos -->

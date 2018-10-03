@@ -1,6 +1,5 @@
 <!doctype html>
 <!-- admin.php -->
-<?php include_once("user_control.php"); validateSession(); ?>
 <html lang="en">
   <head>
     <!-- Meta tags requeridos -->
@@ -17,14 +16,24 @@
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
   </head>
   <body>
-    <!-- Navbar -->
-    <?php include "navbar.php"; ?>
     <!-- Inicia container -->
     <div class = "container admin">
-      <!--Titulo e indicador -->
-      <div class = "row">
-        <h2>Template</h2> 
+
+      <div class = "login-form-container">
+        <h2>DPlastico SCADA</h2> 
+        <form class="login-form">
+          <div class="form-group">
+            <label for="exampleInputEmail1">Usuario</label>
+            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="usuario">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Contraseña</label>
+            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="contraseña">
+          </div>
+          <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+        </form>
       </div>
+
     </div> <!-- Acaba container -->
     <!-- Inicia JavaScript -->
     <!-- primero jQuery, despues Popper.js, despues Bootstrap, despues propio -->

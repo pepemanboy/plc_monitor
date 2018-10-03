@@ -131,3 +131,9 @@ body {
 .admin-megabytes-boton{
 	margin-left: 10px;
 }
+
+.login-form-container
+{
+	max-width: 400px;
+	margin: 0 auto;
+}
