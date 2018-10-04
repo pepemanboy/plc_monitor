@@ -1,5 +1,65 @@
+<?php
+// Start the session
+session_start();
+?>
+
 <!doctype html>
-<!-- admin.php -->
+<!-- login.php -->
+<?php
+
+include_once("user_control.php");
+
+// define variables and set to empty values
+$userErr = $passErr = "";
+$user = $pass = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $r = True;
+  if (empty($_POST["username"])) {
+    $userErr = "Usuario requerido";
+    $r = False;
+  } else {
+    $user = test_input($_POST["username"]);
+  }
+
+  if (empty($_POST["password"])) {
+    $passErr = "Contraseña requerida";
+    $r = False;
+  } else {
+    $pass = test_input($_POST["password"]);
+  }
+
+  if ($r)
+  {
+    $r = validateUserPass($user, $pass);
+    if ($r == OK)
+    {
+      $passErr = "exito";
+      $_SESSION["user"] = $user;
+      echo("<meta http-equiv='refresh' content='0; url=admin.php' />");
+    }
+    else if ($r == ERROR_USERPASS)
+    {
+      $passErr = "Usuario / contraseña incorrectos";
+      session_destroy();
+    }
+    else
+    {
+      $passErr = "Error de servidor";
+      session_destroy();
+    }
+  }
+}
+
+function test_input($data) {
+  $data = trim($data);
+  $data = stripslashes($data);
+  $data = htmlspecialchars($data);
+  return $data;
+}
+
+?>
+
 <html lang="en">
   <head>
     <!-- Meta tags requeridos -->
@@ -10,7 +70,7 @@
     <!-- CSS propio -->
     <link rel = "stylesheet" href = "css/plcshield.css">
     <!-- Titulo de pagina --> 
-    <title>PLC Shield Monitor - Admin</title>
+    <title>PLC Shield Monitor - Login</title>
     <!-- Icono en pagina -->
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
@@ -21,16 +81,18 @@
 
       <div class = "login-form-container">
         <h2>DPlastico SCADA</h2> 
-        <form class="login-form">
+        <form method="post" class="login-form" action= "<?php echo htmlspecialchars($_SERVER['PHP_SELF']);?>">
           <div class="form-group">
-            <label for="exampleInputEmail1">Usuario</label>
-            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="usuario">
+            <label for="login-username-input"">Usuario</label>
+            <input name = "username" class="form-control" id="login-username-input" placeholder="usuario" value ="<?php echo $user;?>">
+            <div class = "login-form-error"> <?php echo $userErr;?> </div>
           </div>
           <div class="form-group">
-            <label for="exampleInputPassword1">Contraseña</label>
-            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="contraseña">
+            <label for="login-password-input">Contraseña</label>
+            <input name = "password" type="password" class="form-control" id="login-password-input" placeholder="contraseña" value ="<?php echo $pass;?>">
+            <div class = "login-form-error"> <?php echo $passErr;?> </div>
           </div>
-          <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+          <button type ="submit" id="login-submit-boton" name="submit" class="btn btn-primary">Iniciar sesión</button>
         </form>
       </div>
 
@@ -41,6 +103,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
     <script src = "js/plcmonitor_util.js"> </script>
+    <script src = "js/plcmonitor_login.js"> </script>
     <!-- Acaba Javascript -->
   </body>
 </html> 

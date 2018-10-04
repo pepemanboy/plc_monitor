@@ -137,3 +137,8 @@ body {
 	max-width: 400px;
 	margin: 0 auto;
 }
+
+.login-form-error
+{
+	color: #D9164A;
+}

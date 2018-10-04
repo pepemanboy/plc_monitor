@@ -50,6 +50,13 @@ if(!defined("DEFINITIONS"))
 			mysqli_close($connection);
 		die("error(" . $str . ")}");
 	}
+
+	function __exit($error_code, &$connection = null)
+	{
+		if($connection)
+			mysqli_close($connection);
+		return $error_code;
+	}
 } // End definitions module
 
 ?>

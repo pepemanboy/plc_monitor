@@ -8,7 +8,7 @@ include_once("plc_util.php");
 // Constants
 $TABLE_NAME = "plc_users";
 $ADMIN_NAME = "admin";
-$ADMIN_PASS =  "admin";
+$ADMIN_PASS = "admin";
 
 /**
 *	Log in session
@@ -35,9 +35,33 @@ function logOut()
 */
 function validateSession()
 {
-	session_start();
-	echo("<meta http-equiv='refresh' content='0; url=login.php' />");
-	return ERROR_SESSION;
+	if (!isset($_SESSION["user"]))
+	{
+		echo("<meta http-equiv='refresh' content='0; url=login.php' />");
+		return ERROR_SESSION;
+	}
+	return OK;
+}
+
+/**
+*	Validate username and password
+*	@param username
+*	@param password
+*	@return error code
+*/
+function validateUserPass($username, $password)
+{
+	// Connect to server and database
+	$link = null;
+	$r = connectToDatabase($link);
+	if ($r != OK)
+		return __exit($r, $link);
+
+	$r = _validateUserPass($link, $username, $password);
+	if ($r != OK)
+		return __exit($r, $link);
+
+	return OK;
 }
 
 /**
@@ -47,8 +71,10 @@ function validateSession()
 *	@param password
 *	@return error code
 */
-function validateUserPass(&$connection, $username, $password)
+function _validateUserPass(&$connection, $username, $password)
 {
+	$table_name = $GLOBALS['TABLE_NAME'];
+
 	// Assert connection
 	if (!$connection)
 		return ERROR_CONNECTION;
@@ -63,9 +89,9 @@ function validateUserPass(&$connection, $username, $password)
 	SELECT username, password FROM " . $table_name . " WHERE username = '" . $username . "' AND password = '" . $password . "'
 	";
 
-	$result = mysqli_query($link, $query);
+	$result = mysqli_query($connection, $query);
 	if (!$result)
-		return $result;
+		return "ERROR POPO";
 
 	// Compare username and password
 	if (($n = mysqli_num_rows($result)) > 0) 
@@ -110,7 +136,7 @@ function createUser(&$connection, $username, $password, $permissions)
 
 	$r = mysqli_query($link,$query);
 	if (!$r)
-		return $r;
+		return ERROR_QUERY;
 
 	return OK;
 }
@@ -123,13 +149,17 @@ function createUser(&$connection, $username, $password, $permissions)
 */
 function createUserControlTable(&$connection)
 {
+	$table_name = $GLOBALS['TABLE_NAME'];
+	$admin_name = $GLOBALS['ADMIN_NAME'];
+	$admin_pass = $GLOBALS['ADMIN_PASS'];
+
 	// Assert connection
 	if (!$connection)
 		return ERROR_CONNECTION;
 
 	// Query table existent
 	$exists = False;
-	$r = tableExists($connection, $TABLE_NAME, $exists); 
+	$r = tableExists($connection, $table_name, $exists); 
 	if($r != OK)
 		return $r;
 
@@ -148,12 +178,12 @@ function createUserControlTable(&$connection)
 		";
 		$r = mysqli_query($link,$query);
 		if (!$r)
-			return $r;
+			return ERROR_QUERY;
 	}
 
 	// Query table empty
 	$empty = False;
-	$r = tableEmpty($link, $table_name, $empty);
+	$r = tableEmpty($connection, $table_name, $empty);
 	if($r != OK)
 		return $r;
 
@@ -163,12 +193,12 @@ function createUserControlTable(&$connection)
 		$query = "
 		INSERT INTO " . $table_name . " 
 		(user_id, username, password, permissions) 
-		VALUES (0,'" . $ADMIN_NAME . "','" . $ADMIN_PASS . "',128);
+		VALUES (0,'" . $admin_name . "','" . $admin_pass . "',128);
 		";  	
 
-		$r = mysqli_query($link,$query);
+		$r = mysqli_query($connection,$query);
 		if (!$r)
-			return $r;
+			return ERROR_QUERY;
 	}
 
 	return OK;

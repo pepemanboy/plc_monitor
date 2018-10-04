@@ -1,3 +1,8 @@
+<?php
+// Start the session
+session_start();
+?>
+
 <!doctype html>
 <!-- admin.php -->
 <?php include_once("user_control.php"); validateSession(); ?>
