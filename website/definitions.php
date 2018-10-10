@@ -34,6 +34,11 @@ if(!defined("DEFINITIONS"))
 	define("ACTION_EVENT", 2);
 	define("ACTION_DELAY", 3);
 
+	/* User permissions bitflags */
+	define("PERMISSIONS_OUTPUTS", 1<<0);
+	define("PERMISSIONS_ACTIONS", 1<<1);
+
+
 	/* Debugging */
 	define("DEBUGGING", "DEBUGGING");
 

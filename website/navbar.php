@@ -22,7 +22,19 @@
       </li>
       <li class="nav-item">
         <a class="nav-link" href="debug.php" id = "navbar-item-debug">Debug</a>
-      </li>
+      </li>      
+      <?php
+      include_once("user_control.php");
+      if (adminSession())
+      {
+        echo ("
+        <li class='nav-item'>
+          <a class='nav-link' href='manager.php' id = 'navbar-item-debug'>Accounts</a>
+        </li>
+        ");
+      }
+
+      ?>
     </ul>
   </div>
 </nav>

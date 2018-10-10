@@ -29,6 +29,16 @@ function logOut()
 }
 
 /**
+*	Validate admin session
+*/
+function adminSession()
+{
+	if (!isset($_SESSION["admin"]))
+		return False;
+	return $_SESSION["admin"] == True;
+}
+
+/**
 *	Validate session
 *	@param session
 *	@return error code
@@ -58,10 +68,8 @@ function validateUserPass($username, $password)
 		return __exit($r, $link);
 
 	$r = _validateUserPass($link, $username, $password);
-	if ($r != OK)
-		return __exit($r, $link);
-
-	return OK;
+		
+	return __exit($r, $link);
 }
 
 /**
@@ -203,4 +211,114 @@ function createUserControlTable(&$connection)
 
 	return OK;
 }
+
+function userControlGetUserTable(&$link, &$message)
+{
+	$table_name = $GLOBALS['TABLE_NAME'];
+	$admin_name = $GLOBALS['ADMIN_NAME'];
+	$admin_pass = $GLOBALS['ADMIN_PASS'];
+
+	// Query
+	$query = "SELECT user_id,username, password, permissions FROM  " . $table_name . " ORDER BY user_id ASC"; 
+
+	$result = mysqli_query($link, $query);
+	if (!$result)
+		return __exit(ERROR_QUERY,$link);
+
+	// Initialize variables
+	$user_ids = array();
+	$usernames = array();
+	$passwords = array();
+	$outputs = array();
+	$actions = array();
+
+	// Get result
+	if (($n = mysqli_num_rows($result)) > 0) 
+	{
+		// Save data of each row
+		$i = 0;
+		while($row = mysqli_fetch_assoc($result)) 
+		{
+			$ids[$i] = $row["user_id"];
+			$usernames[$i] = $row["username"];
+			$passwords[$i] = $row["password"];
+			$p = (int)$row["permissions"];
+			$outputs[$i] = ($p & PERMISSIONS_OUTPUTS) ? "yes" : "no";
+			$actions[$i] = ($p & PERMISSIONS_ACTIONS) ? "yes" : "no";
+			$i = $i + 1;
+		}
+		mysqli_free_result($result);
+	}
+
+	// Print table
+	$message .= "table(";
+	for($i = 0; $i < count($usernames); $i++)
+	{
+		$id = $user_ids[$i];
+		$user = $usernames[$i];
+		$pass = $passwords[$i];
+		$out = $outputs[$i];
+		$act = $actions[$i];
+
+		// Echo row
+		$message .= "
+		<tr id = 'manager-row-" . $id . "'>
+	      <td>" . $user . "</td>
+	      <td>" . $pass . "</td>
+	      <td>" . $out . "</td>
+	      <td>" . $act . "</td>
+	      <td>
+	        <button type='button' class='btn btn-warning manager-modificar-boton' data-user-number = '" . $id . "' id = 'manager-modificar-boton-" . $id . "' >Modificar</button>
+	      </td>
+	      <td>
+	        <button type='button' class='btn btn-danger manager-borrar-boton' data-user-number = '" . $id . "' id = 'manager-borrar-boton-" . $id . "' data-toggle='modal' data-target='#manager-borrar-modal'>Borrar</button>
+	      </td>
+	    </tr>
+		";		
+	}
+	$message .= ")";
+	return OK;
+}
+
+/** 
+*	Process POST request
+*/
+function userControlPostRequest()
+{
+	if ($_SERVER["REQUEST_METHOD"] != "POST")
+		return;
+
+	if(!isset($_POST["operation"]))
+		_exit(ERROR_ARGUMENTS, null);
+
+	$operation = $_POST["operation"];
+
+	// Connect to server and database
+	$link = null;
+	$r = connectToDatabase($link);
+	if ($r != OK)
+		_exit($r, $link);
+
+	$message = "";
+	switch ($operation) 
+	{
+	    case "get_user_table": $r = userControlGetUserTable($link, $message); break;
+	    default: break;
+    }
+
+    if ($r != OK)
+    	_exit($r, $link);
+
+    echo($message);
+
+    _exit(OK, $link);	
+}
+
+/** 
+*	Post
+*/
+userControlPostRequest();
+
+
+
 ?>
