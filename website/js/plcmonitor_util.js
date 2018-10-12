@@ -10,6 +10,13 @@ const ACTION_PERMANENT = 1;
 const ACTION_EVENT = 2;
 const ACTION_DELAY = 3;
 
+/* Permissions */
+const PERMISSIONS_OUTPUTS = 1<<0;
+const PERMISSIONS_ACTIONS = 1<<1;
+
+/* Accounts */
+const ADMIN_USER_ID = 0;
+
 /**
 *	Set active navbar item.
 *	@param {string} item_name name of the item

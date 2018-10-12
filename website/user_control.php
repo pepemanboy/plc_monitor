@@ -9,6 +9,8 @@ include_once("plc_util.php");
 $TABLE_NAME = "plc_users";
 $ADMIN_NAME = "admin";
 $ADMIN_PASS = "admin";
+$ADMIN_ID = 0;
+
 
 /**
 *	Log in session
@@ -119,26 +121,19 @@ function _validateUserPass(&$connection, $username, $password)
 
 /**
 *	Insert user into table
-*	@param connection Database connection
+*	@param link Database connection
 *	@param username
 *	@param password
 *	@param permissions
 *	@return error code
 */
-function createUser(&$connection, $username, $password, $permissions)
+function createUser(&$link, $username, $password, $permissions)
 {
-	// Assert connection
-	if (!$connection)
-		return ERROR_CONNECTION;
-
-	// Assert table
-	$r = createUserControlTable($connection);
-	if($r != OK)
-		return $r;
+	$table_name = $GLOBALS['TABLE_NAME'];
 
 	// Insert user
 	$query = "
-	INSERT INTO plc_users (username, password, permissions) 
+	INSERT INTO " . $table_name . " (username, password, permissions) 
 	VALUES ('" . $username . "','" . $password . "', " . $permissions . ")
 	";
 
@@ -152,22 +147,23 @@ function createUser(&$connection, $username, $password, $permissions)
 /**
 *	Create users control table if it doesnt exist. 
 *	If it exists and is empty, create admin user.
-*	@param connection mysql connection
+*	@param link mysql connection
 *	@return error code
 */
-function createUserControlTable(&$connection)
+function createUserControlTable(&$link)
 {
 	$table_name = $GLOBALS['TABLE_NAME'];
 	$admin_name = $GLOBALS['ADMIN_NAME'];
 	$admin_pass = $GLOBALS['ADMIN_PASS'];
+	$admin_id = $GLOBALS['ADMIN_ID'];
 
 	// Assert connection
-	if (!$connection)
+	if (!$link)
 		return ERROR_CONNECTION;
 
 	// Query table existent
 	$exists = False;
-	$r = tableExists($connection, $table_name, $exists); 
+	$r = tableExists($link, $table_name, $exists); 
 	if($r != OK)
 		return $r;
 
@@ -191,20 +187,14 @@ function createUserControlTable(&$connection)
 
 	// Query table empty
 	$empty = False;
-	$r = tableEmpty($connection, $table_name, $empty);
+	$r = tableEmpty($link, $table_name, $empty);
 	if($r != OK)
 		return $r;
 
 	// Insert one row if it doesnt exist
 	if ($empty)
 	{
-		$query = "
-		INSERT INTO " . $table_name . " 
-		(user_id, username, password, permissions) 
-		VALUES (0,'" . $admin_name . "','" . $admin_pass . "',128);
-		";  	
-
-		$r = mysqli_query($connection,$query);
+		$r = createUser($link, $admin_name, $admin_pass, (PERMISSIONS_OUTPUTS | PERMISSIONS_ACTIONS));
 		if (!$r)
 			return ERROR_QUERY;
 	}
@@ -223,7 +213,7 @@ function userControlGetUserTable(&$link, &$message)
 
 	$result = mysqli_query($link, $query);
 	if (!$result)
-		return __exit(ERROR_QUERY,$link);
+		return ERROR_QUERY;
 
 	// Initialize variables
 	$user_ids = array();
@@ -239,7 +229,7 @@ function userControlGetUserTable(&$link, &$message)
 		$i = 0;
 		while($row = mysqli_fetch_assoc($result)) 
 		{
-			$ids[$i] = $row["user_id"];
+			$user_ids[$i] = $row["user_id"];
 			$usernames[$i] = $row["username"];
 			$passwords[$i] = $row["password"];
 			$p = (int)$row["permissions"];
@@ -263,20 +253,80 @@ function userControlGetUserTable(&$link, &$message)
 		// Echo row
 		$message .= "
 		<tr id = 'manager-row-" . $id . "'>
-	      <td>" . $user . "</td>
-	      <td>" . $pass . "</td>
-	      <td>" . $out . "</td>
-	      <td>" . $act . "</td>
+	      <td id = 'manager-user" . $id . "'>" . $user . "</td>
+	      <td id = 'manager-pass" . $id . "'>" . $pass . "</td>
+	      <td id = 'manager-out" . $id . "'>" . $out . "</td>
+	      <td id = 'manager-act" . $id . "'>" . $act . "</td>
 	      <td>
-	        <button type='button' class='btn btn-warning manager-modificar-boton' data-user-number = '" . $id . "' id = 'manager-modificar-boton-" . $id . "' >Modificar</button>
+	        <button type='button' class='btn btn-warning manager-modificar-boton' data-user-number = '" . $id . "' id = 'manager-modificar-boton-" . $id . "' data-toggle='modal' data-target='#manager-modificar-modal'>Modificar</button>
 	      </td>
 	      <td>
-	        <button type='button' class='btn btn-danger manager-borrar-boton' data-user-number = '" . $id . "' id = 'manager-borrar-boton-" . $id . "' data-toggle='modal' data-target='#manager-borrar-modal'>Borrar</button>
+	      <button type='button' class='btn btn-danger admin-borrar-boton' data-user-number = '" . $id . "' id = 'modal-borrar-boton-" . $id . "' data-toggle='modal' data-target='#manager-borrar-modal'>Borrar</button>
 	      </td>
 	    </tr>
 		";		
 	}
 	$message .= ")";
+	return OK;
+}
+
+function userControlModifyUser(&$link, &$message)
+{
+	$table_name = $GLOBALS['TABLE_NAME'];
+
+	$user_id = $_POST["user_id"];
+	$username = $_POST["username"];
+	$password = $_POST["password"];
+	$permissions = $_POST["permissions"];
+
+	$query = "
+	UPDATE " . $table_name . "
+	SET username = '" . $username . "', password = '" . $password . "', permissions = " . $permissions . "
+	WHERE user_id = " . $user_id . ";
+	";
+
+	$r = mysqli_query($link, $query);
+	if (!$r)
+		return ERROR_QUERY;
+
+	return OK;
+}
+
+/**
+*	Add user to database table
+*/
+function userControlCreateUser(&$link, &$message)
+{
+	$table_name = $GLOBALS['TABLE_NAME'];
+
+	$user_id = $_POST["user_id"];
+	$username = $_POST["username"];
+	$password = $_POST["password"];
+	$permissions = $_POST["permissions"];
+
+	$r = createUser($link, $username, $password, $permissions);
+
+	return $r;
+}
+
+/**
+*	Remove user from table
+*/
+function userControlRemoveUser(&$link, &$message)
+{
+	$table_name = $GLOBALS['TABLE_NAME'];
+
+	$user_id = $_POST["user_id"];
+
+	$query = "
+	DELETE FROM " . $table_name . "
+	WHERE user_id = " . $user_id . ";
+	";
+
+	$r = mysqli_query($link, $query);
+	if (!$r)
+		return ERROR_QUERY;
+
 	return OK;
 }
 
@@ -299,10 +349,18 @@ function userControlPostRequest()
 	if ($r != OK)
 		_exit($r, $link);
 
+	// Assert table
+	$r = createUserControlTable($link);
+	if($r != OK)
+		_exit($r, $link);
+
 	$message = "";
 	switch ($operation) 
 	{
 	    case "get_user_table": $r = userControlGetUserTable($link, $message); break;
+	    case "modify_user": $r = userControlModifyUser($link, $message); break;
+	    case "add_user": $r = userControlAddUser($link, $message); break;
+	    case "remove_user": $r = userControlRemoveUser($link, $message); break;
 	    default: break;
     }
 

@@ -46,6 +46,76 @@
         <button type="button" class="btn btn-success" data-toggle='modal' data-target='#manager-agregar-modal'>Agregar Usuario</button>
       </div>
       <!-- Acaban botones -->
+      <!-- Modal borrar -->
+      <div class="modal fade" id="manager-borrar-modal" tabindex="-1" role="dialog" aria-labelledby="manager-borrar-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="manager-borrar-modal-titulo">Precaución</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" id = "manager-borrar-modal-body">
+              ¿Estás seguro que deseas borrar el usuario?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-primary" id = "manager-borrar-modal-boton">Borrar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal borrar -->   
+      <!-- Modal modificar -->
+      <div class="modal fade" id="manager-modificar-modal" tabindex="-1" role="dialog" aria-labelledby="manager-modificar-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="manager-modificar-modal-titulo">Modificar usuario</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <!-- Empieza cuerpo modal modificar -->
+            <div class="modal-body" id = "manager-modificar-modal-body">
+              <!-- Empieza fila de permisos -->
+              <div  class = "form-group" id = "manager-modificar-modal-permisos-row">
+                <label>Permisos</label>
+                <div class='input-group mb-3'>
+                  <!-- Checkbox modificar salidas -->
+                  <div class='input-group-prepend'>
+                    <div class='input-group-text'>                  
+                      Modificar salidas
+                      <input type='checkbox' class = "manager-checkbox" id = 'manager-modificar-modal-salidas-checkbox'>
+                    </div>
+                  </div><!-- Acaba checkbox modificar salidas-->
+                  <!-- Checkbox config / acciones -->
+                  <div class='input-group-append'>
+                    <div class='input-group-text'>                  
+                      Config / acciones
+                      <input type='checkbox' class = "manager-checkbox" id = 'manager-modificar-modal-acciones-checkbox'>
+                    </div>
+                  </div><!-- Acaba checkbox config/acciones-->
+                </div> <!-- Acaba fila de permisos -->
+              </div>
+              <!-- Empieza fila de usuario -->
+              <div class = "form-group" id = "manager-modificar-modal-usuario-row">
+                <label>Usuario</label>
+                <input class="form-control" id="manager-modificar-modal-usuario-input" placeholder="user">
+              </div><!-- Acaba fila de usuario -->
+              <!-- Empieza fila de contraseña -->
+              <div class = "form-group">
+                <label>Contraseña</label>
+                <input class="form-control" id="manager-modificar-modal-password-input" placeholder="pass">
+              </div><!-- Acaba fila de contraseña-->
+            </div> <!-- Acaba cuerpo de modal modificar -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-primary" id = "manager-modificar-modal-boton">Modificar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal modificar -->    
       <div id = "manager-debug-row"> <div>
     </div> <!-- Acaba container -->
     <!-- Inicia JavaScript -->
