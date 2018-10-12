@@ -1,4 +1,5 @@
 <?php 
+session_start();
 
 // Includes
 include_once("definitions.php");
@@ -28,6 +29,7 @@ function logIn()
 function logOut()
 {
 	session_destroy();
+	$_SESSION = [];
 	return OK;
 }
 
@@ -102,7 +104,7 @@ function _validateUserPass(&$connection, $username, $password)
 
 	$result = mysqli_query($connection, $query);
 	if (!$result)
-		return "ERROR POPO";
+		return ERROR_QUERY;
 
 	// Compare username and password
 	if (($n = mysqli_num_rows($result)) > 0) 

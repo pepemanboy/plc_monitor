@@ -2,6 +2,7 @@
 // Start the session
 session_start();
 include_once("user_control.php"); 
-validateSession();
-include("admin_content.php");
+$r = validateSession();
+if($r == OK)
+  include("admin_content.php");
 ?>
