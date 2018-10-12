@@ -27,6 +27,7 @@ function logIn()
 */
 function logOut()
 {
+	session_destroy();
 	return OK;
 }
 
@@ -261,7 +262,12 @@ function userControlGetUserTable(&$link, &$message)
 	        <button type='button' class='btn btn-warning manager-modificar-boton' data-user-number = '" . $id . "' id = 'manager-modificar-boton-" . $id . "' data-toggle='modal' data-target='#manager-modificar-modal'>Modificar</button>
 	      </td>
 	      <td>
-	      <button type='button' class='btn btn-danger admin-borrar-boton' data-user-number = '" . $id . "' id = 'modal-borrar-boton-" . $id . "' data-toggle='modal' data-target='#manager-borrar-modal'>Borrar</button>
+	      ";
+		if (strcmp($user, $admin_name) != 0)
+		{
+			$message .= "<button type='button' class='btn btn-danger manager-borrar-boton' data-user-number = '" . $id . "' id = 'modal-borrar-boton-" . $id . "' data-toggle='modal' data-target='#manager-borrar-modal'>Borrar</button>";
+		}
+	    $message .= "
 	      </td>
 	    </tr>
 		";		
@@ -339,7 +345,7 @@ function userControlPostRequest()
 		return;
 
 	if(!isset($_POST["operation"]))
-		_exit(ERROR_ARGUMENTS, null);
+		return;
 
 	$operation = $_POST["operation"];
 
@@ -359,8 +365,9 @@ function userControlPostRequest()
 	{
 	    case "get_user_table": $r = userControlGetUserTable($link, $message); break;
 	    case "modify_user": $r = userControlModifyUser($link, $message); break;
-	    case "add_user": $r = userControlAddUser($link, $message); break;
+	    case "add_user": $r = userControlCreateUser($link, $message); break;
 	    case "remove_user": $r = userControlRemoveUser($link, $message); break;
+	    case "logout": $r = logOut(); break;
 	    default: break;
     }
 

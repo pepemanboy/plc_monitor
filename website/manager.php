@@ -43,9 +43,28 @@
       </div> <!-- Acaba tabla -->
       <!-- Boton de agregar nuevo -->
       <div class = "row">
-        <button type="button" class="btn btn-success" data-toggle='modal' data-target='#manager-agregar-modal'>Agregar Usuario</button>
+        <button type="button" class="btn btn-success" data-toggle='modal' data-target='#manager-agregar-modal' id = "manager-agregar-boton">Agregar Usuario</button>
       </div>
       <!-- Acaban botones -->
+      <!-- Modal notif -->
+      <div class="modal fade" id="notif-modal" tabindex="-1" role="dialog" aria-labelledby="notif-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="notif-modal-titulo">Notificacion</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" id = "notif-modal-body">
+              Notificacion
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal notif -->   
       <!-- Modal borrar -->
       <div class="modal fade" id="manager-borrar-modal" tabindex="-1" role="dialog" aria-labelledby="manager-borrar-modal-titulo" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -115,7 +134,57 @@
             </div>
           </div>
         </div>
-      </div> <!-- Acaba modal modificar -->    
+      </div> <!-- Acaba modal modificar -->  
+      <!-- Modal agregar -->
+      <div class="modal fade" id="manager-agregar-modal" tabindex="-1" role="dialog" aria-labelledby="manager-agregar-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="manager-agregar-modal-titulo">Agregar usuario</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <!-- Empieza cuerpo modal agregar -->
+            <div class="modal-body" id = "manager-agregar-modal-body">
+              <!-- Empieza fila de permisos -->
+              <div  class = "form-group" id = "manager-agregar-modal-permisos-row">
+                <label>Permisos</label>
+                <div class='input-group mb-3'>
+                  <!-- Checkbox modificar salidas -->
+                  <div class='input-group-prepend'>
+                    <div class='input-group-text'>                  
+                      Modificar salidas
+                      <input type='checkbox' class = "manager-checkbox" id = 'manager-agregar-modal-salidas-checkbox'>
+                    </div>
+                  </div><!-- Acaba checkbox modificar salidas-->
+                  <!-- Checkbox config / acciones -->
+                  <div class='input-group-append'>
+                    <div class='input-group-text'>                  
+                      Config / acciones
+                      <input type='checkbox' class = "manager-checkbox" id = 'manager-agregar-modal-acciones-checkbox'>
+                    </div>
+                  </div><!-- Acaba checkbox config/acciones-->
+                </div> <!-- Acaba fila de permisos -->
+              </div>
+              <!-- Empieza fila de usuario -->
+              <div class = "form-group" id = "manager-agregar-modal-usuario-row">
+                <label>Usuario</label>
+                <input class="form-control" id="manager-agregar-modal-usuario-input" placeholder="user">
+              </div><!-- Acaba fila de usuario -->
+              <!-- Empieza fila de contraseña -->
+              <div class = "form-group">
+                <label>Contraseña</label>
+                <input class="form-control" id="manager-agregar-modal-password-input" placeholder="pass">
+              </div><!-- Acaba fila de contraseña-->
+            </div> <!-- Acaba cuerpo de modal agregar -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-primary" id = "manager-agregar-modal-boton">Agregar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal agregar -->  
       <div id = "manager-debug-row"> <div>
     </div> <!-- Acaba container -->
     <!-- Inicia JavaScript -->

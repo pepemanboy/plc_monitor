@@ -33,9 +33,11 @@
         </li>
         ");
       }
-
       ?>
     </ul>
+    <form class="form-inline my-2 my-lg-0">
+      <button type="button" class="btn btn-outline-secondary my-2 my-sm-0" id = "logout-boton">Log out</button>
+    </form>
   </div>
 </nav>
 <!-- Acaba Navbar -->

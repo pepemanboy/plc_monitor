@@ -140,3 +140,16 @@ function downloadCSV(args) {
 	link.setAttribute('download', filename);
 	link.click();
 }
+
+/**
+*	Log out
+*/
+$("#logout-boton").click(function(){
+	$.post("user_control.php",
+    {
+      operation: "logout"
+    },
+    function(data,status){
+      window.location.replace("login.php");      
+    }); 
+});
