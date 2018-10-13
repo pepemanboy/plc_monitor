@@ -1,5 +1,5 @@
 <?php 
 session_start();
-include_once("user_control.php")
+include_once("user_control.php");
 userControlPostRequest();
 ?>

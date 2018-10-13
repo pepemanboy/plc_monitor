@@ -12,7 +12,6 @@ $ADMIN_NAME = ADMIN_USER;
 $ADMIN_PASS = "admin";
 $ADMIN_ID = 0;
 
-
 /**
 *	Log in session
 *	@return error code
@@ -393,6 +392,5 @@ function userControlPostRequest()
 
     _exit(OK, $link);	
 }
-
 
 ?>
