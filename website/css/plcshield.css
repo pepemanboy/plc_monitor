@@ -73,7 +73,6 @@ body {
 }
 
 .viz-agregar-accion-boton{
-	margin-top: 20px;
 	margin-bottom: 20px;
 	margin-right: 15px;
 	margin-left: 15px;
@@ -81,6 +80,10 @@ body {
 
 .viz-control-grafica-row{
 	margin-bottom: 10px;
+}
+
+.viz-grafica-row{
+	margin-bottom: 20px;
 }
 
 .viz-title-row {

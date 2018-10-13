@@ -19,7 +19,7 @@ $( document ).ready(function() {
 */
 function updateTable()
 {
-  $.post("user_control.php",
+  $.post("post_user_control.php",
     {
       operation: "get_user_table"
     },
@@ -87,7 +87,7 @@ $("#manager-modificar-modal-boton").click(function(){
 
 	$("#manager-modificar-modal").modal('hide');
 
-  $.post("user_control.php",
+  $.post("post_user_control.php",
 	  {
 	    operation: "modify_user",
 	    user_id: g_user_id,
@@ -143,7 +143,7 @@ $("#manager-agregar-modal-boton").click(function(){
 
 	$("#manager-agregar-modal").modal('hide');
 
-  $.post("user_control.php",
+  $.post("post_user_control.php",
 	  {
 	    operation: "add_user",
 	    username: user,
@@ -184,7 +184,7 @@ $("#manager-borrar-modal-boton").click(function(){
 
 	$("#manager-borrar-modal").modal('hide');
 
-  $.post("user_control.php",
+  $.post("post_user_control.php",
 	  {
 	    operation: "remove_user",
 	    user_id: g_user_id,

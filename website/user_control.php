@@ -8,7 +8,7 @@ include_once("plc_util.php");
 
 // Constants
 $TABLE_NAME = "plc_users";
-$ADMIN_NAME = "admin";
+$ADMIN_NAME = ADMIN_USER;
 $ADMIN_PASS = "admin";
 $ADMIN_ID = 0;
 
@@ -17,8 +17,10 @@ $ADMIN_ID = 0;
 *	Log in session
 *	@return error code
 */
-function logIn()
+function logIn($user, $permissions)
 {
+    $_SESSION["user"] = $user;
+    $_SESSION["permissions"] = $permissions;
 	return OK;
 }
 
@@ -38,9 +40,19 @@ function logOut()
 */
 function adminSession()
 {
-	if (!isset($_SESSION["admin"]))
+	if (!isset($_SESSION["user"]))
 		return False;
-	return $_SESSION["admin"] == True;
+	return $_SESSION["user"] == ADMIN_USER;
+}
+
+/**
+*	Validate permissions
+*/
+function validatePermissions($permission)
+{
+	if(!isset($_SESSION["permissions"]))
+		return False;
+	return ($_SESSION["permissions"] & $permission) == 0 ? False : True;
 }
 
 /**
@@ -64,7 +76,7 @@ function validateSession()
 *	@param password
 *	@return error code
 */
-function validateUserPass($username, $password)
+function validateUserPass($username, $password, &$permissions)
 {
 	// Connect to server and database
 	$link = null;
@@ -72,7 +84,7 @@ function validateUserPass($username, $password)
 	if ($r != OK)
 		return __exit($r, $link);
 
-	$r = _validateUserPass($link, $username, $password);
+	$r = _validateUserPass($link, $username, $password, $permissions);
 		
 	return __exit($r, $link);
 }
@@ -84,7 +96,7 @@ function validateUserPass($username, $password)
 *	@param password
 *	@return error code
 */
-function _validateUserPass(&$connection, $username, $password)
+function _validateUserPass(&$connection, $username, $password, &$permissions)
 {
 	$table_name = $GLOBALS['TABLE_NAME'];
 
@@ -99,7 +111,7 @@ function _validateUserPass(&$connection, $username, $password)
 
 	// Query table
 	$query = "
-	SELECT username, password FROM " . $table_name . " WHERE username = '" . $username . "' AND password = '" . $password . "'
+	SELECT username, password, permissions FROM " . $table_name . " WHERE username = '" . $username . "' AND password = '" . $password . "'
 	";
 
 	$result = mysqli_query($connection, $query);
@@ -115,6 +127,7 @@ function _validateUserPass(&$connection, $username, $password)
 		mysqli_free_result($result);
 		if ($user != $username || $pass != $password)
 			return ERROR_USERPASS;
+		$permissions = $row["permissions"];
 	}
 	else
 		return ERROR_USERPASS;
@@ -380,12 +393,6 @@ function userControlPostRequest()
 
     _exit(OK, $link);	
 }
-
-/** 
-*	Post
-*/
-userControlPostRequest();
-
 
 
 ?>

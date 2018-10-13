@@ -1,4 +1,5 @@
 <?php 
+session_start();
 /**
 Administrador devices
 */
@@ -7,6 +8,7 @@ Administrador devices
 include_once("definitions.php");
 include_once("connect.php");
 include_once("plc_util.php");
+include_once("user_control.php");
 
 //Check for expected POST arguments
 if ( !isset($_POST['number_of_actions']) )
@@ -25,8 +27,13 @@ for($i = 0; $i < $number_of_actions; $i++)
   echo("
 <div class = 'viz-accion card'>
   <div class='card-header viz-action-header' id = 'viz-action-header" . $index . "'>
-    <span id = 'viz-action-id" . $index . "'> </span>
-    <button type='button' class='btn btn-danger viz-action-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal' id = 'viz-action-borrar-boton" . $index . "'>Borrar</button>
+    <span id = 'viz-action-id" . $index . "'> </span>");
+  if(validatePermissions(PERMISSIONS_ACTIONS))
+  {
+    echo("
+    <button type='button' class='btn btn-danger viz-action-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal' id = 'viz-action-borrar-boton" . $index . "'>Borrar</button>");
+  }  
+  echo("
   </div>
   <div class = 'card-body'>
     <!-- Empieza primera fila -->

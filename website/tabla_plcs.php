@@ -243,9 +243,17 @@ function printTable($ids, $names, $status)
 	      <th scope='row'>". $id ."</th>
 	      <td>" . $name . "</td>
 	      <td>" . $stat . " <span id = 'admin-status-badge-" . $id . "' class='badge badge-success'>OK</span> </td>
-	      <td>
-	        <button type='button' class='btn btn-danger admin-borrar-boton' data-plc-number = '" . $id . "' id = 'admin-borrar-boton-" . $id . "' data-toggle='modal' data-target='#admin-borrar-modal'>Borrar</button>
-	      </td>
+	      ");
+		include_once("user_control.php");
+		if(adminSession())
+		{
+			echo("
+	        <td>
+	        	<button type='button' class='btn btn-danger admin-borrar-boton' data-plc-number = '" . $id . "' id = 'admin-borrar-boton-" . $id . "' data-toggle='modal' data-target='#admin-borrar-modal'>Borrar</button>
+			</td>");
+		}
+	    echo("
+	      
 	    </tr>
 		");		
 	}

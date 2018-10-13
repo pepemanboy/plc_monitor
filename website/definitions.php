@@ -38,6 +38,8 @@ if(!defined("DEFINITIONS"))
 	define("PERMISSIONS_OUTPUTS", 1<<0);
 	define("PERMISSIONS_ACTIONS", 1<<1);
 
+	define("ADMIN_USER", "admin");
+
 
 	/* Debugging */
 	define("DEBUGGING", "DEBUGGING");

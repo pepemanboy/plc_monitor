@@ -1,11 +1,6 @@
 <?php
 // Start the session
 session_start();
-?>
-
-<!doctype html>
-<!-- login.php -->
-<?php
 
 include_once("user_control.php");
 
@@ -31,11 +26,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   if ($r)
   {
-    $r = validateUserPass($user, $pass);
+    $permissions = 0;
+    $r = validateUserPass($user, $pass, $permissions);
     if ($r == OK)
     {
       $passErr = "exito";
-      $_SESSION["user"] = $user;
+      logIn($user, $permissions);
       echo("<meta http-equiv='refresh' content='0; url=admin.php' />");
     }
     else if ($r == ERROR_USERPASS)
@@ -57,9 +53,10 @@ function test_input($data) {
   $data = htmlspecialchars($data);
   return $data;
 }
-
 ?>
 
+<!doctype html>
+<!-- login.php -->
 <html lang="en">
   <head>
     <!-- Meta tags requeridos -->
