@@ -29,7 +29,7 @@ for($i = 0; $i < count($ids); $i++)
 	$name = $names[$i];
 	$id = $ids[$i];
 	// Echo row
-	echo("<a class='dropdown-item dropdown-plc' data-plc-number = '" . $id . "' id = 'control-plc-dropdown-" . $id . "' href='#'>PLC ID: ". $id .". Nombre: " . $name . "</a>");	
+	echo("<a class='dropdown-item dropdown-plc' data-plc-name = '" . $name . "'data-plc-number = '" . $id . "' id = 'control-plc-dropdown-" . $id . "' href='#'>PLC ID: ". $id .". Nombre: " . $name . "</a>");	
 }
 // Close mySQL server connection
 mysqli_close($link);

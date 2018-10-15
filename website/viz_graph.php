@@ -74,6 +74,7 @@ else if ($operation == "get")
 
 	$date_start = $_POST['date_start'];
 	$date_end = $_POST['date_end'];
+	$name = $_POST['signal_name'];
 
 	// Query inputs
 	$query = "SELECT * FROM " . $table_name . "
@@ -116,6 +117,8 @@ else if ($operation == "get")
 	    		echo(",");
 	    }
 	    echo(")");
+
+	    echo("name(" . $name . ")");
 	    mysqli_free_result($result);
 	}
 }

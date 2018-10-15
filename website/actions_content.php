@@ -2,7 +2,7 @@
 session_start();
 ?>
 <!doctype html>
-<!-- viz.php -->
+<!-- actions.php -->
 <html lang="en">
 <head>
   <!-- Meta tags requeridos -->
@@ -36,7 +36,7 @@ session_start();
         <a class="btn btn-info dropdown-toggle plc-dropdown-menu" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display="static">
           Selecciona un PLC
         </a>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink" id = "viz-plc-dropdown">
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
           <?php include("control_devices_dropdown.php"); ?>
         </div>
       </div> <!-- Acaba dropdown plcs -->
@@ -69,9 +69,6 @@ session_start();
         </div>
       </div> <!-- Acaba dropdown senales -->
     </div> <!-- Acaba titulo y dropdowns -->
-    <!-- Senales seleccionadas -->
-    <div id = "viz-selected-signals-group">      
-    </div> <!-- Acaban senales seleccionadas -->
     <!-- Inicia seleccion de fechas -->
     <div class="row visualizador-dp-row">
       <div class='col'>
@@ -94,7 +91,7 @@ session_start();
     <!-- Botones de control de grafica -->
     <div class = "row viz-control-grafica-row">
       <div class = "col">
-        <button type="button" class="btn btn-success btn-lg btn-block disabled" id = "viz-visualizar-fechas-boton">Visualizar señales en fechas seleccionadas</button>
+        <button type="button" class="btn btn-success btn-lg btn-block disabled" id = "viz-visualizar-fechas-boton">Visualizar fechas seleccionadas</button>
       </div>
       <div class = "col">
         <button type="button" class="btn btn-success btn-lg btn-block disabled" id = "viz-csv-boton">Descargar CSV</button>
@@ -104,8 +101,63 @@ session_start();
     <div class = "row viz-grafica-row">
       <div id="chartContainer" style="height: 370px; width: 100%;"></div>
     </div> <!-- Acaba grafica -->
+    <!-- Boton de agregar accion -->
+    <div class ='row'>
+    <?php
+    include_once("user_control.php");
+    if(validatePermissions(PERMISSIONS_ACTIONS))
+    {
+      echo("
+        <button type='button' class='btn btn-success btn-lg btn-block viz-agregar-accion-boton disabled' id = 'viz-agregar-accion-boton' data-toggle='modal' data-target='#viz-agregar-modal'>Selecciona una señal</button>
+      ");
+    }
+    ?>
+    </div>        
+    <!--Acciones -->    
+    <div id = "viz-actions-row"> </div>
     <!-- Debug row -->
     <div id = "debug-row"></div>
+    <!-- Modal borrar -->
+      <div class="modal fade" id="viz-borrar-modal" tabindex="-1" role="dialog" aria-labelledby="admin-borrar-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="viz-borrar-modal-titulo">Precaución</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" id = "viz-borrar-modal-body">
+              ¿Estás seguro que deseas borrar la acción?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-primary" id = "viz-borrar-modal-boton">Borrar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal borrar -->
+      <!-- Modal agregar -->
+      <div class="modal fade" id="viz-agregar-modal" tabindex="-1" role="dialog" aria-labelledby="viz-agregar-modal-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="viz-agregar-modal-titulo">Agregar nueva accion</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" id = "viz-agregar-modal-body">    
+              <!-- Inicia cuerpo modal agregar -->            
+              Agregar accion
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-primary" id = "viz-agregar-modal-boton">Agregar</button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Acaba modal agregar -->
   </div> <!-- Acaba container -->
   <!-- Inicia JavaScript -->
   <!-- primero jQuery, despues Popper.js, despues Bootstrap, despues propio -->
@@ -134,7 +186,7 @@ session_start();
     }
   </script>
   <script src = "js/plcmonitor_util.js"> </script>
-  <script src = "js/plcmonitor_viz.js"> </script>
+  <script src = "js/plcmonitor_actions.js"> </script>
   <!-- Charts -->
   <!-- <script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script> -->
   <script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>

@@ -15,6 +15,9 @@
         <a class="nav-link" href="viz.php" id = "navbar-item-viz">Visualizador</a>
       </li>
       <li class="nav-item">
+        <a class="nav-link" href="actions.php" id = "navbar-item-actions">Acciones</a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" href="control.php" id = "navbar-item-control">Control</a>
       </li>
       <li class="nav-item">
@@ -29,7 +32,10 @@
       {
         echo ("
         <li class='nav-item'>
-          <a class='nav-link' href='manager.php' id = 'navbar-item-debug'>Accounts</a>
+          <a class='nav-link' href='manager.php' id = 'navbar-item-manager'>Accounts</a>
+        </li>
+        <li class='nav-item'>
+          <a class='nav-link' href='options.php' id = 'navbar-item-options'>Options</a>
         </li>
         ");
       }
