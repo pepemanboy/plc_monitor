@@ -1,8 +1,11 @@
 <?php
-// Start the session
 session_start();
+include_once("customize.php");
+$title = "";
+$r = getTitle($title);
+if($r != OK)
+  $title = "PLC_MONITOR";
 ?>
-
 <!doctype html>
 <!-- control.php -->
 <?php include_once("user_control.php"); validateSession(); ?>
@@ -16,7 +19,7 @@ session_start();
   <!-- CSS propio -->
   <link rel = "stylesheet" href = "css/plcshield.css">
   <!-- Titulo de pagina --> 
-  <title>PLC Shield Monitor - Control</title>
+  <title><?php echo($title); ?> - Control</title>
   <!-- Icono en pagina -->
   <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
   <link rel="icon" href="img/favicon.ico" type="image/x-icon">

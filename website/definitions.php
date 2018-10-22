@@ -6,8 +6,6 @@ if(!defined("DEFINITIONS"))
 
 	/* Username and password */
 	define("SERVER", "localhost");
-	// define("USERNAME", "pepemanb_pepeman");
-	// define("PASSWORD", "pepe1995*");
 	define("USERNAME", "dplastic_sc_ivan");
 	define("PASSWORD", "Kristal$737733");
 	define("DATABASE", "dplastic_dplastico_scada");

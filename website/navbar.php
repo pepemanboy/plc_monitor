@@ -25,7 +25,10 @@
       </li>
       <li class="nav-item">
         <a class="nav-link" href="debug.php" id = "navbar-item-debug">Debug</a>
-      </li>      
+      </li>     
+      <li class="nav-item">
+        <a class="nav-link" href="detail.php" id = "navbar-item-detail">Detalle</a>
+      </li>  
       <?php
       include_once("user_control.php");
       if (adminSession())

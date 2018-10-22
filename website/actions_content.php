@@ -1,5 +1,10 @@
 <?php
 session_start();
+include_once("customize.php");
+$title = "";
+$r = getTitle($title);
+if($r != OK)
+  $title = "PLC_MONITOR";
 ?>
 <!doctype html>
 <!-- actions.php -->
@@ -15,7 +20,7 @@ session_start();
   <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
   <!-- Titulo de pagina --> 
-  <title>PLC Shield Monitor - Admin</title>
+  <title><?php echo($title); ?> - Actions</title>
   <!-- Icono en pagina -->
   <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
   <link rel="icon" href="img/favicon.ico" type="image/x-icon">
