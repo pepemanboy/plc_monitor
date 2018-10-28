@@ -29,7 +29,10 @@ if($r != OK)
   <?php include "navbar.php"; ?>
   <!-- Inicia container -->
   <div class = "container admin">
-    <!-- Inicia titulo y dropdown -->
+    <!-- Inicia titulo y dropdown -->    
+    <div class = "row float-right">        
+      <h4><span class="badge badge-light" id = "status-indicator">Status: OK</span></h4>   
+    </div>
     <div class = "row titulo">
       <h2>Control de dispositivo </h2>
       <!-- Dropdown senales -->
@@ -130,6 +133,8 @@ if($r != OK)
   <script src ="https://code.jquery.com/jquery-3.3.1.min.js"> </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.4/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.14/moment-timezone-with-data-2012-2022.min.js"></script>
   <script src = "js/plcmonitor_util.js"> </script>
   <script src = "js/plcmonitor_control.js"> </script>
   <!-- Acaba Javascript -->

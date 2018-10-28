@@ -25,6 +25,7 @@ $( document ).ready(function() {
 
 function updatePlcs()
 {
+	moduleStatus("Querying table");
 	$.post("tabla_plcs.php",
     {
       operation: "get",
@@ -155,7 +156,11 @@ function updateTable()
 	// Check if plcs finished loading
 	for(var i = 0; i < g_plcs.length; ++i)
 	{
-		if (g_plcs[i].err) return false;
+		if (g_plcs[i].err)
+		{
+			moduleStatus("Error querying table");
+			return false;
+		}
 		if (g_plcs[i].ready != READY_ALL) return false;
 	}
 
@@ -181,6 +186,7 @@ function updateTable()
 		}
 	}
 	$('[data-toggle="tooltip"]').tooltip();
+	moduleStatus("Table query OK");
 
 
 }
@@ -195,4 +201,13 @@ function notify(text, title = "Notificación")
 	$("#notif-modal-titulo").text(title);
 	$("#notif-modal-body").text(text);
 	$("#notif-modal").modal("show");
+}
+
+/**
+* Report status of module
+* @param {string} status Status of module
+*/
+function moduleStatus(status)
+{
+  $("#status-indicator").text("Status: " + status);
 }

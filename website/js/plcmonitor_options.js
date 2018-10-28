@@ -17,6 +17,7 @@ $( document ).ready(function() {
 */
 function updateProperties()
 {
+  moduleStatus("Querying properties");
 	$.post("post_customize.php",
     {
       operation: "get_properties"
@@ -24,13 +25,21 @@ function updateProperties()
     function(data,status){
       var err = getPhpVar(data, "error").val;
       if(!plcOk(err))
+      {
+        moduleStatus("Query properties error " + err);
         return;
+      }
 
       // Title
       var title = getPhpVar(data, "title");      
       if(title.error)
+      {
+        moduleStatus("Query properties error ");
         return;
+      }
+      moduleStatus("Query properties OK");
 			$("#options-title-input").val(title.val);    
+      document.title = title.val + " - Options";
     }); 	
 }
 
@@ -73,4 +82,13 @@ function notify(text, title = "Notificación")
 function debug(text)
 {
 	$("#debug-row").text(text);
+}
+
+/**
+* Report status of module
+* @param {string} status Status of module
+*/
+function moduleStatus(status)
+{
+  $("#status-indicator").text("Status: " + status);
 }

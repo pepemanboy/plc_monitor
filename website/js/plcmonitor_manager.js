@@ -15,10 +15,11 @@ $( document ).ready(function() {
 });
 
 /**
-* Update PLC html table.
+* Update users html table.
 */
 function updateTable()
 {
+	moduleStatus("Querying table");
   $.post("post_user_control.php",
     {
       operation: "get_user_table"
@@ -27,10 +28,17 @@ function updateTable()
       var err = getPhpVar(data, "error").val;
       var table = getPhpVar(data, "table");
       if(!plcOk(err))
+      {
+      	moduleStatus("Table query error " + err);
         return;
+      }
       if(table.error)
+      {
+      	moduleStatus("Table query error");
         return;
-      $("#manager-user-table").html(table.val);       
+      }
+      $("#manager-user-table").html(table.val);    
+      moduleStatus("Table query OK");   
     }); 
 }
 
@@ -213,4 +221,13 @@ function notify(text, title = "Notificación")
 	$("#notif-modal-titulo").text(title);
 	$("#notif-modal-body").text(text);
 	$("#notif-modal").modal("show");
+}
+
+/**
+* Report status of module
+* @param {string} status Status of module
+*/
+function moduleStatus(status)
+{
+  $("#status-indicator").text("Status: " + status);
 }

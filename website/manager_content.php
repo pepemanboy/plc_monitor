@@ -29,9 +29,12 @@ if($r != OK)
     <!-- Inicia container -->
     <div class = "container admin">
       <!--Titulo e indicador -->
-      <div class = "row">
-        <h2>Account manager</h2> 
+      <div class = "row float-right">        
+        <h4><span class="badge badge-light" id = "status-indicator">Status: OK</span></h4>   
       </div>
+      <div class = "row titulo">
+        <h2>Account manager</h2> 
+      </div><!-- Acaba titulo e indicador --> 
       <!-- Inicia Tabla -->
       <div class = "row manager-tabla">
         <table class="table table-hover">

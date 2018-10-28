@@ -228,6 +228,23 @@ else if ($operation == "megabytes")
 		_exit(ERROR_QUERY,$link);
 	}
 }
+else if ($operation == "date")
+{
+	// Check for arguments
+	if (!isset($_POST['plc_number'])) 
+		_exit(ERROR_ARGUMENTS);
+
+	// Fetch arguments
+	$plc_number = $_POST['plc_number']; 
+
+
+	$stat = null;
+	$r = arduinoStatus($link, $plc_number , "get" , $stat);
+	if ($r != OK)
+		_exit($r, $link);
+
+	echo("date({$stat})");
+}
 
 // Format the output as table
 function printTable($ids, $names, $status)

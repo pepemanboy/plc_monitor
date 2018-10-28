@@ -133,6 +133,7 @@ $("#viz-visualizar-fechas-boton").click(function(){
 
 function getGraphSignals(date1, date2)
 {
+	vizStatus("Querying signals");
 	g_graph_signals = {signals: [], error: "OK" };
 	for(var i = 0; i < g_selected_signals.length; i++)
 	{
@@ -169,9 +170,11 @@ function graphSignals()
 
 	if (!plcOk(g_graph_signals.error))
 	{
-		vizStatus("g_selected_signals.error");
+		vizStatus(g_selected_signals.error);
 		return false;
 	}
+
+	vizStatus("Querying signals OK");
 
 	// Compute data
 	var dataArray = new Array();

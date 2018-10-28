@@ -3,6 +3,7 @@ var OUTPUT_COUNT = 6;
 
 // Global variables
 var g_plc = 0;
+var g_confirmationPending = moment();
 
 // On load
 $( document ).ready(function() {
@@ -152,6 +153,35 @@ function setOutputs(n){
       outputsStatus(err);
       if(!plcOk(err))
         return;
+      moduleStatus("Pending PLC " + n);
+      g_confirmationPending = moment();
+      setTimeout(function() { confirmationWait(n); }, 5000);
+    });
+}
+
+function confirmationWait(n)
+{  
+  $.post("tabla_plcs.php",
+    {
+      plc_number: n,
+      operation: "date"
+    },
+    function(data,status){
+      var err = getPhpVariable(data, "error");
+      outputsStatus(err);
+      if(!plcOk(err))
+      {
+        moduleStatus("Confirmation Error PLC " + n);
+        return;
+      }
+      var d = moment(getPhpVariable(data,"date"), 'YYYY-MM-DD HH:mm:ss');
+      var diff = d.diff(g_confirmationPending);
+      if (diff > 0)
+      {
+        moduleStatus("Confirmed PLC " + n);
+        return;
+      }
+      setTimeout(function() { confirmationWait(n); }, 5000);
     });
 }
 
@@ -185,4 +215,13 @@ function updateButtonColors()
       $("#do"+i).addClass("btn-success");
     }
   }
+}
+
+/**
+* Report status of module
+* @param {string} status Status of module
+*/
+function moduleStatus(status)
+{
+  $("#status-indicator").text("Status: " + status);
 }
