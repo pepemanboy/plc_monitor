@@ -271,7 +271,7 @@ uint8_t _plcGetOutputs()
 uint8_t _plcGetCounters()
 {
   
-  int di[DIGITAL_INPUT_COUNT];
+  long di[DIGITAL_INPUT_COUNT];
 
   uint8_t r = getDigitalInputs(di);
   if (r != Ok)
@@ -295,7 +295,7 @@ uint8_t _plcGetCounters()
 uint8_t _plcResetCounters()
 {
 
-  int rr[DIGITAL_INPUT_COUNT];
+  long rr[DIGITAL_INPUT_COUNT];
   uint8_t r = getResets(rr);
   if (r != Ok)
   {
@@ -347,8 +347,8 @@ uint8_t _plcSendOutputs()
 uint8_t _plcSendInputs()
 {
 	uint8_t i;
-	int din[DIGITAL_INPUT_COUNT];
-	int ain[ANALOG_INPUT_COUNT];
+	long din[DIGITAL_INPUT_COUNT];
+	long ain[ANALOG_INPUT_COUNT];
 
 	for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
 	{

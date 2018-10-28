@@ -420,7 +420,7 @@ uint8_t _retryPost(const char * url, const char * params, const char * msg)
  * @param e placeholder for outputs array
  * @return error code
 */
-uint8_t getResets(int * rr)
+uint8_t getResets(long * rr)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
@@ -431,7 +431,7 @@ uint8_t getResets(int * rr)
     return Error;
   
   // Get resets
-  r = _getArray(rr,type_int,"resets(",DIGITAL_INPUT_COUNT);
+  r = _getArray(rr,type_long,"resets(",DIGITAL_INPUT_COUNT);
   if (r != Ok)
     return r;
 
@@ -446,7 +446,7 @@ uint8_t getResets(int * rr)
  * @param e placeholder for outputs array
  * @return error code
 */
-uint8_t getDigitalInputs(int * di)
+uint8_t getDigitalInputs(long * di)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
@@ -457,7 +457,7 @@ uint8_t getDigitalInputs(int * di)
     return Error;
   
   // Get resets
-  r = _getArray(di,type_int,"di(",DIGITAL_INPUT_COUNT);
+  r = _getArray(di,type_long,"di(",DIGITAL_INPUT_COUNT);
   if (r != Ok)
     return r;
 
@@ -530,7 +530,7 @@ uint8_t setOutputs(bool * dout)
  * @param di digital input array
  * @param analog input array
 */
-uint8_t setInputs(int * di, int * ai)
+uint8_t setInputs(long * di, long * ai)
 {
   char p[QUERY_BUFFER_SIZE];
   sprintf(p,"plc_number=%d&operation=set&",PLC_ID);
