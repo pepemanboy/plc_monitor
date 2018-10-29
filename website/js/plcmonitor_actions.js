@@ -105,70 +105,6 @@ function vizStatus(status)
 	$("#viz-status-indicator").text("Status: " + status);
 }
 
-$("#viz-visualizar-fechas-boton").click(function(){
-	// Disabled status
-	if($(this).hasClass( "disabled" ))
-		return false;
-	// No dates
-	if($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "" )
-		return false;
-
-	if(g_plc <= 0)
-	{
-		vizStatus("Selecciona un plc");
-		return false;
-	}
-
-	if(g_signal_number <= 0)
-	{
-		vizStatus("Selecciona una senal");
-		return false;
-	}
-
-	// Cambiar a formato de base de datos
-	var fecha1 = moment($("#datetimepicker1").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
-	var fecha2 = moment($("#datetimepicker2").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
-
-	getSignal(g_plc, g_signal_number, g_signal_type, fecha1, fecha2);	
-
-	$("#viz-csv-boton").removeClass("disabled");
-});
-
-function getSignal(plc_number, signal_number, signal_type, date1, date2)
-{
-	// Argument check
-	if(plc_number < 1 || signal_number < 1 || signal_type == "")
-		return false;
-
-	vizStatus("Querying signal");
-
-	$.post("viz_graph.php",
-	{
-		plc_number: plc_number,
-		signal_number: signal_number,
-		signal_type: signal_type,
-		operation: "get",
-		date_start: date1,
-		date_end: date2
-	},
-	function(data,status){
-		var err = getPhpVariable(data, "error"); 
-		g_values = getPhpArray(data, "values").map(Number);
-		g_dates = getPhpArray(data, "dates");
-
-		updateChart(g_dates, g_values, "PLC " + g_plc + "  " + g_signal_type.toUpperCase() + " " + g_signal_number);
-
-		vizStatus(err);
-		if(!plcOk(err))
-			return;
-	}); 
-}
-
-$("#viz-csv-boton").click(function(){
-	if($(this).hasClass( "disabled" ))
-		return false;	
-	downloadCSV({ filename: "plc" + g_plc + "_" + g_signal_type + g_signal_number + ".csv" });
-});
 
 $('.datetimepicker-input').on('input',function(e){
     // No dates
@@ -181,49 +117,6 @@ function debugText(txt)
 {
 	$("#debug-row").text(txt);
 }
-
-function updateChart(dates, values, title)
-{   
-	var data = [];
-	var dataSeries = { type: "line" };
-	var dataPoints = [];
-	for (var i = 0; i < dates.length; i ++) 
-	{
-		x = new Date(moment(dates[i],'YYYY-MM-DD HH:mm:ss').toDate());
-		y = values[i];
-		dataPoints.push({
-			x: x,
-			y: y
-		});
-	}
-	dataSeries.dataPoints = dataPoints;
-	data.push(dataSeries);
-
-    //Better to construct options first and then pass it as a parameter
-    var options = {
-    	title:{
-    		text: title
-    	},
-    	toolTip: {
-	      	contentFormatter: function (e) {
-	          var content = "";
-	          for (var i = 0; i < e.entries.length; i++){
-	            content = CanvasJS.formatDate(e.entries[i].dataPoint.x, "D/MMM/YYYY HH:mm:ss");       
-	          }       
-	          return content;
-	        }
-	      },
-    	zoomEnabled: true,
-    	animationEnabled: true,
-    	axisY: {
-    		includeZero: false
-    	},
-    	data: data 
-    };
-
-    $("#chartContainer").CanvasJSChart(options);
-}
-
 // Obtener acciones. N es el numero de plc
 function getActions(plc_number, signal_number, signal_type)
 {

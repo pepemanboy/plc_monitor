@@ -35,7 +35,7 @@ if($r != OK)
       <h4><span class="badge badge-light viz-status-indicator" id = "viz-status-indicator">Status: OK</span></h4>  
     </div>
     <div class = "row viz-title-row">
-      <h2>Visualizador</h2> 
+      <h2>Acciones</h2> 
       <!-- Dropdown plcs -->
       <div class="dropdown dropdown-visualizador-plcs">
         <a class="btn btn-info dropdown-toggle plc-dropdown-menu" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display="static">
@@ -74,38 +74,7 @@ if($r != OK)
         </div>
       </div> <!-- Acaba dropdown senales -->
     </div> <!-- Acaba titulo y dropdowns -->
-    <!-- Inicia seleccion de fechas -->
-    <div class="row visualizador-dp-row">
-      <div class='col'>
-        <div class="form-group">
-          <div class="input-group date" id="" data-target-input="nearest">
-            <h3 class = "visualizador-dp-label">Inicio: </h3>
-            <input type="text" class="form-control datetimepicker-input" id="datetimepicker1" data-toggle="datetimepicker" data-target="#datetimepicker1" placeholder = "Click para escoger inicio"/>
-          </div>
-        </div>
-      </div>
-      <div class='col'>
-        <div class="form-group">
-          <div class="input-group date" id="" data-target-input="nearest">
-            <h3 class = "visualizador-dp-label">Fin: </h3>
-            <input type="text" class="form-control datetimepicker-input" id="datetimepicker2" data-toggle="datetimepicker" data-target="#datetimepicker2" placeholder = "Click para escoger fin"/>
-          </div>
-        </div>
-      </div>
-    </div><!-- Acaba seleccion de fechas -->
-    <!-- Botones de control de grafica -->
-    <div class = "row viz-control-grafica-row">
-      <div class = "col">
-        <button type="button" class="btn btn-success btn-lg btn-block disabled" id = "viz-visualizar-fechas-boton">Visualizar fechas seleccionadas</button>
-      </div>
-      <div class = "col">
-        <button type="button" class="btn btn-success btn-lg btn-block disabled" id = "viz-csv-boton">Descargar CSV</button>
-      </div>
-    </div>
-    <!-- Empieza grafica -->
-    <div class = "row viz-grafica-row">
-      <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-    </div> <!-- Acaba grafica -->
+    
     <!-- Boton de agregar accion -->
     <div class ='row'>
     <?php
