@@ -52,10 +52,14 @@ class Customize extends Module
 	/** Post get properties */
 	private function postGetProperties(&$message)
 	{
-		$title = "";
-		$r = $this->getProperty("title", $title);
-		if ($r != OK)
-			return $r;
+		// Get parameters
+		$b = True;
+		$title = null;
+		$b = $b && getPostParameter("property_title", $title);
+
+		if (!$b)
+			return ERROR_ARGUMENTS;
+		
 		$message .= "title({$title})";
 		return OK;
 	}
@@ -63,10 +67,14 @@ class Customize extends Module
 	/** Post set properties */
 	private function postSetProperties(&$message)
 	{
-		if(!isset($_POST["property_title"]))
+		// Get parameters
+		$b = True;
+		$title = null;
+		$b = $b && getPostParameter("property_title", $title);
+
+		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$title = $_POST["property_title"];
 		$r = $this->setProperty("title", $title);
 		return $r;
 	}

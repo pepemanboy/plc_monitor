@@ -15,7 +15,7 @@ class Module
     /** Initialize function, to be defined by module */
     protected function initialize(){ return OK; }
     /** Private post request function to be defined by module */
-    protected function _postRequest($operation, &$message){ return OK; }
+    protected function postRequestData($operation, &$message){ return OK; }
 
 
     /*** Constructor and destructor */
@@ -73,6 +73,15 @@ class Module
         return OK;
     }
 
+    /** Get POST request parameters. Return true if parameter is set, false otherwise */
+    protected function getPostParameter($parameter_name, &$parameter)
+    {
+        if (!isset($_POST[$parameter_name])) 
+            return False;
+        $parameter = $_POST[$parameter_name];
+        return True;
+    }
+
     /** Public post request function */
     public function postRequest()
     {
@@ -89,7 +98,7 @@ class Module
         $operation = $_POST["operation"];
 
         $message = "";
-        $r = $this->_postRequest($operation, $message);
+        $r = $this->postRequestData($operation, $message);
         echo("{{$message}error({$r})}");
 
         return $r;
