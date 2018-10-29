@@ -52,6 +52,8 @@ $("#options-save-boton").click(function(){
     },
     function(data,status){
       var err = getPhpVar(data, "error").val;
+      
+      debug(data);
       if(!plcOk(err))
       {
       	notify("Error guardando opciones. Codigo de error = " + err);
@@ -61,6 +63,7 @@ $("#options-save-boton").click(function(){
       {
       	notify("Opciones guardadas exitosamente.");
       }
+
       updateProperties();
 
     }); 

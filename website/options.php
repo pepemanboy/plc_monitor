@@ -6,6 +6,14 @@ $r = validateSession();
 if($r == OK)
   if(adminSession())
   {
+  	// Get page title
+	include_once("customize.php");
+	$customize = new Customize();
+	$title = "PLC_MONITOR";
+	if ($customize->initialized())
+	  $r = $customize->getTitle($title);
+	$customize = null;
+
     include("options_content.php");
   } 
   else

@@ -1,11 +1,4 @@
-<?php
-session_start();
-include_once("customize.php");
-$title = "";
-$r = getTitle($title);
-if($r != OK)
-  $title = "PLC_MONITOR";
-?>
+<?php session_start(); ?>
 <!doctype html>
 <!-- viz.php -->
 <html lang="en">

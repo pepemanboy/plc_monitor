@@ -53,7 +53,7 @@ if(!defined("DEFINITIONS"))
 	{
 		if($connection)
 			mysqli_close($connection);
-		die("error(" . $str . ")}");
+		postDie($str);
 	}
 
 	function __exit($error_code, &$connection = null)
@@ -61,6 +61,11 @@ if(!defined("DEFINITIONS"))
 		if($connection)
 			mysqli_close($connection);
 		return $error_code;
+	}
+
+	function postDie($error_code)
+	{
+		die("error({$error_code})}");
 	}
 } // End definitions module
 

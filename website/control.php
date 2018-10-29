@@ -3,6 +3,14 @@
 session_start();
 include_once("user_control.php"); 
 $r = validateSession();
-if($r == OK)
-  include("control_content.php");
+
+// Get page title
+include_once("customize.php");
+$customize = new Customize();
+$title = "PLC_MONITOR";
+if ($customize->initialized())
+  $r = $customize->getTitle($title);
+$customize = null;
+
+include("control_content.php");
 ?>
