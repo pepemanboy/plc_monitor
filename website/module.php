@@ -74,12 +74,18 @@ class Module
     }
 
     /** Get POST request parameters. Return true if parameter is set, false otherwise */
-    protected function getPostParameter($parameter_name, &$parameter)
+    protected function getPostParameter($parameter_name, &$parameter = null)
     {
         if (!isset($_POST[$parameter_name])) 
             return False;
         $parameter = $_POST[$parameter_name];
         return True;
+    }
+
+    /** Set parameter */
+    protected function setParameter($parameter_name, $parameter, &$message)
+    {
+        $message .= "{$parameter_name}({$parameter})";
     }
 
     /** Public post request function */

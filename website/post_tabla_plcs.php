@@ -1,9 +1,9 @@
 <?php 
 session_start();
 
-include_once("customize.php");
+include_once("tabla_plcs.php");
 
-$module = new Customize();
+$module = new TablaPlcs();
 
 if (!$module->initialized())
 {
@@ -14,4 +14,3 @@ if (!$module->initialized())
 $r = $module->postRequest();
 $module = null;
 ?>
-

@@ -31,7 +31,7 @@ class TablaPlcs extends Module
 			PRIMARY KEY (id),
 			UNIQUE (name));
 			";
-			$r = mysqli_query($link,$query);
+			$r = mysqli_query($this->link, $query);
 			if (!$r)
 				return ERROR_QUERY;
 		}
@@ -79,7 +79,6 @@ class TablaPlcs extends Module
     /** Get */
     private function postGet(&$message)
     {
-
     	// Get parameters
 		$b = True;
 		$format = null;
@@ -115,7 +114,7 @@ class TablaPlcs extends Module
 		foreach($ids as $id)
 		{
 			$stat = 0;
-			$r = arduinoStatus($this->$link, $id , "get" , $stat);
+			$r = arduinoStatus($this->link, $id , "get" , $stat);
 			if ($r != OK)
 				return $r;
 			$status[$i] = $stat;
@@ -125,24 +124,26 @@ class TablaPlcs extends Module
 		// Print on selected format
 		if($format == "table") 
 		{
-			$this->printTable($ids, $names, $status, $message);		
+			$this->printTable($ids, $names, $status, $message);	
 			$n = count($ids);
-			$message .= "status_(";
+
+			$p = "";
 			for($i = 0; $i < $n; $i++)
 			{
-				$message .= $status[$i];
+				$p .= $status[$i];
 				if($i < $n - 1)
-					$message .= ",";
+					$p .= ",";
 			}
-			$message .= ")";
-			$message .= "ids_(";
+			$this->setParameter("status_", $p, $message);
+
+			$p = "";
 			for($i = 0; $i < $n; $i++)
 			{
-				$message .= $ids[$i];
+				$p .= $ids[$i];
 				if($i < $n - 1)
-					$message .= ",";
+					$p .= ",";
 			}
-			$message .= ")";
+			$this->setParameter("ids_", $p, $message);
 		}
 		else
 		{
@@ -176,7 +177,7 @@ class TablaPlcs extends Module
 			array_push($tables, $suffix . "di". $i, $suffix . "ai". $i);
 
 		// Delete registry from main table
-		$query = "DELETE FROM plcs WHERE id IN ('{$plc_number}')";
+		$query = "DELETE FROM {$this->TABLE_NAME} WHERE id IN ('{$plc_number}')";
 		$result = mysqli_query($this->link, $query);
 		if (!$result)
 			return ERROR_QUERY;
@@ -215,7 +216,7 @@ class TablaPlcs extends Module
 			return ERROR_ARGUMENTS;
 
 		// Query
-		$query = "SELECT name FROM plcs WHERE id = {$plc_number}";
+		$query = "SELECT name FROM {$this->TABLE_NAME} WHERE id = {$plc_number}";
 		$result = mysqli_query($this->link, $query);
 		if (!$result)
 			return ERROR_QUERY;
@@ -225,7 +226,7 @@ class TablaPlcs extends Module
 		if (($n = mysqli_num_rows($result)) > 0) 
 			$exists = 1;
 
-		$message .= "exists({$exists})";
+		$this->setParameter("exists", $exists, $message);
 
 		return OK;
 	}
@@ -276,7 +277,7 @@ class TablaPlcs extends Module
 		if ($r != OK)
 			return $r;
 
-		$message .= "date({$stat})";
+		$this->setParameter("date", $stat, $message);
 
 		return OK;
 	}
@@ -286,53 +287,54 @@ class TablaPlcs extends Module
     /** Format output as table */
 	private function printTable($ids, $names, $status, &$message)
 	{
-		$message .= "table(";
+		$p = "";
 		for($i = 0; $i < count($ids); $i++)
 		{
 			$name = $names[$i];
 			$id = $ids[$i];
 			$stat = $status[$i];
-			$message .= "<tr id = 'admin-row-{$id}'>
+			$p .= "<tr id = 'admin-row-{$id}'>
 		      <th scope='row'>{$id}</th>
 		      <td>{$name}</td>
-		      <td>{$stat}<span id = 'admin-status-badge-{$id}' class='badge badge-success'>OK</span> </td>
+		      <td>{$stat} <span id = 'admin-status-badge-{$id}' class='badge badge-success'>OK</span> </td>
 		      ";
 			include_once("user_control.php");
 			if(adminSession())
 			{
-				$message .= "
+				$p .= "
 		        <td>
 		        	<button type='button' class='btn btn-danger admin-borrar-boton' data-plc-number = '{$id}' id = 'admin-borrar-boton-{$id}' data-toggle='modal' data-target='#admin-borrar-modal'>Borrar</button>
 				</td>";
 			}
-		    $message .= "		      
+		    $p .= "		      
 		    </tr>
 			";		
 		}
-		$message .= ")";
+		$this->setParameter("table", $p, $message);
 	}
 
 	/** Format output as arrays */
 	private function printArrays($ids, $names, &$message)
 	{
-		// Return values
 		$n = count($ids);
-		$message .= "ids(";
+
+		$p = "";
 		for($i = 0; $i < $n; $i++)
 		{
-			$message .= $ids[$i];
+			$p .= $ids[$i];
 			if($i < $n - 1)
-				$message .= ",";
+				$p .= ",";
 		}
-		$message .=  ")";
-		$message .= "names(";
+		$this->setParameter("ids", $p, $message);
+
+		$p = "";
 		for($i = 0; $i < $n; $i++)
 		{
-			$message .= $names[$i];
+			$p .= $names[$i];
 			if($i < $n - 1)
-				$message .=  ",";
+				$p .=  ",";
 		}
-		$message .= ")";
+		$this->setParameter("names", $p, $message);
 	}
 }
 

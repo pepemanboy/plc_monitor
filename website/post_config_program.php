@@ -1,9 +1,9 @@
 <?php 
 session_start();
 
-include_once("customize.php");
+include_once("config_program_oo.php");
 
-$module = new Customize();
+$module = new Config();
 
 if (!$module->initialized())
 {

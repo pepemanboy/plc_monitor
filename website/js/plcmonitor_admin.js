@@ -35,7 +35,7 @@ function deletePlc(n){
   if(n < 1)
     return;
   adminStatus("Borrando PLC");
-  $.post("tabla_plcs.php",
+  $.post("post_tabla_plcs.php",
   {
     operation: "delete",
     plc_number: n
@@ -80,7 +80,7 @@ function addPlc(nombre_plc){
   if(!nombre_plc)
     return;
   adminStatus("Agregando PLC");
-  $.post("tabla_plcs.php",
+  $.post("post_tabla_plcs.php",
   {
     operation: "add",
     plc_name: nombre_plc
@@ -100,7 +100,7 @@ function addPlc(nombre_plc){
 */
 function updateTable()
 {
-  $.post("tabla_plcs.php",
+  $.post("post_tabla_plcs.php",
     {
       operation: "get",
       format: "table",
@@ -112,7 +112,6 @@ function updateTable()
       var table = getPhpVar(data, "table");
       if(table.error)
       {
-        alert("table error");
         return;
       }
       $("#admin-plc-table").html(table.val);  
@@ -148,7 +147,7 @@ $('#admin-respaldar-senales-boton').click(function(){
   adminStatus("Respaldando...");
   $("#admin-respaldar-senales-boton").addClass("disabled");
   // Get plc ids
-  $.post("tabla_plcs.php",
+  $.post("post_tabla_plcs.php",
     {
       operation: "get",
       format: "array",
@@ -304,7 +303,7 @@ $( document ).ajaxError(function() {
 */
 function getDatabaseSize()
 {
-  $.post("tabla_plcs.php",
+  $.post("post_tabla_plcs.php",
   {
     operation: "megabytes"
   },
@@ -318,4 +317,13 @@ function getDatabaseSize()
     var mb = getPhpVariable(data, "megabytes");
     $("#admin-megabytes-boton").text("Espacio: " + mb + " MB");
   }); 
+}
+
+
+/**
+* Debug
+*/
+function debug(text)
+{
+  $("#debug-row").text(text);
 }
