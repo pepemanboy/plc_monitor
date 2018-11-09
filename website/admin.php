@@ -1,8 +1,9 @@
 <?php
 session_start();
 
-include_once("user_control.php"); 
-validateSession(); // Will redirect if fails
+// Validate session
+include_once("user_control_oo.php"); 
+// UserControl::validateSession(); // Will redirect if fails
 
 // Get page title
 include_once("customize.php");

@@ -20,6 +20,7 @@ if(!defined("DEFINITIONS"))
 	define("ERROR_SELECT_DB", "SELECTDB ERROR");
 	define("ERROR_USERPASS", "USERNAME PASSWORD ERROR");
 	define("ERROR_SESSION", "SESSION ERROR");
+	define("ERROR_INITIALIZE", "INITIALIZE ERROR");
 
 	/* Input types */
 	define("TYPE_DIGITAL", 0);

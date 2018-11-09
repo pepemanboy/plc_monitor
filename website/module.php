@@ -16,6 +16,8 @@ class Module
     protected function initialize(){ return OK; }
     /** Private post request function to be defined by module */
     protected function postRequestData($operation, &$message){ return OK; }
+    /** Prepare module for post request */
+    protected function postInitialize(){ return OK; }
 
 
     /*** Constructor and destructor */
@@ -91,7 +93,6 @@ class Module
     /** Public post request function */
     public function postRequest()
     {
-        // Assert module initialization
         if (!$this->initialized())
             return ERROR_CONNECTION;
 
@@ -102,6 +103,10 @@ class Module
             return ERROR_ARGUMENTS;
 
         $operation = $_POST["operation"];
+
+        $r = $this->postInitialize();
+        if ($r != OK)
+            return $r;
 
         $message = "";
         $r = $this->postRequestData($operation, $message);

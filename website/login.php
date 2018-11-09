@@ -5,8 +5,8 @@ session_start();
 include_once("user_control.php");
 
 // define variables and set to empty values
-$userErr = $passErr = "";
-$user = $pass = "";
+$userErr = $passErr = ""; 
+$user = $pass = ""; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $r = True;

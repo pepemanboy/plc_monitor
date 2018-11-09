@@ -12,5 +12,5 @@ if ($customize->initialized())
   $r = $customize->getTitle($title);
 $customize = null;
 
- include("actions_content.php");
+include("actions_content.php");
 ?>
