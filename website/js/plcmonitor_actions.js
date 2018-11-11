@@ -18,22 +18,9 @@ var g_actions = [];
 
 // On load
 $( document ).ready(function() {
-  // Set active menu
+	setTitle("Actions");
   $("#navbar-item-actions").addClass("active");
   $("#navbar-item-actions").attr("href", "#");
-  updateChart([],[],"Gráfica");
-
-  // Default dates
-  today = new Date();
-  today_10 = new Date();
-  today_10.setDate(today_10.getDate() - 10);
-  $('#datetimepicker2').datetimepicker({ date: today });
-  $('#datetimepicker1').datetimepicker({ 
-  	date: new Date(today_10)
-  });
-
-  // $("#datetimepicker2").datetimepicker("setDate", moment().format('YYYY-MM-DD HH:mm:ss'));
-
 });
 
 // Cuando se pica algun plc en el dropdown, actualizar g_plc
@@ -72,10 +59,10 @@ function updateSignalDropdown(n)
 	if(g_plc < 1)
 		return false;
 
-	vizStatus("Querying signal names popix");
+	vizStatus("Querying signal names");
 
-	$.post("config_program.php",
-	{
+	$.post("modules/post.php", {
+      module: "config_program",
 		plc_number: n,
 		operation: "get"
 	},
@@ -113,16 +100,12 @@ $('.datetimepicker-input').on('input',function(e){
     $("#viz-visualizar-fechas-boton").removeClass("disabled");
 });
 
-function debugText(txt)
-{
-	$("#debug-row").text(txt);
-}
 // Obtener acciones. N es el numero de plc
 function getActions(plc_number, signal_number, signal_type)
 {
 	vizStatus("Querying actions");
-	$.post("viz_action.php",
-	{
+	$.post("modules/post.php", {
+      module: "viz_action",
 		plc_number: plc_number,
 		operation: "get"
 	},
@@ -285,8 +268,8 @@ function deleteAction(plc_number, action_id)
 {
 	vizStatus("Deleting action");
 
-	$.post("viz_action.php",
-	{
+	$.post("modules/post.php", {
+      module: "viz_action",
 		plc_number: plc_number,
 		operation: "delete",
 		delete_id: action_id
@@ -443,8 +426,8 @@ function addAction(plc_number)
 	// Action type
 	var at = Number($('input[name=viz-action-radios0]:checked').attr("data-action-type"));
 
-	$.post("viz_action.php",
-	{
+	$.post("modules/post.php", {
+      module: "viz_action",
 		plc_number: plc_number,
 		operation: "add",
 		input: ("" + g_signal_type + g_signal_number),

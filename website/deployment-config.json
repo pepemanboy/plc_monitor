@@ -1,9 +1,0 @@
-{
-  "type": "ftp",
-  "host": "dplastico-scada.com",
-  "user": "scada@dplastico-scada.com",
-  "password": "Kristal$737733",
-  "port": "21",
-  "remotePath": "/",
-  "uploadOnSave": true
-}

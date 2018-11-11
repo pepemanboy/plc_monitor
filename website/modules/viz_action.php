@@ -37,6 +37,7 @@ class Actions extends Module
      */
     protected function postInitialize()
     {
+    	echo("pi");
 		$b = True;
 		$plc_number = 0;
 		$b = $b && $this->getPostParameter("plc_number", $plc_number);
@@ -75,7 +76,7 @@ class Actions extends Module
 		  if (!$r)
 		    return ERROR_QUERY;
 		}
-
+		echo("rok ");
 		return OK;
     }
 
@@ -93,9 +94,10 @@ class Actions extends Module
 	 */
 	protected function postRequestData($operation, &$message)
 	{
+		echo("prd ");
 		switch ($operation) 
 		{
-		    case "add": return $this->postaAdd($message);
+		    case "add": return $this->postAdd($message);
 		    case "get": return $this->postGet($message);
 		    case "delete": return $this->postDelete($message);
 		    case "email": return $this->postEmail($message);
@@ -114,6 +116,7 @@ class Actions extends Module
 	*/
 	private function postAdd(&$message)
 	{
+		echo("pa ");
 		$b = True;
 		$input = $threshold = $updown = $output = $email = $notification_interval_s = $action_type = $delay_s = 0;
 		$b = $b && $this->getPostParameter("input", $input);
@@ -137,12 +140,11 @@ class Actions extends Module
 		}
 
 		$query = "
-		INSERT INTO = {$this->table_name} 
+		INSERT INTO {$this->table_name} 
 		(input, threshold, updown, output, email, notification_interval_s, action_type, delay_s) 
 		VALUES
 		('{$input}',{$threshold},{$updown},{$output},'{$email}',{$notification_interval_s},{$action_type},{$delay_s})";
 
-		// Execute query
 		$r = mysqli_query($this->link, $query);
 		if (!$r)
 			return ERROR_QUERY;
@@ -208,10 +210,10 @@ class Actions extends Module
 		foreach ($inputs as $i)
 		{
 			array_push($inputs_types, (strpos($i, 'di') !== false) ? TYPE_DIGITAL : TYPE_ANALOG);
-			array_push($inputs_numbers, substr($inputs[$i], 2));
+			array_push($inputs_numbers, substr($i, 2));
 		}
 		$this->setParameterArray("inputs_types", $inputs_types, $n, $message);
-		$this->setParameterArray("inputs_types", $inputs_numbers, $n, $message);
+		$this->setParameterArray("inputs_numbers", $inputs_numbers, $n, $message);
 
 		$this->setParameterArray("thresholds", $thresholds, $n, $message);
 		$this->setParameterArray("updowns", $updowns, $n, $message);
@@ -305,7 +307,7 @@ class Actions extends Module
 		$message = "Entrada {$input} ha pasado el threshold {$threshold}" ;
 		$message .= ($updown == 0) ? "arriba" : "abajo";
 		$subject = "Alerta";
-		$header = "From: Alerta PLC Monitor";
+		$header = "From: Alerta SCADA";
 	}
 }
 ?>

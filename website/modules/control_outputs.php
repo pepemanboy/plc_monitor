@@ -30,7 +30,7 @@ class ControlOutputs extends Module
      *
      * If table is empty, insert a row with 0 values.
      */
-    private function postInitialize()
+    protected function postInitialize()
     {
 		$b = True;
 		$plc_number = 0;
@@ -42,7 +42,7 @@ class ControlOutputs extends Module
 		$this->table_name = "plc{$plc_number}_outputs";
 
 		$name = "";
-		$r = findPlcById($this->link,$plc_number,$name);
+		$r = findPlcById($this->link, $plc_number, $name);
 		if ($r != OK)
 		  return $r;
 
@@ -54,7 +54,7 @@ class ControlOutputs extends Module
 		if (!$exists)
 		{
 		     $query = "
-		     CREATE TABLE {$table_name} (
+		     CREATE TABLE {$this->table_name} (
 		     timeStamp TIMESTAMP NOT NULL PRIMARY KEY,
 		     	do1 int(11) NOT NULL,
 				do2 int(11) NOT NULL,
@@ -64,7 +64,7 @@ class ControlOutputs extends Module
 				do6 int(11) NOT NULL	
 			)
 			";
-			$r = mysqli_query($this->link,$query);
+			$r = mysqli_query($this->link, $query);
 			if (!$r)
 				return ERROR_QUERY;
 		}
@@ -77,11 +77,11 @@ class ControlOutputs extends Module
 		if ($empty)
 		{
 			$query = "
-			INSERT INTO {$table_name}
+			INSERT INTO {$this->table_name}
 			(do1,do2,do3,do4,do5,do6) 
 			VALUES (0,0,0,0,0,0);
 			";  
-			$r = mysqli_query($this->link,$query);
+			$r = mysqli_query($this->link, $query);
 			if (!$r)
 				return ERROR_QUERY;
 		}
@@ -139,7 +139,7 @@ class ControlOutputs extends Module
 		if (!$r)
 			return ERROR_QUERY;
 
-		do{} while(mysqli_more_results($link) && mysqli_next_result($link)); // flush multi queries
+		do{} while(mysqli_more_results($this->link) && mysqli_next_result($this->link)); // flush multi queries
 
 		return OK;
 	}

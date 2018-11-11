@@ -43,7 +43,7 @@ class ControlInputs extends Module
 		$this->table_name = "plc{$plc_number}_inputs";
 
 		$name = "";
-		$r = findPlcById($this->link,$plc_number,$name);
+		$r = findPlcById($this->link, $plc_number, $name);
 		if ($r != OK)
 		  return $r;
 
@@ -71,7 +71,7 @@ class ControlInputs extends Module
 				ai6 int(11) NOT NULL	
 			)
 			";
-			$r = mysqli_query($this->link,$query);
+			$r = mysqli_query($this->link, $query);
 			if (!$r)
 				return ERROR_QUERY;
 		}
