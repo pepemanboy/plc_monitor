@@ -1,10 +1,9 @@
 <?php
-// Start the session
 session_start();
 
-include_once("user_control.php");
+include("modules/user_control.php");
+$userControl = new UserControl();
 
-// define variables and set to empty values
 $userErr = $passErr = ""; 
 $user = $pass = ""; 
 
@@ -27,22 +26,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   if ($r)
   {
     $permissions = 0;
-    $r = validateUserPass($user, $pass, $permissions);
+    $r = $userControl->validateUserPass($user, $pass, $permissions);
     if ($r == OK)
     {
       $passErr = "exito";
-      logIn($user, $permissions);
+      $userControl->logIn($user, $permissions);
       echo("<meta http-equiv='refresh' content='0; url=admin.php' />");
     }
     else if ($r == ERROR_USERPASS)
     {
       $passErr = "Usuario / contraseña incorrectos";
-      session_destroy();
+      $userControl->logOut();
     }
     else
     {
       $passErr = "Error de servidor";
-      session_destroy();
+      $userControl->logOut();
     }
   }
 }
@@ -67,7 +66,7 @@ function test_input($data) {
     <!-- CSS propio -->
     <link rel = "stylesheet" href = "css/plcshield.css">
     <!-- Titulo de pagina --> 
-    <title>PLC Shield Monitor - Login</title>
+    <title>PLC Monitor - Login</title>
     <!-- Icono en pagina -->
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">

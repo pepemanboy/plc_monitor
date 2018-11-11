@@ -72,7 +72,7 @@ function updateSignalDropdown(n)
 	if(g_plc < 1)
 		return false;
 
-	vizStatus("Querying signal names");
+	vizStatus("Querying signal names popix");
 
 	$.post("config_program.php",
 	{

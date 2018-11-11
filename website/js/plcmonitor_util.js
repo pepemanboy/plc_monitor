@@ -124,7 +124,7 @@ function downloadCSV(args) {
 	var data, filename, link;
 
 	var csv = convertArrayOfObjectsToCSV({
-		data: arraysToPoints(g_dates,g_values)
+		data: arraysToPoints(args.dates,args.values)
 	});
 	if (csv == null) return;
 
@@ -153,3 +153,30 @@ $("#logout-boton").click(function(){
       window.location.replace("login.php");      
     }); 
 });
+
+/** 
+* Set webpage title.
+*/
+function setTitle(module_name)
+{
+	$.post("modules/post.php",
+    {
+			module: "customize",
+      operation: "get_properties"
+    },
+    function(data,status){
+      var err = getPhpVar(data, "error").val;
+      if(!plcOk(err))
+        return;
+      var title = getPhpVar(data, "title").val;
+      document.title = title + " - " + module_name;
+    }); 
+}
+
+
+/**
+ * Debug
+ */
+function debug(text) {
+  $("#debug-row").text(text);
+}

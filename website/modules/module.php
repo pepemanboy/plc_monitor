@@ -3,7 +3,9 @@
  * Module implementation.
  */
 
-include_once("definitions.php");
+include_once( dirname(__FILE__) . '/../definitions.php');
+include_once( dirname(__FILE__) . '/../connect.php');
+include_once( dirname(__FILE__) . '/../plc_util.php');
 
 /**
  * Module class definitions.
@@ -190,23 +192,36 @@ class Module
      */
     public function postRequest()
     {
+        $r = OK;
+        $message = "";
+
         if (!$this->initialized())
-            return ERROR_CONNECTION;
+        {
+            $r = ERROR_CONNECTION;
+            goto end;
+        }
 
         if ($_SERVER["REQUEST_METHOD"] != "POST")
-            return ERROR_ARGUMENTS;
+        {
+            $r = ERROR_ARGUMENTS;
+            goto end;
+        }
 
         if(!isset($_POST["operation"]))
-            return ERROR_ARGUMENTS;
+        {
+            $r = ERROR_ARGUMENTS;
+            goto end;
+        }
 
         $operation = $_POST["operation"];
 
         $r = $this->postInitialize();
         if ($r != OK)
-            return $r;
+            goto end;
 
-        $message = "";
         $r = $this->postRequestData($operation, $message);
+
+        end:
         echo("{{$message}error({$r})}");
 
         return $r;

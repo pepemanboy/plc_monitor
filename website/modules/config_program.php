@@ -5,10 +5,7 @@
 
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
 
 /**
  * PLC configuration module.
@@ -45,7 +42,7 @@ class Config extends Module
      *
      * If POST parameter "arduino" is set, update the PLC's status using arduinoStatus from plc_util.php
      */    
-    private function postInitialize()
+    protected function postInitialize()
     {
 		$b = True;
 		$plc_number = 0;
@@ -57,7 +54,7 @@ class Config extends Module
 		$this->table_name = "plc{$plc_number}_config";
 
 		$name = "";
-		$r = findPlcById($this->link,$plc_number,$name);
+		$r = findPlcById($this->link, $plc_number, $name);
 		if ($r != OK)
 		  return $r;
 
@@ -114,15 +111,16 @@ class Config extends Module
 		$r = tableEmpty($this->link, $this->table_name, $empty); 
 		if (!$r)
 			return ERROR_QUERY;
+
 		if($empty)
 		{
 			$query = "INSERT INTO {$this->table_name} (";
 			for($i = 1; $i <= 6; $i ++)
 			{
 				$query .= "
-				di{i}_name, di{i}_freq, di{i}_count,
-				ai{i}_name, ai{i}_freq, ai{i}_gain, ai{i}_offs,
-				do{i}_name";
+				di{$i}_name, di{$i}_freq, di{$i}_count,
+				ai{$i}_name, ai{$i}_freq, ai{$i}_gain, ai{$i}_offs,
+				do{$i}_name";
 				if ($i != 6) 
 					$query .= ",";
 			} 
@@ -132,9 +130,9 @@ class Config extends Module
 			for($i = 1; $i <= 6; $i ++)
 			{
 				$query .= "
-				'Digital Input {i}', 0, 0, 
-				'Analog Input {i}', 0, 1, 0,
-				'Digital Output {i}'";
+				'Digital Input {$i}', 0, 0, 
+				'Analog Input {$i}', 0, 1, 0,
+				'Digital Output {$i}'";
 				if ($i != 6) 
 					$query .= ",";
 			} 
@@ -143,7 +141,6 @@ class Config extends Module
 			if (!$r)
 				return ERROR_QUERY;
 		}
-
 		return OK;
     }
 
@@ -165,6 +162,7 @@ class Config extends Module
 		    case "get": return $this->postGet($message);
 		    default: return ERROR_ARGUMENTS; 
 	    }
+	    return OK;
 	}
 
 	/** 
@@ -197,9 +195,9 @@ class Config extends Module
 		for($i = 1; $i <= 6; $i ++)
 		{
 			$query .= "
-			di{i}_name, di{i}_freq, di{i}_count,
-			ai{i}_name, ai{i}_freq, ai{i}_gain, ai{i}_offs,
-			do{i}_name";
+			di{$i}_name, di{$i}_freq, di{$i}_count,
+			ai{$i}_name, ai{$i}_freq, ai{$i}_gain, ai{$i}_offs,
+			do{$i}_name";
 			if ($i != 6) 
 				$query .= ",";
 		} 
@@ -251,9 +249,9 @@ class Config extends Module
 		for($i = 1; $i <= 6; $i ++)
 		{
 			$query .= "
-			di{i}_name, di{i}_freq, di{i}_count,
-			ai{i}_name, ai{i}_freq, ai{i}_gain, ai{i}_offs,
-			do{i}_name";
+			di{$i}_name, di{$i}_freq, di{$i}_count,
+			ai{$i}_name, ai{$i}_freq, ai{$i}_gain, ai{$i}_offs,
+			do{$i}_name";
 			if ($i != 6) 
 				$query .= ",";
 		} 
@@ -267,23 +265,26 @@ class Config extends Module
 			{
 				for ($i = 1; $i <= 6; $i ++)
 				{
-					$this->setParameter("di{$i}", "{$row['di{$i}_freq']}, {$row['di{$i}_count']}", $message);
-					$this->setParameter("ai{$i}", "{$row['ai{$i}_freq']}, {$row['ai{$i}_gain']}, {$row['ai{$i}_offs']}", $message);
+					$this->setParameter("di{$i}", "{$row["di{$i}_freq"]}, {$row["di{$i}_count"]}", $message);
+					$this->setParameter("ai{$i}", "{$row["ai{$i}_freq"]}, {$row["ai{$i}_gain"]}, {$row["ai{$i}_offs"]}", $message);
 				}
 			} 
 			else
 			{
 				for ($i = 1; $i <= 6; $i ++)
 				{
-					$this->setParameter("di{$i}", "{$row['di{$i}_name']}, {$row['di{$i}_freq']}, {$row['di{$i}_count']}", $message);
-					$this->setParameter("ai{$i}", "{{$row['ai{$i}_name']}, {$row['ai{$i}_freq']}, {$row['ai{$i}_gain']}, {$row['ai{$i}_offs']}", $message);
-					$this->setParameter("do{$i}", "{$row['do{$i}_name']}", $message);
+					$this->setParameter("di{$i}", "{$row["di{$i}_name"]}, {$row["di{$i}_freq"]}, {$row["di{$i}_count"]}", $message);
+					$this->setParameter("ai{$i}", "{$row["ai{$i}_name"]}, {$row["ai{$i}_freq"]}, {$row["ai{$i}_gain"]}, {$row["ai{$i}_offs"]}", $message);
+					$this->setParameter("do{$i}", "{$row["do{$i}_name"]}", $message);
 				}
 			}		
 			mysqli_free_result($result);
 		}
 		else
+		{
+			echo("kek");
 			return ERROR_QUERY;
+		}
 
 		return OK;
 	}

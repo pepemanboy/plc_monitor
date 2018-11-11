@@ -1,3 +1,8 @@
+<?php
+session_start();
+include_once("modules/user_control.php");
+?>
+
 <!-- Navbar --> 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
   <a class="navbar-brand" href="#">DPlastico SCADA</a>
@@ -30,8 +35,7 @@
         <a class="nav-link" href="detail.php" id = "navbar-item-detail">Detalle</a>
       </li>  
       <?php
-      include_once("user_control.php");
-      if (adminSession())
+      if (UserControl::adminSession())
       {
         echo ("
         <li class='nav-item'>

@@ -4,10 +4,7 @@
  */
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
 
 /**
  * Website customization module.

@@ -5,10 +5,8 @@
 
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/user_control.php');
 
 /**
  * PLC registration table module.
@@ -31,14 +29,14 @@ class TablaPlcs extends Module
     {
     	$this->table_name = "plcs";
 		$exists = False;
-		$r = tableExists($this->link, $this->TABLE_NAME, $exists); 
+		$r = tableExists($this->link, $this->table_name, $exists); 
 		if($r != OK)
 			return $r;
 
 		if (!$exists)
 		{
 			$query = "
-			CREATE TABLE {$this->TABLE_NAME} (
+			CREATE TABLE {$this->table_name} (
 			id int NOT NULL AUTO_INCREMENT,
 			name VARCHAR(200) NOT NULL,
 			PRIMARY KEY (id),
@@ -100,7 +98,7 @@ class TablaPlcs extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$query = "INSERT INTO {$this->TABLE_NAME} (name) VALUES ('{$plc_name}')";
+		$query = "INSERT INTO {$this->table_name} (name) VALUES ('{$plc_name}')";
 		$r = mysqli_query($this->link, $query);
 		if (!$r)
 			return ERROR_QUERY;
@@ -131,7 +129,7 @@ class TablaPlcs extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$query = "SELECT id,name FROM {$this->TABLE_NAME} ORDER BY id ASC";
+		$query = "SELECT id,name FROM {$this->table_name} ORDER BY id ASC";
 		$result = mysqli_query($this->link, $query);
 		if (!$result)
 			return ERROR_QUERY;
@@ -167,23 +165,8 @@ class TablaPlcs extends Module
 			$this->printTable($ids, $names, $status, $message);	
 			$n = count($ids);
 
-			$p = "";
-			for($i = 0; $i < $n; $i++)
-			{
-				$p .= $status[$i];
-				if($i < $n - 1)
-					$p .= ",";
-			}
-			$this->setParameter("status_", $p, $message);
-
-			$p = "";
-			for($i = 0; $i < $n; $i++)
-			{
-				$p .= $ids[$i];
-				if($i < $n - 1)
-					$p .= ",";
-			}
-			$this->setParameter("ids_", $p, $message);
+			$this->setParameterArray("status_", $status, $n, $message);
+			$this->setParameterArray("ids_", $ids, $n, $message);
 		}
 		else
 		{
@@ -269,7 +252,7 @@ class TablaPlcs extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$query = "SELECT name FROM {$this->TABLE_NAME} WHERE id = {$plc_number}";
+		$query = "SELECT name FROM {$this->table_name} WHERE id = {$plc_number}";
 		$result = mysqli_query($this->link, $query);
 		if (!$result)
 			return ERROR_QUERY;
@@ -372,8 +355,7 @@ class TablaPlcs extends Module
 		      <td>{$name}</td>
 		      <td>{$stat} <span id = 'admin-status-badge-{$id}' class='badge badge-success'>OK</span> </td>
 		      ";
-			include_once("user_control.php");
-			if(adminSession())
+			if(UserControl::adminSession())
 			{
 				$p .= "
 		        <td>

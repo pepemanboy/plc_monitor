@@ -5,10 +5,7 @@
 
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
 
 /**
  * PLC visualization graph module.
@@ -46,7 +43,7 @@ class VizGraph extends Module
 		$this->table_name = "plc{$plc_number}_{$signal_type}{$signal_number}";
 
 		$name = "";
-		$r = findPlcById($this->link,$plc_number,$name);
+		$r = findPlcById($this->link, $plc_number, $name);
 		if ($r != OK)
 		  return $r;
 
@@ -141,7 +138,7 @@ class VizGraph extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$r = fetchValDate($date_start, $date_end, $message);
+		$r = $this->fetchValDate($date_start, $date_end, $message);
 		if ($r != OK)
 			return $r;
 
@@ -160,7 +157,7 @@ class VizGraph extends Module
 	*/
 	private function postGetBackup(&$message)
 	{
-		return fetchValDate(null, null, $message);
+		return $this->fetchValDate(null, null, $message);
 	}
 
 	/** 
