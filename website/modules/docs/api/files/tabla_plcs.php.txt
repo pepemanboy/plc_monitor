@@ -31,7 +31,7 @@ class TablaPlcs extends Module
     {
     	$this->table_name = "plcs";
 		$exists = False;
-		$r = tableExists($this->link, $this->TABLE_NAME, $exists); 
+		$r = $this->tableExists($exists); 
 		if($r != OK)
 			return $r;
 

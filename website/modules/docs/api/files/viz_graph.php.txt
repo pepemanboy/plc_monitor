@@ -51,7 +51,7 @@ class VizGraph extends Module
 		  return $r;
 
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if ($r != OK)
 			return $r;
 

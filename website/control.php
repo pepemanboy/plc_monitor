@@ -14,7 +14,7 @@ UserControl::validateSession(); // Will redirect if fails
   <!-- Bootstrap CSS --> 
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
   <!-- CSS propio -->
-  <link rel = "stylesheet" href = "css/plcshield.css">
+  <link rel = "stylesheet" href = "css/plcmonitor.css">
   <!-- Titulo de pagina --> 
   <title>PLC Monitor - Control</title>
   <!-- Icono en pagina -->

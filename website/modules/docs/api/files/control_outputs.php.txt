@@ -50,7 +50,7 @@ class ControlOutputs extends Module
 		  return $r;
 
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if ($r != OK)
 			return $r;
 
@@ -73,7 +73,7 @@ class ControlOutputs extends Module
 		}
 
 		$empty = True;
-		$r = tableEmpty($this->link, $this->table_name, $empty); 
+		$r = tableEmpty($empty); 
 		if (!$r)
 			return ERROR_QUERY;
 

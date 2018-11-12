@@ -6,6 +6,7 @@
 session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
 
 /**
  * PLC Control outputs module.
@@ -41,13 +42,13 @@ class ControlOutputs extends Module
 
 		$this->table_name = "plc{$plc_number}_outputs";
 
-		$name = "";
-		$r = findPlcById($this->link, $plc_number, $name);
+		$plc_table = new TablaPlcs();
+		$r = $plc_table->findPlcById($plc_number);
 		if ($r != OK)
 		  return $r;
 
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists);
 		if ($r != OK)
 			return $r;
 
@@ -70,7 +71,7 @@ class ControlOutputs extends Module
 		}
 
 		$empty = True;
-		$r = tableEmpty($this->link, $this->table_name, $empty); 
+		$r = tableEmpty($empty); 
 		if (!$r)
 			return ERROR_QUERY;
 
@@ -120,26 +121,51 @@ class ControlOutputs extends Module
 	 */
 	private function postSet(&$message)
 	{
-		$b = True;
-		$do = [];
-		for ($i = 1; $i <= 6; $i++)
-			$b = $b && $this->getPostParameter("do{$i}", $do[$i-1]);
+		if (!$this->getPostParameter("arduino"))
+		{
+			$b = True;
+			$arr = null;
+			$b = $b && $this->getPostParameter("outputs", $arr);
 
-		if (!$b)
-			return ERROR_ARGUMENTS;
+			if (!$b)
+				return ERROR_ARGUMENTS;
 
-		$query = "
-		DELETE FROM {$this->table_name};
-		INSERT INTO {$this->table_name} 
-		(do1,do2,do3,do4,do5,do6) 
-		VALUES ({$do[0]}, {$do[1]}, {$do[2]}, {$do[3]}, {$do[4]}, {$do[5]});
-		";
+			$query = "
+			DELETE FROM {$this->table_name};
+			INSERT INTO {$this->table_name} 
+			(do1,do2,do3,do4,do5,do6) 
+			VALUES ({$arr[0]}, {$arr[1]}, {$arr[2]}, {$arr[3]}, {$arr[4]}, {$arr[5]});
+			";  	
 
-		$r = mysqli_multi_query($this->link, $query);
-		if (!$r)
-			return ERROR_QUERY;
+			$r = mysqli_multi_query($this->link, $query);
+			if (!$r)
+				return ERROR_QUERY;
 
-		do{} while(mysqli_more_results($this->link) && mysqli_next_result($this->link)); // flush multi queries
+			do{} while(mysqli_more_results($this->link) && mysqli_next_result($this->link)); // flush multi queries
+		}
+		else // Outputs coming from arduino
+		{
+			$b = True;
+			$do = [];
+			for ($i = 1; $i <= 6; $i++)
+				$b = $b && $this->getPostParameter("do{$i}", $do[$i-1]);
+
+			if (!$b)
+				return ERROR_ARGUMENTS;
+
+			$query = "
+			DELETE FROM {$this->table_name};
+			INSERT INTO {$this->table_name} 
+			(do1,do2,do3,do4,do5,do6) 
+			VALUES ({$do[0]}, {$do[1]}, {$do[2]}, {$do[3]}, {$do[4]}, {$do[5]});
+			";
+
+			$r = mysqli_multi_query($this->link, $query);
+			if (!$r)
+				return ERROR_QUERY;
+
+			do{} while(mysqli_more_results($this->link) && mysqli_next_result($this->link)); // flush multi queries
+		}
 
 		return OK;
 	}

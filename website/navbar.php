@@ -28,16 +28,13 @@ include_once("modules/user_control.php");
       <li class="nav-item">
         <a class="nav-link" href="config.php" id = "navbar-item-config">Configuracion</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="debug.php" id = "navbar-item-debug">Debug</a>
-      </li>     
-      <li class="nav-item">
-        <a class="nav-link" href="detail.php" id = "navbar-item-detail">Detalle</a>
-      </li>  
       <?php
       if (UserControl::adminSession())
       {
         echo ("
+        <li class='nav-item'>
+          <a class='nav-link' href='detail.php' id = 'navbar-item-detail'>Detalle</a>
+        </li>  
         <li class='nav-item'>
           <a class='nav-link' href='manager.php' id = 'navbar-item-manager'>Accounts</a>
         </li>

@@ -6,6 +6,7 @@
 session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
 
 /**
  * PLC visualization graph module.
@@ -42,13 +43,13 @@ class VizGraph extends Module
 
 		$this->table_name = "plc{$plc_number}_{$signal_type}{$signal_number}";
 
-		$name = "";
-		$r = findPlcById($this->link, $plc_number, $name);
+		$plc_table = new TablaPlcs();
+		$r = $plc_table->findPlcById($plc_number);
 		if ($r != OK)
 		  return $r;
 
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if ($r != OK)
 			return $r;
 

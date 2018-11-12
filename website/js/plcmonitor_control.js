@@ -7,7 +7,7 @@ var g_confirmationPending = moment();
 
 // On load
 $(document).ready(function() {
-  // Set active menu
+  setTitle("Control");
   $("#navbar-item-control").addClass("active");
   $("#navbar-item-control").attr("href", "#");
 });
@@ -71,7 +71,6 @@ function getInputs(n) {
       operation: "get"
     },
     function(data, status) {
-      debug("INPUTS = " + data);
       var digital_inputs = getPhpArray(data, "digital_inputs").map(Number);
       var analog_inputs = getPhpArray(data, "analog_inputs").map(Number);
       var err = getPhpVariable(data, "error");

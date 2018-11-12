@@ -5,6 +5,7 @@
 session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
 
 /**
  * Website customization module.
@@ -37,7 +38,7 @@ class Customize extends Module
     	$this->table_name = "plc_customize";
 
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if($r != OK)
 			return $r;
 
@@ -50,7 +51,7 @@ class Customize extends Module
 		}
 
 		$empty = False;
-		$r = tableEmpty($this->link, $this->table_name, $empty);
+		$r = tableEmpty($empty);
 		if($r != OK)
 			return $r;
 

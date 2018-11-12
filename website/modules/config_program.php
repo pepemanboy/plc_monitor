@@ -6,6 +6,7 @@
 session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
 
 /**
  * PLC configuration module.
@@ -53,13 +54,13 @@ class Config extends Module
 
 		$this->table_name = "plc{$plc_number}_config";
 
-		$name = "";
-		$r = findPlcById($this->link, $plc_number, $name);
+		$plc_table = new TablaPlcs();
+		$r = $plc_table->findPlcById($plc_number);
 		if ($r != OK)
 		  return $r;
 
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if ($r != OK)
 			return $r;
 
@@ -68,17 +69,6 @@ class Config extends Module
 			$r = arduinoStatus($this->link, $plc_number);
 			if ($r != OK)
 				return $r;
-
-			$poweron = 0;
-			if ($this->getPostParameter("poweron", $poweron))
-			{
-				if((int)$poweron == 1)
-				{
-					$r = logPowerOn($this->link, $plc_number);
-					if ($r != OK)
-						return $r;
-				}		
-			}
 		}
 
 		if (!$exists)
@@ -108,7 +98,7 @@ class Config extends Module
 		}
 
 		$empty = True;
-		$r = tableEmpty($this->link, $this->table_name, $empty); 
+		$r = tableEmpty($empty); 
 		if (!$r)
 			return ERROR_QUERY;
 
@@ -184,7 +174,7 @@ class Config extends Module
 		$digital_outputs = null;
 		$b = $b && $this->getPostParameter("di", $digital_inputs);
 		$b = $b && $this->getPostParameter("ai", $analog_inputs);
-		$b = $b && $this->getPostParameter("do", $digital_outputs);
+		$b = $b && $this->getPostParameter("dout", $digital_outputs);
 
 		if (!$b)
 			return ERROR_ARGUMENTS;
@@ -265,16 +255,16 @@ class Config extends Module
 			{
 				for ($i = 1; $i <= 6; $i ++)
 				{
-					$this->setParameter("di{$i}", "{$row["di{$i}_freq"]}, {$row["di{$i}_count"]}", $message);
-					$this->setParameter("ai{$i}", "{$row["ai{$i}_freq"]}, {$row["ai{$i}_gain"]}, {$row["ai{$i}_offs"]}", $message);
+					$this->setParameter("di{$i}", "{$row["di{$i}_freq"]},{$row["di{$i}_count"]}", $message);
+					$this->setParameter("ai{$i}", "{$row["ai{$i}_freq"]},{$row["ai{$i}_gain"]},{$row["ai{$i}_offs"]}", $message);
 				}
 			} 
 			else
 			{
 				for ($i = 1; $i <= 6; $i ++)
 				{
-					$this->setParameter("di{$i}", "{$row["di{$i}_name"]}, {$row["di{$i}_freq"]}, {$row["di{$i}_count"]}", $message);
-					$this->setParameter("ai{$i}", "{$row["ai{$i}_name"]}, {$row["ai{$i}_freq"]}, {$row["ai{$i}_gain"]}, {$row["ai{$i}_offs"]}", $message);
+					$this->setParameter("di{$i}", "{$row["di{$i}_name"]},{$row["di{$i}_freq"]},{$row["di{$i}_count"]}", $message);
+					$this->setParameter("ai{$i}", "{$row["ai{$i}_name"]},{$row["ai{$i}_freq"]},{$row["ai{$i}_gain"]},{$row["ai{$i}_offs"]}", $message);
 					$this->setParameter("do{$i}", "{$row["do{$i}_name"]}", $message);
 				}
 			}		

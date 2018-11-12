@@ -29,7 +29,7 @@ class TablaPlcs extends Module
     {
     	$this->table_name = "plcs";
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if($r != OK)
 			return $r;
 
@@ -367,6 +367,56 @@ class TablaPlcs extends Module
 			";		
 		}
 		$this->setParameter("table", $p, $message);
+	}
+
+	/** 
+	 * Find plc by id, get name.
+	 *
+	 * @param integer $id PLC ID.
+	 * @param {out}string $name PLC name in PLC table.
+	 */
+	public function findPlcById($id, &$name)
+	{ 
+		if (!$this->initialized())
+            return ERROR_INITIALIZE;
+		
+		$query = "SELECT id,name FROM {$this->table_name} WHERE id in ({$id})";
+		if ($result = mysqli_query($this->link, $query)) 
+		{
+			$row = mysqli_fetch_row($result);  
+			if ($row == NULL) 
+				return ERROR_QUERY; 
+			$name = $row[1];
+			return OK;
+		}
+
+		return ERROR_QUERY;
+	}
+
+	/** 
+	 * Get PLC list 
+	 *
+	 * @param {out}mixed $connection Database connection object.
+	 * @param {out}array $ids PLC IDs array.
+	 * @param {out}array $names PLC names array.
+	 */
+	public function getPlcList(&$ids, &$names = null)
+	{
+		if (!$this->initialized())
+            return ERROR_INITIALIZE;
+
+		$query = "SELECT id,name FROM plcs ORDER BY id ASC";
+		$result = mysqli_query($this->link, $query);
+		if (mysqli_num_rows($result) > 0) {
+			$i = 0;
+			while($row = mysqli_fetch_row($result)) {
+				$ids[$i] = $row[0];
+				$names[$i] = $row[1];
+				$i = $i + 1;
+			}
+			mysqli_free_result($result);
+		} 
+		return OK;
 	}
 }
 

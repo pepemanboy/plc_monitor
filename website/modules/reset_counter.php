@@ -6,6 +6,7 @@
 session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
 
 /**
  * PLC reset counters module
@@ -44,13 +45,13 @@ class ResetCounter extends Module
 
 		$this->table_name = "plc{$plc_number}_reset";
 
-		$name = "";
-		$r = findPlcById($this->link, $plc_number, $name);
+		$plc_table = new TablaPlcs();
+		$r = $plc_table->findPlcById($plc_number);
 		if ($r != OK)
 		  return $r;
 
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if ($r != OK)
 			return $r;
 
@@ -67,13 +68,13 @@ class ResetCounter extends Module
 				r6 int(11) NOT NULL
 			)
 			";
-			$r = mysqli_query($this->link,$query);
+			$r = mysqli_query($this->link, $query);
 			if (!$r)
 				return ERROR_QUERY;
 		}
 
 		$empty = False;
-		$r = tableEmpty($this->link, $this->table_name, $empty);
+		$r = tableEmpty($empty);
 		if($r != OK)
 			return $r;
 
@@ -85,7 +86,7 @@ class ResetCounter extends Module
 			VALUES (-1,-1,-1,-1,-1,-1);
 			";  	
 
-			$r = mysqli_query($this->link,$query);
+			$r = mysqli_query($this->link, $query);
 			if (!$r)
 				return ERROR_QUERY;
 		}
@@ -107,7 +108,7 @@ class ResetCounter extends Module
 	{
 		switch ($operation) 
 		{
-		    case "set": return $this->postaSet($message);
+		    case "set": return $this->postSet($message);
 		    case "get": return $this->postGet($message);
 		    default: return ERROR_ARGUMENTS; 
 	    }
@@ -125,10 +126,10 @@ class ResetCounter extends Module
 	private function postSet(&$message)
 	{
 		$b = True;
-		$r[];
+		$resets = [];
 		for ($i = 1; $i <= 6; $i++)
 		{
-			$b = $b && $this->getPostParameter("r{$i}", $r[$i-1]);
+			$b = $b && $this->getPostParameter("r{$i}", $resets[$i-1]);
 		}
 
 		if (!$b)
@@ -140,7 +141,7 @@ class ResetCounter extends Module
 			return ERROR_QUERY;
 
 		$query = "INSERT INTO {$this->table_name} (r1,r2,r3,r4,r5,r6) 
-		VALUES ({$r[0]}, {$r[1]}, {$r[2]}, {$r[3]}, {$r[4]}, {$r[5]})";
+		VALUES ({$resets[0]}, {$resets[1]}, {$resets[2]}, {$resets[3]}, {$resets[4]}, {$resets[5]});";
 		$r = mysqli_query($this->link, $query);
 		if (!$r)
 			return ERROR_QUERY;

@@ -3,9 +3,9 @@
  * Module implementation.
  */
 
-include_once( dirname(__FILE__) . '/../definitions.php');
-include_once( dirname(__FILE__) . '/../connect.php');
-include_once( dirname(__FILE__) . '/../plc_util.php');
+include_once( dirname(__FILE__) . '/definitions.php');
+include_once( dirname(__FILE__) . '/connect.php');
+include_once( dirname(__FILE__) . '/plc_util.php');
 
 /**
  * Module class definitions.
@@ -115,7 +115,7 @@ class Module
         $this->initialized = false;
 
         $this->link = null;
-        $r = connectToDatabase($this->link);
+        $r = $this->connectToDatabase();
         if ($r != OK)
             return $r;
 
@@ -135,7 +135,7 @@ class Module
      * @param {out}string $parameter Placeholder to put parameter value if found.
      * @return boolean True if parameter is set, False otherwise 
      */
-    protected function getPostParameter($parameter_name, &$parameter = null)
+    public static function getPostParameter($parameter_name, &$parameter = null)
     {
         if (!isset($_POST[$parameter_name])) 
             return False;
@@ -153,7 +153,7 @@ class Module
      * @param string $parameter Variable value
      * @param {out}string $message Placeholder to append variable
      */
-    protected function setParameter($parameter_name, $parameter, &$message)
+    public static function setParameter($parameter_name, $parameter, &$message)
     {
         $message .= "{$parameter_name}({$parameter})";
     }
@@ -169,7 +169,7 @@ class Module
      * @param integer $array_length Array length
      * @param {out}string $message Placeholder to append array
      */
-    protected function setParameterArray($parameter_name, $array, $array_length, &$message)
+    public static function setParameterArray($parameter_name, $array, $array_length, &$message)
     {
         $p = "";
         for($i = 0; $i < $array_length; $i++)
@@ -225,6 +225,36 @@ class Module
         echo("{{$message}error({$r})}");
 
         return $r;
+    }
+
+    /** 
+     * Establish connection with database in default server 
+     *
+     * @param mixed $db Database to connect to. Default database as default argument.
+     */
+    private function connectToDatabase()
+    {
+        return DbConnection::connectToDatabase($this->link);
+    }
+
+    /** 
+     * Check if module's table exists. 
+     *
+     * @param {out}boolean $exists True if table exists. False otherwise.
+     */
+    private function tableExists(&$exists)
+    {
+        return DbConnection::tableExists($this->link, $this->table_name, $exists);
+    }
+
+    /** 
+     * Check if module's table is empty. Assumes table exists 
+     *
+     * @param {out}boolean $empty True if table is empty. False otherwise.
+     */
+    private function tableEmpty(&$empty)
+    {
+        return DbConnection::tableEmpty($this->link, $this->table_name, $empty);
     }
 }
 

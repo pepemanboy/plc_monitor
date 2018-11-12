@@ -44,7 +44,7 @@ class UserControl extends Module
     {
     	$this->table_name = "plc_users";
 		$exists = False;
-		$r = tableExists($this->link, $this->table_name, $exists); 
+		$r = $this->tableExists($exists); 
 		if($r != OK)
 			return $r;
 
@@ -66,7 +66,7 @@ class UserControl extends Module
 		}
 
 		$empty = False;
-		$r = tableEmpty($this->link, $this->table_name, $empty);
+		$r = tableEmpty($empty);
 		if($r != OK)
 			return $r;
 
