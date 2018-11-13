@@ -7,6 +7,7 @@ session_start();
 
 include_once("modules/user_control.php");
 
+
 $r = OK;
 $message = "";
 
@@ -36,6 +37,7 @@ for($i = 0; $i < $number_of_actions; $i++)
     $p .= "
     <button type='button' class='btn btn-danger viz-action-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal' id = 'viz-action-borrar-boton{$index}'>Borrar</button>";
   }  
+
   $p .= "
   </div>
   <div class = 'card-body'>
@@ -114,7 +116,7 @@ for($i = 0; $i < $number_of_actions; $i++)
   ";   
 }
 
-Module::setPostParameter("table", $p, $message);
+Module::setParameter("table", $p, $message);
 
 end:
 echo("{{$message}error({$r})}");

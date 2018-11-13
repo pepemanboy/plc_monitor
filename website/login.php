@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     else
     {
-      $passErr = "Error de servidor";
+      $passErr = $r;
       $userControl->logOut();
     }
   }

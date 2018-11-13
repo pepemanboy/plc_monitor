@@ -78,7 +78,7 @@ class ControlInputs extends Module
 		}
 
 		$empty = True;
-		$r = tableEmpty($empty); 
+		$r = $this->tableEmpty($empty); 
 		if (!$r)
 			return ERROR_QUERY;
 

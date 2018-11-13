@@ -5,7 +5,6 @@
 
 include_once( dirname(__FILE__) . '/definitions.php');
 include_once( dirname(__FILE__) . '/connect.php');
-include_once( dirname(__FILE__) . '/plc_util.php');
 
 /**
  * Module class definitions.
@@ -33,7 +32,7 @@ class Module
     /** @var boolean Module initialized flag. */
     protected $initialized = False;
     /** @var string Table name in database. */
-    private $table_name = "";
+    protected $table_name = "";
 
     /*** METHOD PROTOYPES, TO BE DEFINED BY SUBMODULES */
 
@@ -117,11 +116,17 @@ class Module
         $this->link = null;
         $r = $this->connectToDatabase();
         if ($r != OK)
+        {
+            echo("could not connect");
             return $r;
+        }
 
         $r = $this->initialize();
         if ($r != OK)
+        {
+            echo("no pudeee({$r})");
             return $r;
+        }
 
         $this->initialized = true;
 
@@ -178,7 +183,7 @@ class Module
           if($i < $array_length - 1)
             $p .= ",";
         }
-        $this->setParameter($parameter_name, $p, $message);
+        Module::setParameter($parameter_name, $p, $message);
     }
 
     /** 
@@ -242,7 +247,7 @@ class Module
      *
      * @param {out}boolean $exists True if table exists. False otherwise.
      */
-    private function tableExists(&$exists)
+    public function tableExists(&$exists)
     {
         return DbConnection::tableExists($this->link, $this->table_name, $exists);
     }
@@ -252,7 +257,7 @@ class Module
      *
      * @param {out}boolean $empty True if table is empty. False otherwise.
      */
-    private function tableEmpty(&$empty)
+    public function tableEmpty(&$empty)
     {
         return DbConnection::tableEmpty($this->link, $this->table_name, $empty);
     }

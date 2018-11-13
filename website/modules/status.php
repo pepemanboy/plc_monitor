@@ -13,7 +13,7 @@ include_once( dirname(__FILE__) . '/tabla_plcs.php');
  *
  * Contains functions to get and set the status of a PLC.
  */
-class Status extends Module
+class PLCStatus extends Module
 {
 	/**
 	 * PLCstatus handler
@@ -24,17 +24,20 @@ class Status extends Module
 	 */
 	public function status($id, $operation = "set", &$status = null)
 	{
+		if (!$this->initialized())
+			return ERROR_INITIALIZE;
+
 		$this->table_name = "plc{$id}_status";
 
 		$plc_table = new TablaPlcs();
-		$r = $plc_table->findPlcById($plc_number);
+		$r = $plc_table->findPlcById($id);
 		if ($r != OK)
 		  return $r;
 
 		$exists = False;
-		$r = $this->tableExists($this->table_name, $exists); 
-		if ($r != OK)
-			return $r;
+		$r = $this->tableExists($exists); 
+		if($r != OK)
+			return $r . "tet";
 
 		if (!$exists)
 		{
@@ -76,10 +79,7 @@ class Status extends Module
 
 		  	mysqli_free_result($result);
 		}	
-
 		return OK;
-	}
-
-	
+	}	
 }
 ?>

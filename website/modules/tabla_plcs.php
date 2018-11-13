@@ -7,6 +7,8 @@ session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
 include_once( dirname(__FILE__) . '/user_control.php');
+include_once( dirname(__FILE__) . '/status.php');
+
 
 /**
  * PLC registration table module.
@@ -149,11 +151,12 @@ class TablaPlcs extends Module
 		}
 
 		$status = array();
-		$i = 0;
+		$i = 0;		
 		foreach($ids as $id)
 		{
-			$stat = 0;
-			$r = arduinoStatus($this->link, $id , "get" , $stat);
+			$stat = 0;			
+			$plc_status = new PLCStatus();
+			$r = $plc_status->status($id , "get" , $stat);
 			if ($r != OK)
 				return $r;
 			$status[$i] = $stat;
@@ -164,7 +167,6 @@ class TablaPlcs extends Module
 		{
 			$this->printTable($ids, $names, $status, $message);	
 			$n = count($ids);
-
 			$this->setParameterArray("status_", $status, $n, $message);
 			$this->setParameterArray("ids_", $ids, $n, $message);
 		}
@@ -217,7 +219,7 @@ class TablaPlcs extends Module
 		foreach ($tables as $table)
 		{
 			$exists = False;
-			$r = tableExists($this->link, $table, $exists); 
+			$r = DbConnection::tableExists($this->link, $table, $exists); 
 			if($r != OK)
 				return $r;
 
@@ -229,7 +231,6 @@ class TablaPlcs extends Module
 			if (!$result)
 				return ERROR_QUERY;
 		}
-
 		return OK;
 	}
 
@@ -322,7 +323,8 @@ class TablaPlcs extends Module
 			return ERROR_ARGUMENTS;
 
 		$stat = null;
-		$r = arduinoStatus($this->link, $plc_number , "get" , $stat);
+		$plc_status = new PLCStatus();
+		$r = $plc_status->status($plc_number , "get" , $stat);
 		if ($r != OK)
 			return $r;
 

@@ -41,7 +41,7 @@ class Config extends Module
      *
      * If table is empty, insert a row with default values values.
      *
-     * If POST parameter "arduino" is set, update the PLC's status using arduinoStatus from plc_util.php
+     * If POST parameter "arduino" is set, update the PLC's status using PLCStatus->status
      */    
     protected function postInitialize()
     {
@@ -66,7 +66,8 @@ class Config extends Module
 
 		if($this->getPostParameter("arduino"))
 		{
-			$r = arduinoStatus($this->link, $plc_number);
+			$plc_status = new PLCStatus();
+			$r = $plc_status->status($plc_number);
 			if ($r != OK)
 				return $r;
 		}
@@ -98,7 +99,7 @@ class Config extends Module
 		}
 
 		$empty = True;
-		$r = tableEmpty($empty); 
+		$r = $this->tableEmpty($empty); 
 		if (!$r)
 			return ERROR_QUERY;
 

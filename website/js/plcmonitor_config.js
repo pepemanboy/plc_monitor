@@ -152,7 +152,6 @@ $('.config-reset-boton').click(function() {
 			r6: v[5],
 		},
 		function(data, status) {
-			debug(data);
 			var err = getPhpVariable(data, "error");
 			configStatus(err);
 			if (!plcOk(err))

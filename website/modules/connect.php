@@ -36,7 +36,7 @@ class DbConnection
 	 */
 	public static function tableExists(&$connection, $table, &$exists)
 	{
-		$query = "SELECT * FROM information_schema.tables WHERE table_name =  '{$table}' LIMIT 1;";
+		$query = "SELECT * FROM information_schema.tables WHERE table_name = '{$table}' LIMIT 1;";
 		$r = mysqli_query($connection, $query);
 		if(!$r)
 			return ERROR_QUERY;
@@ -55,13 +55,11 @@ class DbConnection
 	 */
 	public static function tableEmpty(&$connection, $table, &$empty)
 	{
-		$query = "SELECT 1 FROM `" . $table . "`";
+		$query = "SELECT 1 FROM {$table}";
 		$r = mysqli_query($connection, $query);
 		if(!$r)
-		{
-			_debug("Failed to query: ". mysqli_error($connection));
 			return ERROR_QUERY;
-		}
+		
 		$empty = mysqli_fetch_row($r) ? False : True;
 		mysqli_free_result($r);
 		return OK;

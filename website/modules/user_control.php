@@ -40,6 +40,7 @@ class UserControl extends Module
      */
     protected function initialize()
     {
+
     	$this->table_name = "plc_users";
 		$exists = False;
 		$r = $this->tableExists($exists); 
@@ -60,11 +61,12 @@ class UserControl extends Module
 			";
 			$r = mysqli_query($this->link, $query);
 			if (!$r)
-				return ERROR_QUERY;
+				return $r;
 		}
 
+
 		$empty = False;
-		$r = tableEmpty($empty);
+		$r = $this->tableEmpty($empty);
 		if($r != OK)
 			return $r;
 
@@ -74,7 +76,6 @@ class UserControl extends Module
 			if (!$r)
 				return ERROR_QUERY;
 		}
-
 		return OK;
     }
 
@@ -403,6 +404,5 @@ class UserControl extends Module
 
 		return OK;
 	}
-
 }
 ?>

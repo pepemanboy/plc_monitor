@@ -74,7 +74,7 @@ class ResetCounter extends Module
 		}
 
 		$empty = False;
-		$r = tableEmpty($empty);
+		$r = $this->tableEmpty($empty);
 		if($r != OK)
 			return $r;
 
