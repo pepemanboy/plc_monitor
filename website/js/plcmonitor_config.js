@@ -1,30 +1,96 @@
-/* Constants */
+/** 
+ * Javascript for config.php
+ *
+ * @author Pepe Melendez
+ */
+
+/*** CONSTANTS */
 var OUTPUT_COUNT = 6;
 
-// Global variables
-var g_plc = 0;
+/*** GLOBAL VARIABLES */
+var g_plc = 0; ///< Selected PLC id
 
-// On load
+/*** EVENT FUNCTIONS */
+
+/**
+ * Document. On load.
+ *
+ * Set webpage title, active navbar item.
+ */
 $(document).ready(function() {
 	setTitle("Config");
 	$("#navbar-item-config").addClass("active");
 	$("#navbar-item-config").attr("href", "#");
 });
 
-// Cuando se pica algun plc en el dropdown, actualizar g_plc
+/**
+ * Dropdown plc. On click.
+ *
+ * Update text, set g_plc with selected plc's id. Get config.
+ */
 $('.dropdown-plc').click(function() {
 	$(".plc-dropdown-menu").text($(this).text());
 	g_plc = Number($(this).attr('data-plc-number'));
 	getConfig(g_plc);
 });
 
-// Cuando se pica algun plc en el dropdown, actualizar g_plc
+/** 
+ * Set config button. On click.
+ *
+ * Set config.
+ */
 $('#config-programar-boton').click(function() {
 	setConfig(g_plc);
 });
 
-// Get configuration from database, n is plc number
-function getConfig(n) {
+/**
+ * Reset button. On click.
+ *
+ * Send reset values to db table.
+ */
+$('.config-reset-boton').click(function() {
+	var v = Array();
+	var b = false;
+	for (var i = 0; i < 6; i++) {
+		v.push($('#config-reset-input-' + (i + 1)).val());
+		if (v[i] == "") {
+			v[i] = -1;
+		} else {
+			b = true;
+		}
+	}
+	if (!b) {
+		alert("Escribe algun valor de reset");
+		return false;
+	}
+	configStatus("Sending reset");
+	$.post("modules/post.php", {
+			module: "reset_counter",
+			plc_number: g_plc,
+			operation: "set",
+			r1: v[0],
+			r2: v[1],
+			r3: v[2],
+			r4: v[3],
+			r5: v[4],
+			r6: v[5],
+		},
+		function(data, status) {
+			var err = getPhpVariable(data, "error");
+			configStatus(err);
+			if (!plcOk(err))
+				return;
+		});
+});
+
+/*** CUSTOM FUNCTIONS */
+
+/**
+ * Get configuration from db.
+ *
+ * @param {integer} id PLC id.
+ */
+function getConfig(id) {
 	if (n < 1)
 		return false;
 
@@ -32,7 +98,7 @@ function getConfig(n) {
 
 	$.post("modules/post.php", {
 			module: "config_program",
-			plc_number: n,
+			plc_number: id,
 			operation: "get"
 		},
 		function(data, status) {
@@ -69,13 +135,16 @@ function getConfig(n) {
 
 				$("#name-do" + i).val(dout[0]);
 			}
-
 		});
 }
 
-// Set configuration to database, n is plc number
-function setConfig(n) {
-	if (n < 1) {
+/**
+ * Set configuration in db table.
+ *
+ * @param {integer} id PLC id.
+ */
+function setConfig(id) {
+	if (id < 1) {
 		configStatus("Selecciona un PLC");
 		return false;
 	}
@@ -107,14 +176,13 @@ function setConfig(n) {
 
 	$.post("modules/post.php", {
 			module: "config_program",
-			plc_number: n,
+			plc_number: id,
 			operation: "set",
 			di: digital_inputs,
 			ai: analog_inputs,
 			dout: digital_outputs
 		},
 		function(data, status) {
-			// alert(data);
 			var err = getPhpVariable(data, "error");
 			configStatus(err);
 			if (!plcOk(err))
@@ -123,43 +191,11 @@ function setConfig(n) {
 		});
 }
 
-// Reset counter
-$('.config-reset-boton').click(function() {
-	var v = Array();
-	var b = false;
-	for (var i = 0; i < 6; i++) {
-		v.push($('#config-reset-input-' + (i + 1)).val());
-		if (v[i] == "") {
-			v[i] = -1;
-		} else {
-			b = true;
-		}
-	}
-	if (!b) {
-		alert("Escribe algun valor de reset");
-		return false;
-	}
-	configStatus("Sending reset");
-	$.post("modules/post.php", {
-			module: "reset_counter",
-			plc_number: g_plc,
-			operation: "set",
-			r1: v[0],
-			r2: v[1],
-			r3: v[2],
-			r4: v[3],
-			r5: v[4],
-			r6: v[5],
-		},
-		function(data, status) {
-			var err = getPhpVariable(data, "error");
-			configStatus(err);
-			if (!plcOk(err))
-				return;
-		});
-});
-
-// Report input status
+/**
+ * Report status of module.
+ *
+ * @param {string} status
+ */
 function configStatus(status) {
 	$("#config-status-indicator").text("Status: " + status);
 }

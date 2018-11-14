@@ -1,6 +1,14 @@
+<?php
+session_start();
+include_once("modules/user_control.php");
+UserControl::validateSession(); // Will redirect if fails
+if (!UserControl::adminSession())
+  echo("<meta http-equiv='refresh' content='0; url=admin.php' />");
+?>
+
 <?php session_start(); ?>
 <!doctype html>
-<!-- options.php -->
+<!-- template.php -->
 <html lang="en">
   <head>
     <!-- Meta tags requeridos -->

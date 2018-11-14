@@ -4,9 +4,13 @@
 * @author Pepe Melendez
 */
 
+/*** EVENT FUNCTIONS */
+
 /**
-* On document load. Set webpage title.
-*/
+ * Document. On load.
+ *
+ * Set webpage title.
+ */
 $( document ).ready(function() {
 	setTitle("Login");
 });

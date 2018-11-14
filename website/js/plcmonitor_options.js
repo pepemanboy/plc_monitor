@@ -1,11 +1,15 @@
 /** 
- * Javascript for manager.php
+ * Javascript for options.php
  *
  * @author Pepe Melendez
  */
 
+/*** EVENT FUNCTIONS */
+
 /**
- * On document load. Set active navbar item, update table.
+ * Document. On load.
+ *
+ * Set webpage title, active navbar item, update table.
  */
 $(document).ready(function() {
   setTitle("Options");
@@ -13,34 +17,11 @@ $(document).ready(function() {
   updateProperties();
 });
 
-/** 
- * Update properties
+/**
+ * Save options button. On click.
+ *
+ * Save properties on db table.
  */
-function updateProperties() {
-  moduleStatus("Querying properties");
-  $.post("modules/post.php", {
-      module: "customize",
-      operation: "get_properties"
-    },
-    function(data, status) {
-      var err = getPhpVar(data, "error").val;
-      if (!plcOk(err)) {
-        moduleStatus("Query properties error " + err);
-        return;
-      }
-
-      // Title
-      var title = getPhpVar(data, "title");
-      if (title.error) {
-        moduleStatus("Query properties error ");
-        return;
-      }
-      moduleStatus("Query properties OK");
-      $("#options-title-input").val(title.val);
-      document.title = title.val + " - Options";
-    });
-}
-
 $("#options-save-boton").click(function() {
   var title = $("#options-title-input").val();
   $.post("modules/post.php", {
@@ -62,26 +43,31 @@ $("#options-save-boton").click(function() {
     });
 });
 
-/**
- *  Notify user through modal.
- */
-function notify(text, title = "Notificación") {
-  $("#notif-modal-titulo").text(title);
-  $("#notif-modal-body").text(text);
-  $("#notif-modal").modal("show");
-}
+/*** CUSTOM FUNCTIONS */
 
-/**
- * Debug
+/** 
+ * Get properties from db table and show them on table.
  */
-function debug(text) {
-  $("#debug-row").text(text);
-}
+function updateProperties() {
+  moduleStatus("Querying properties");
+  $.post("modules/post.php", {
+      module: "customize",
+      operation: "get_properties"
+    },
+    function(data, status) {
+      var err = getPhpVar(data, "error").val;
+      if (!plcOk(err)) {
+        moduleStatus("Query properties error " + err);
+        return;
+      }
 
-/**
- * Report status of module
- * @param {string} status Status of module
- */
-function moduleStatus(status) {
-  $("#status-indicator").text("Status: " + status);
+      var title = getPhpVar(data, "title");
+      if (title.error) {
+        moduleStatus("Query properties error ");
+        return;
+      }
+      moduleStatus("Query properties OK");
+      $("#options-title-input").val(title.val);
+      document.title = title.val + " - Options";
+    });
 }

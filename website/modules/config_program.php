@@ -272,10 +272,7 @@ class Config extends Module
 			mysqli_free_result($result);
 		}
 		else
-		{
-			echo("kek");
 			return ERROR_QUERY;
-		}
 
 		return OK;
 	}

@@ -17,29 +17,28 @@ var g_values = [];
 var g_actions = [];
 
 // On load
-$( document ).ready(function() {
+$(document).ready(function() {
 	setTitle("Actions");
-  $("#navbar-item-actions").addClass("active");
-  $("#navbar-item-actions").attr("href", "#");
+	$("#navbar-item-actions").addClass("active");
+	$("#navbar-item-actions").attr("href", "#");
 });
 
 // Cuando se pica algun plc en el dropdown, actualizar g_plc
-$('.dropdown-plc').click(function(){
+$('.dropdown-plc').click(function() {
 	$(".plc-dropdown-menu").text($(this).text());
 	g_plc = Number($(this).attr('data-plc-number'));
 	$(".senales-dropdown-menu").text('Selecciona una senal');
 	g_signal_number = 0;
-	g_signal_type = "";	
+	g_signal_type = "";
 	updateSignalDropdown(g_plc);
 	// displayActions([],0,0,0);
 	$("#viz-agregar-accion-boton").text("Selecciona una señal");
-	getActions(g_plc,0,0);
+	getActions(g_plc, 0, 0);
 });
 
 // Cuando se pica alguna senal en el dropdown, actualizar g_signal
-$('.dropdown-senales').click(function(){
-	if(g_plc < 1)
-	{
+$('.dropdown-senales').click(function() {
+	if (g_plc < 1) {
 		vizStatus("Ningun PLC seleccionado");
 		return;
 	}
@@ -54,342 +53,316 @@ $('.dropdown-senales').click(function(){
 });
 
 // Update signal dropdown names. n is plc number
-function updateSignalDropdown(n)
-{
-	if(g_plc < 1)
+function updateSignalDropdown(n) {
+	if (g_plc < 1)
 		return false;
 
 	vizStatus("Querying signal names");
 
 	$.post("modules/post.php", {
-      module: "config_program",
-		plc_number: n,
-		operation: "get"
-	},
-	function(data,status){
+			module: "config_program",
+			plc_number: n,
+			operation: "get"
+		},
+		function(data, status) {
 
-		var err = getPhpVariable(data, "error"); 
-		vizStatus(err);
-		if(!plcOk(err))
-			return;
+			var err = getPhpVariable(data, "error");
+			vizStatus(err);
+			if (!plcOk(err))
+				return;
 
-		for(var i = 1; i <= 6; i++)
-		{
-			di = getPhpArray(data,"di" + i);	  		
-			ai = getPhpArray(data,"ai" + i);
-			g_do_names[i-1] = getPhpArray(data,"do" + i)[0];
+			for (var i = 1; i <= 6; i++) {
+				di = getPhpArray(data, "di" + i);
+				ai = getPhpArray(data, "ai" + i);
+				g_do_names[i - 1] = getPhpArray(data, "do" + i)[0];
 
-			$("#viz-signal-dropdown-di" + i).text("DI" + i + ": " + di[0]);
-			$("#viz-signal-dropdown-ai" + i).text("AI" + i + ": " + ai[0]);
-		}
+				$("#viz-signal-dropdown-di" + i).text("DI" + i + ": " + di[0]);
+				$("#viz-signal-dropdown-ai" + i).text("AI" + i + ": " + ai[0]);
+			}
 
-	});  
+		});
 }
 
 // Report input status
-function vizStatus(status)
-{
+function vizStatus(status) {
 	$("#viz-status-indicator").text("Status: " + status);
 }
 
 
-$('.datetimepicker-input').on('input',function(e){
-    // No dates
-    if($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "" )
-    	return false;
-    $("#viz-visualizar-fechas-boton").removeClass("disabled");
+$('.datetimepicker-input').on('input', function(e) {
+	// No dates
+	if ($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "")
+		return false;
+	$("#viz-visualizar-fechas-boton").removeClass("disabled");
 });
 
 // Obtener acciones. N es el numero de plc
-function getActions(plc_number, signal_number, signal_type)
-{
+function getActions(plc_number, signal_number, signal_type) {
 	vizStatus("Querying actions");
 	$.post("modules/post.php", {
-      module: "viz_action",
-		plc_number: plc_number,
-		operation: "get"
-	},
-	function(data,status)
-	{
-		var err = getPhpVariable(data, "error"); 
-		vizStatus(err);
-		if(!plcOk(err))
-			return;
+			module: "viz_action",
+			plc_number: plc_number,
+			operation: "get"
+		},
+		function(data, status) {
+			var err = getPhpVariable(data, "error");
+			vizStatus(err);
+			if (!plcOk(err))
+				return;
 
-		var err = getPhpArr(data, "ids").error;
-		var empty = getPhpArr(data, "ids").empty;
-		var n = getPhpVariable(data, "n");
-		var ids = getPhpArr(data, "ids").val;
-		var inputs = getPhpArray(data, "inputs");
-		var thresholds = getPhpArray(data, "thresholds");
-		var updowns = getPhpArray(data, "updowns");
-		var outputs = getPhpArray(data, "outputs");
-		var emails = getPhpArray(data, "emails");
-		var notification_intervals_s = getPhpArray(data, "notification_intervals_s");
-		var action_types = getPhpArray(data, "action_types");
-		var delays_s = getPhpArray(data, "delays_s");
+			var err = getPhpArr(data, "ids").error;
+			var empty = getPhpArr(data, "ids").empty;
+			var n = getPhpVariable(data, "n");
+			var ids = getPhpArr(data, "ids").val;
+			var inputs = getPhpArray(data, "inputs");
+			var thresholds = getPhpArray(data, "thresholds");
+			var updowns = getPhpArray(data, "updowns");
+			var outputs = getPhpArray(data, "outputs");
+			var emails = getPhpArray(data, "emails");
+			var notification_intervals_s = getPhpArray(data, "notification_intervals_s");
+			var action_types = getPhpArray(data, "action_types");
+			var delays_s = getPhpArray(data, "delays_s");
 
-		g_actions = [];
-		if(!err && !empty)
-		{
-			for(var i = 0; i < inputs.length; i ++)
-			{
-				g_actions.push({
-					ID: ids[i],
-					input: inputs[i], 
-					threshold: thresholds[i], 
-					updown: updowns[i], 
-					output: outputs[i],
-					email: emails[i],
-					notification_interval_s: notification_intervals_s[i],
-					action_type: action_types[i],
-					delay_s: delays_s[i]
-				});
+			g_actions = [];
+			if (!err && !empty) {
+				for (var i = 0; i < inputs.length; i++) {
+					g_actions.push({
+						ID: ids[i],
+						input: inputs[i],
+						threshold: thresholds[i],
+						updown: updowns[i],
+						output: outputs[i],
+						email: emails[i],
+						notification_interval_s: notification_intervals_s[i],
+						action_type: action_types[i],
+						delay_s: delays_s[i]
+					});
+				}
 			}
-		}
-		
-		displayActions(g_actions, signal_number, signal_type);
-	}); 
+
+			displayActions(g_actions, signal_number, signal_type);
+		});
 }
 
-function displayActions(actions, signal_number, signal_type)
-{
+function displayActions(actions, signal_number, signal_type) {
 	// Filter for selected input
 	var signal_name = signal_type + signal_number;
-	var inputActions = actions.filter(function (el) {
-	  return el.input == signal_name;
+	var inputActions = actions.filter(function(el) {
+		return el.input == signal_name;
 	});
 	inputActions = actions;
-	if (inputActions.length < 1)
-	{
-		$("#viz-actions-row").html("");	
+	if (inputActions.length < 1) {
+		$("#viz-actions-row").html("");
 		return;
 	}
-	$.post("viz_action_box.php",
-	{
-		number_of_actions: inputActions.length 
-	},
-	function(data,status)
-	{
-		var err = getPhpVariable(data, "error"); 
-		vizStatus(err);
-		if(!plcOk(err))
-			return;
+	$.post("modules/post.php", {
+			module: "viz_action",
+			operation: "action_box",
+			plc_number: g_plc,
+			number_of_actions: inputActions.length
+		},
+		function(data, status) {
+			var err = getPhpVariable(data, "error");
+			vizStatus(err);
+			if (!plcOk(err))
+				return;
 
-		var a = getPhpVariable(data, "table");
-		$("#viz-actions-row").html(a);	
-		fillActions(inputActions);		
-	}); 
+			var a = getPhpVariable(data, "table");
+			$("#viz-actions-row").html(a);
+			fillActions(inputActions);
+		});
 }
 
-function fillActions(actions)
-{
-	for(var i = 1; i <= actions.length; i ++)
-	{
-		var action = actions[i-1];
+function fillActions(actions) {
+	for (var i = 1; i <= actions.length; i++) {
+		var action = actions[i - 1];
 		$("#viz-action-id" + i).text("Accion para " + action.input.toUpperCase());
 		$("#viz-action-threshold" + i).val(action.threshold).prop('disabled', true);
-		$("#viz-action-updown" + i).prop("checked",action.updown > 0 ? true : false).prop('disabled', true);
+		$("#viz-action-updown" + i).prop("checked", action.updown > 0 ? true : false).prop('disabled', true);
 		var do_txt = "Ninguna salida";
-		if(action.output > 0)
-			do_txt = "DO" + action.output + " Nombre: " + g_do_names[action.output-1];
+		if (action.output > 0)
+			do_txt = "DO" + action.output + " Nombre: " + g_do_names[action.output - 1];
 		$("#viz-action-output" + i).append($('<option>', {
-		    value: 1,
-		    text: do_txt
+			value: 1,
+			text: do_txt
 		})).prop('disabled', true);
 		$("#viz-action-email" + i).val(action.email).prop('disabled', true);
 		// Calculate time
 		var t = action.notification_interval_s;
 		var s = "sec";
-		if (t > 60)
-		{
+		if (t > 60) {
 			s = "min", t /= 60;
-			if (t > 60)
-			{
+			if (t > 60) {
 				s = "horas", t /= 60;
 				if (t > 24)
 					s = "dias", t /= 24;
 			}
-		}				
+		}
 		$("#viz-action-interval" + i).val(t).prop('disabled', true);
 		$("#viz-action-interval-suffix" + i).append($('<option>', {
-		    value: 1,
-		    text: s
+			value: 1,
+			text: s
 		})).prop('disabled', true);
 		// Radios
 		var selected = action.action_type;
 		var $radios = $('input:radio[name=viz-action-radios' + i + ']').prop('disabled', true);
-	    if($radios.is(':checked') === false) {
-	        $radios.filter('[data-action-type=' + selected + ']').prop('checked', true);
-	    }
+		if ($radios.is(':checked') === false) {
+			$radios.filter('[data-action-type=' + selected + ']').prop('checked', true);
+		}
 		// $("input[name=viz-action-radios" + i + "]:checked").val();
 		// Calculate delay time
 		var t = action.delay_s;
 		var s = "sec";
-		if (t > 60)
-		{
+		if (t > 60) {
 			s = "min", t /= 60;
-			if (t > 60)
-			{
+			if (t > 60) {
 				s = "horas", t /= 60;
 				if (t > 24)
 					s = "dias", t /= 24;
 			}
-		}	
+		}
 		$("#viz-action-delay" + i).val(t).prop('disabled', true);
 		$("#viz-action-delay-suffix" + i).append($('<option>', {
-		    value: 1,
-		    text: s
+			value: 1,
+			text: s
 		})).prop('disabled', true);
 		$("#viz-action-borrar-boton" + i).attr("data-action-id", action.ID);
 	}
 }
 
-$("#viz-agregar-accion-boton").click(function(){
-	if($(this).hasClass( "disabled" ))
+$("#viz-agregar-accion-boton").click(function() {
+	if ($(this).hasClass("disabled"))
 		return false;
 });
 
 // Boton de borrar en una fila. Mostrar modal
-$(document).on("click" , '.viz-action-borrar-boton', function(){
-  var n = $(this).attr("data-action-id");
-  g_action_delete = n;
-  $("#viz-borrar-modal-body").text("¿Estás seguro que deseas borrar la accion " + n + "?");
+$(document).on("click", '.viz-action-borrar-boton', function() {
+	var n = $(this).attr("data-action-id");
+	g_action_delete = n;
+	$("#viz-borrar-modal-body").text("¿Estás seguro que deseas borrar la accion " + n + "?");
 });
 
 // Boton de borrar accion dentro del modal
-$('#viz-borrar-modal-boton').click(function(){
-  $('#viz-borrar-modal').modal('hide');
-  deleteAction(g_plc, g_action_delete);
+$('#viz-borrar-modal-boton').click(function() {
+	$('#viz-borrar-modal').modal('hide');
+	deleteAction(g_plc, g_action_delete);
 });
 
 // Borrar accion
-function deleteAction(plc_number, action_id)
-{
+function deleteAction(plc_number, action_id) {
 	vizStatus("Deleting action");
 
 	$.post("modules/post.php", {
-      module: "viz_action",
-		plc_number: plc_number,
-		operation: "delete",
-		delete_id: action_id
-	},
-	function(data,status)
-	{
-		var err = getPhpVariable(data, "error"); 
-		vizStatus(err);
-		if(!plcOk(err))
-			return;	
-		getActions(g_plc, g_signal_number, g_signal_type);
-	}); 
+			module: "viz_action",
+			plc_number: plc_number,
+			operation: "delete",
+			delete_id: action_id
+		},
+		function(data, status) {
+			var err = getPhpVariable(data, "error");
+			vizStatus(err);
+			if (!plcOk(err))
+				return;
+			getActions(g_plc, g_signal_number, g_signal_type);
+		});
 }
 
-$("#viz-agregar-accion-boton").click(function(){
-  showModalAction();
+$("#viz-agregar-accion-boton").click(function() {
+	showModalAction();
 });
 
-function showModalAction()
-{ 
-	$.post("viz_action_box.php",
-	{
-		number_of_actions: 1,
-		modal: true
-	},
-	function(data,status)
-	{
-		var err = getPhpVariable(data, "error"); 
-		vizStatus(err);
-		if(!plcOk(err))
-			return;
+function showModalAction() {
+	$.post("modules/post.php", {
+			module: "viz_action",
+			operation: "action_box",
+			plc_number: g_plc,
+			number_of_actions: 1,
+			modal: true,
+		},
+		function(data, status) {
+			var err = getPhpVariable(data, "error");
+			vizStatus(err);
+			if (!plcOk(err))
+				return;
 
-		var a = getPhpVariable(data, "table");
-		$("#viz-agregar-modal-body").html(a);	
-		formatModalAction();
-	}); 
+			var a = getPhpVariable(data, "table");
+			$("#viz-agregar-modal-body").html(a);
+			formatModalAction();
+		});
 }
 
-function formatModalAction()
-{
-	$("#viz-action-header0").html("Nueva acción para PLC " + g_plc + " " + g_signal_type.toUpperCase() + g_signal_number);	
-	
+function formatModalAction() {
+	$("#viz-action-header0").html("Nueva acción para PLC " + g_plc + " " + g_signal_type.toUpperCase() + g_signal_number);
+
 	// Title
 
 	// Outputs list
 	var signal_name = g_signal_type + g_signal_number;
-	var inputActions = g_actions.filter(function (el) {
-	  return el.output == 0;
+	var inputActions = g_actions.filter(function(el) {
+		return el.output == 0;
 	});
 
 	$("#viz-action-output0").append($('<option>', {
-		    value: 0,
-		    text: "Ninguna salida"
-		}));
+		value: 0,
+		text: "Ninguna salida"
+	}));
 
-	for(var i = 1; i <= 6; i ++)
-	{
-		var txt = "DO" + (i) + " [" + g_do_names[i-1] + "]";
-		var a = g_actions.filter(function (el) {
-		  return el.output == i;
+	for (var i = 1; i <= 6; i++) {
+		var txt = "DO" + (i) + " [" + g_do_names[i - 1] + "]";
+		var a = g_actions.filter(function(el) {
+			return el.output == i;
 		});
-		if(a.length > 0)
-		{
+		if (a.length > 0) {
 			txt += " usada por " + a[0].input;
 		}
 		$("#viz-action-output0").append($('<option>', {
-		    value: i,
-		    text: txt
+			value: i,
+			text: txt
 		}));
 	}
 
 	// minutos, horas, etc list
-	$("#viz-action-interval-suffix0").append($('<option>', 
-		{
-		    value: 1,
-		    text: "minutos"
-		}));
-	$("#viz-action-interval-suffix0").append($('<option>', 
-		{
-		    value: 2,
-		    text: "horas"
-		}));
-	$("#viz-action-interval-suffix0").append($('<option>', 
-		{
-		    value: 3,
-		    text: "dias"
-		}));
+	$("#viz-action-interval-suffix0").append($('<option>', {
+		value: 1,
+		text: "minutos"
+	}));
+	$("#viz-action-interval-suffix0").append($('<option>', {
+		value: 2,
+		text: "horas"
+	}));
+	$("#viz-action-interval-suffix0").append($('<option>', {
+		value: 3,
+		text: "dias"
+	}));
 
 	//minutos, horas, etc para delay
-	$("#viz-action-delay-suffix0").append($('<option>', 
-		{
-		    value: 1,
-		    text: "segundos"
-		}));
-	$("#viz-action-delay-suffix0").append($('<option>', 
-		{
-		    value: 2,
-		    text: "minutos"
-		}));
-	$("#viz-action-delay-suffix0").append($('<option>', 
-		{
-		    value: 3,
-		    text: "horas"
-		}));
+	$("#viz-action-delay-suffix0").append($('<option>', {
+		value: 1,
+		text: "segundos"
+	}));
+	$("#viz-action-delay-suffix0").append($('<option>', {
+		value: 2,
+		text: "minutos"
+	}));
+	$("#viz-action-delay-suffix0").append($('<option>', {
+		value: 3,
+		text: "horas"
+	}));
 
 	// Radios
 	var $radios = $('input:radio[name=viz-action-radios0]');
-    if($radios.is(':checked') === false) {
-        $radios.filter('[data-action-type=1]').prop('checked', true);
-    }
-	
+	if ($radios.is(':checked') === false) {
+		$radios.filter('[data-action-type=1]').prop('checked', true);
+	}
+
 }
 
-$("#viz-agregar-modal-boton").click(function(){
-  addAction(g_plc);
+$("#viz-agregar-modal-boton").click(function() {
+	addAction(g_plc);
 });
 
-function addAction(plc_number)
-{
-	if(!verifyAction())
+function addAction(plc_number) {
+	if (!verifyAction())
 		return false;
 
 	vizStatus("Adding action");
@@ -399,74 +372,76 @@ function addAction(plc_number)
 	// Notification interval time
 	var n_t = Number($("#viz-action-interval0").val());
 	var n_s = $("#viz-action-interval-suffix0 option:selected").val();
-	switch(Number(n_s)){
-		case 3: n_t *= 24;
-		case 2: n_t *= 60; 
-		case 1: n_t *= 60;
-		default: break;
+	switch (Number(n_s)) {
+		case 3:
+			n_t *= 24;
+		case 2:
+			n_t *= 60;
+		case 1:
+			n_t *= 60;
+		default:
+			break;
 	}
 
 	// Email
 	var email = "None";
-	if(n_t)
-	{
+	if (n_t) {
 		var email = $("#viz-action-email0").val();
 	}
 
 	// Delay time
 	var d_t = Number($("#viz-action-delay0").val());
 	var d_s = $("#viz-action-delay-suffix0 option:selected").val();
-	switch(Number(d_s)){		
-		case 3: d_t *= 60;
-		case 2: d_t *= 60; 
-		case 1: d_t *= 1;
-		default: break;
+	switch (Number(d_s)) {
+		case 3:
+			d_t *= 60;
+		case 2:
+			d_t *= 60;
+		case 1:
+			d_t *= 1;
+		default:
+			break;
 	}
 
 	// Action type
 	var at = Number($('input[name=viz-action-radios0]:checked').attr("data-action-type"));
 
 	$.post("modules/post.php", {
-      module: "viz_action",
-		plc_number: plc_number,
-		operation: "add",
-		input: ("" + g_signal_type + g_signal_number),
-		threshold: $("#viz-action-threshold0").val(),
-		updown: $("#viz-action-updown0").prop("checked") ? 1 : 0,
-		output: Number($("#viz-action-output0 option:selected").val()),
-		email: email,
-		notification_interval_s: n_t ,
-		action_type: at,
-		delay_s: d_t
-	},
-	function(data,status)
-	{
-		var err = getPhpVariable(data, "error"); 
-		vizStatus(err);
-		if(!plcOk(err))
-			return;	
-		getActions(g_plc, g_signal_number, g_signal_type);
-	}); 
+			module: "viz_action",
+			plc_number: plc_number,
+			operation: "add",
+			input: ("" + g_signal_type + g_signal_number),
+			threshold: $("#viz-action-threshold0").val(),
+			updown: $("#viz-action-updown0").prop("checked") ? 1 : 0,
+			output: Number($("#viz-action-output0 option:selected").val()),
+			email: email,
+			notification_interval_s: n_t,
+			action_type: at,
+			delay_s: d_t
+		},
+		function(data, status) {
+			var err = getPhpVariable(data, "error");
+			vizStatus(err);
+			if (!plcOk(err))
+				return;
+			getActions(g_plc, g_signal_number, g_signal_type);
+		});
 }
 
-function verifyAction()
-{
+function verifyAction() {
 	var r = true;
 	// Threshold
 	var th = $("#viz-action-threshold0").val();
-	if(!th)
-	{
+	if (!th) {
 		alert("Sin valor de nivel");
 		return false;
 	}
 
 	// Notifs
 	var notif = $("#viz-action-interval0").val();
-	if(notif && notif > 0)
-	{
+	if (notif && notif > 0) {
 		var email = $("#viz-action-email0").val();
-		if (!email)
-		{
+		if (!email) {
 			alert("Agregar email o quitar intervalo");
 			return false;
 		}
@@ -474,16 +449,13 @@ function verifyAction()
 
 	// Temporizador
 	var radios = $('input[name=viz-action-radios0]:checked').attr("data-action-type");
-	if(radios && radios == ACTION_DELAY)
-	{
+	if (radios && radios == ACTION_DELAY) {
 		var delay = $("#viz-action-delay0").val();
-		if (!delay || delay < 0)
-		{
+		if (!delay || delay < 0) {
 			alert("Sin valor de temporizador");
 			return false;
 		}
 	}
-	
+
 	return true;
 }
-

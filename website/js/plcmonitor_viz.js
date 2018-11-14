@@ -1,24 +1,34 @@
-/* Constants */
+/** 
+ * Javascript for viz.php
+ * @author Pepe Melendez
+ */
+
+/*** CONSTANTS */
 var OUTPUT_COUNT = 6;
 
-// Global variables
-var g_plc = 0;
-var g_plc_name = "";
-var g_signal_number = 0;
-var g_signal_type = "";
-var g_signal_name = "";
+/*** GLOBAL VARIABLES */
+var g_plc = 0; ///<
+var g_plc_name = ""; ///<
+var g_signal_number = 0; ///<
+var g_signal_type = ""; ///<
+var g_signal_name = ""; ///<
 
-var g_di_names = [];
-var g_ai_names = [];
-var g_do_names = [];
+var g_di_names = []; ///<
+var g_ai_names = []; ///<
+var g_do_names = []; ///<
 
-var g_dates = [];
-var g_values = [];
+var g_dates = []; ///<
+var g_values = []; ///<
 
-var g_selected_signals = new Array();
-var g_graph_signals = [];
+var g_selected_signals = new Array(); ///<
+var g_graph_signals = []; ///<
+
+/*** EVENT FUNCTIONS */
 
 // On load
+/**
+*
+*/
 $(document).ready(function() {
 	setTitle("Viz");
 	// Set active menu
@@ -42,6 +52,9 @@ $(document).ready(function() {
 });
 
 // Cuando se pica algun plc en el dropdown, actualizar g_plc
+/**
+*
+*/
 $('.dropdown-plc').click(function() {
 	$(".plc-dropdown-menu").text($(this).text());
 	$(".plc-dropdown-menu").attr("data-plc-name", $(this).attr("data-plc-name"));
@@ -54,6 +67,9 @@ $('.dropdown-plc').click(function() {
 });
 
 // Cuando se pica alguna senal en el dropdown, actualizar g_signal
+/**
+*
+*/
 $('.dropdown-senales').click(function() {
 	if (g_plc < 1) {
 		vizStatus("Ningun PLC seleccionado");
@@ -78,7 +94,79 @@ $('.dropdown-senales').click(function() {
 	vizStatus("OK");
 });
 
+/**
+*
+*/
+$("#viz-visualizar-fechas-boton").click(function() {
+	// Disabled status
+	if ($(this).hasClass("disabled"))
+		return false;
+	// No dates
+	if ($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "")
+		return false;
+
+	if (g_selected_signals.length < 1) {
+		vizStatus("Selecciona una senal");
+		return false;
+	}
+
+	// Cambiar a formato de base de datos
+	var fecha1 = moment($("#datetimepicker1").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
+	var fecha2 = moment($("#datetimepicker2").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
+
+	getGraphSignals(fecha1, fecha2);
+	$("#viz-csv-boton").removeClass("disabled");
+});
+
+/**
+*
+*/
+$("#viz-csv-boton").click(function() {
+	if ($(this).hasClass("disabled"))
+		return false;
+	for (var i = 0; i < g_graph_signals.signals.length; i++) {
+		downloadCSV({
+			values: g_graph_signals.signals[i].values,
+			dates: g_graph_signals.signals[i].dates,
+			filename: g_graph_signals.signals[i].name + ".csv"
+		});
+	}
+
+});
+
+/**
+*
+*/
+$('.datetimepicker-input').on('input', function(e) {
+	// No dates
+	if ($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "")
+		return false;
+	$("#viz-visualizar-fechas-boton").removeClass("disabled");
+});
+
+/**
+*
+*/
+$(document).on("click", '.viz-selected-signal', function() {
+	var s = {
+		plc_number: $(this).attr("data-plc-number"),
+		signal_type: $(this).attr("data-signal-type"),
+		number: $(this).attr("data-signal-number")
+	};
+
+	var index = g_selected_signals.findIndex(e => e.number == s.signal_number && e.plc_number == s.plc_number && e.signal_type == s.signal_type);
+	if (index !== -1) g_selected_signals.splice(index, 1);
+
+	$(this).remove();
+});
+
+/*** CUSTOM FUNCTIONS */
+
+
 // Update signal dropdown names. n is plc number
+/**
+*
+*/
 function updateSignalDropdown(n) {
 	if (g_plc < 1)
 		return false;
@@ -112,27 +200,9 @@ function updateSignalDropdown(n) {
 		});
 }
 
-$("#viz-visualizar-fechas-boton").click(function() {
-	// Disabled status
-	if ($(this).hasClass("disabled"))
-		return false;
-	// No dates
-	if ($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "")
-		return false;
-
-	if (g_selected_signals.length < 1) {
-		vizStatus("Selecciona una senal");
-		return false;
-	}
-
-	// Cambiar a formato de base de datos
-	var fecha1 = moment($("#datetimepicker1").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
-	var fecha2 = moment($("#datetimepicker2").val(), 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD HH:mm:ss');
-
-	getGraphSignals(fecha1, fecha2);
-	$("#viz-csv-boton").removeClass("disabled");
-});
-
+/**
+*
+*/
 function getGraphSignals(date1, date2) {
 	vizStatus("Querying signals");
 	g_graph_signals = {
@@ -169,6 +239,9 @@ function getGraphSignals(date1, date2) {
 	}
 }
 
+/**
+*
+*/
 function graphSignals() {
 	// Not yet completed
 	if (g_selected_signals.length > g_graph_signals.signals.length)
@@ -244,27 +317,9 @@ function graphSignals() {
 
 }
 
-$("#viz-csv-boton").click(function() {
-	if ($(this).hasClass("disabled"))
-		return false;
-	for (var i = 0; i < g_graph_signals.signals.length ; i++)
-	{
-		downloadCSV({
-			values: g_graph_signals.signals[i].values,
-			dates: g_graph_signals.signals[i].dates,
-			filename: g_graph_signals.signals[i].name + ".csv"
-		});
-	}
-	
-});
-
-$('.datetimepicker-input').on('input', function(e) {
-	// No dates
-	if ($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "")
-		return false;
-	$("#viz-visualizar-fechas-boton").removeClass("disabled");
-});
-
+/**
+*
+*/
 function updateChart(dates, values, title) {
 	var data = [];
 	var dataSeries = {
@@ -307,25 +362,20 @@ function updateChart(dates, values, title) {
 	$("#chartContainer").CanvasJSChart(options);
 }
 
-// Report input status
-function vizStatus(status) {
-	$("#viz-status-indicator").text("Status: " + status);
-}
-
-$(document).on("click", '.viz-selected-signal', function() {
-	var s = {
-		plc_number: $(this).attr("data-plc-number"),
-		signal_type: $(this).attr("data-signal-type"),
-		number: $(this).attr("data-signal-number")
-	};
-
-	var index = g_selected_signals.findIndex(e => e.number == s.signal_number && e.plc_number == s.plc_number && e.signal_type == s.signal_type);
-	if (index !== -1) g_selected_signals.splice(index, 1);
-
-	$(this).remove();
-});
-
+/**
+*
+*/
 function addSelectedSignal() {
 	var s = "PLC: " + g_plc_name + " Signal: " + g_signal_name;
 	$("#viz-selected-signals-group").append("<button type='button' class='btn btn-sm btn-secondary viz-selected-signal' data-plc-number = " + g_plc + " data-signal-number = " + g_signal_number + " data-signal-type = '" + g_signal_type + "'>" + s + " <strong><span>&times;</span></strong></button>").append(" ");
 }
+
+/**
+ * Report status of module.
+ *
+ * @param {string} status
+ */
+function vizStatus(status) {
+	$("#viz-status-indicator").text("Status: " + status);
+}
+

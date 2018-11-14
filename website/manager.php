@@ -7,7 +7,7 @@ if (!UserControl::adminSession())
 ?>
 
 <!doctype html>
-<!-- admin.php -->
+<!-- manager.php -->
 <html lang="en">
   <head>
     <!-- Meta tags requeridos -->

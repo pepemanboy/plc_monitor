@@ -4,10 +4,15 @@
  * @author Pepe Melendez
  */
 
-g_user_id = -1;
+/*** GLOBAL VARIABLES */
+g_user_id = -1; ///< Selected user id
+
+/*** EVENT FUNCTIONS */
 
 /**
- * On document load. Set active navbar item, update table.
+ * Document. On load.
+ *
+ * Set webpage title, active navbar item, update table.
  */
 $(document).ready(function() {
 	setTitle("Manager");
@@ -15,33 +20,11 @@ $(document).ready(function() {
 	updateTable();
 });
 
-/**
- * Update users html table.
- */
-function updateTable() {
-	moduleStatus("Querying table");
-	$.post("modules/post.php", {
-			module: "user_control",
-			operation: "get_user_table"
-		},
-		function(data, status) {
-			var err = getPhpVar(data, "error").val;
-			var table = getPhpVar(data, "table");
-			if (!plcOk(err)) {
-				moduleStatus("Table query error " + err);
-				return;
-			}
-			if (table.error) {
-				moduleStatus("Table query error");
-				return;
-			}
-			$("#manager-user-table").html(table.val);
-			moduleStatus("Table query OK");
-		});
-}
 
 /**
- *	Modify an account button. Open modal and fill accordingly.
+ * Modify an account button. On click.
+ *
+ * Open modal and fill accordingly.
  */
 $(document).on("click", '.manager-modificar-boton', function() {
 
@@ -68,7 +51,9 @@ $(document).on("click", '.manager-modificar-boton', function() {
 });
 
 /**
- *	Button inside modify account modal. Send request to modify account.
+ * Button inside modify account modal. On click.
+ * 
+ * Send request to modify account.
  */
 $("#manager-modificar-modal-boton").click(function() {
 	if (g_user_id < 0)
@@ -110,7 +95,9 @@ $("#manager-modificar-modal-boton").click(function() {
 });
 
 /**
- *	Button to add account. Open add account modal.
+ * Button to add account. On click.
+ *
+ * Open add account modal.
  */
 $("#manager-agregar-boton").click(function() {
 	$("#manager-agregar-modal-salidas-checkbox").prop('checked', false);
@@ -122,7 +109,9 @@ $("#manager-agregar-boton").click(function() {
 
 
 /**
- *	Button inside add account modal. Send request to add new user.
+ * Button inside add account modal. On click.
+ *
+ * Send request to add new user.
  */
 $("#manager-agregar-modal-boton").click(function() {
 
@@ -161,7 +150,9 @@ $("#manager-agregar-modal-boton").click(function() {
 });
 
 /**
- *	Button to erase account.
+ * Button to erase account. On click.
+ *
+ * Show erase modal.
  */
 $(document).on("click", '.manager-borrar-boton', function() {
 
@@ -172,7 +163,9 @@ $(document).on("click", '.manager-borrar-boton', function() {
 });
 
 /**
- *	Button inside erase account modal. Send request to erase account.
+ * Button inside erase account modal. On click.
+ *
+ * Send request to erase account.
  */
 $("#manager-borrar-modal-boton").click(function() {
 	var user = $("#manager-user" + g_user_id).text();
@@ -196,20 +189,29 @@ $("#manager-borrar-modal-boton").click(function() {
 		});
 });
 
-/**
- *	Notify user through modal.
- */
-
-function notify(text, title = "Notificación") {
-	$("#notif-modal-titulo").text(title);
-	$("#notif-modal-body").text(text);
-	$("#notif-modal").modal("show");
-}
+/*** CUSTOM FUNCTIONS */
 
 /**
- * Report status of module
- * @param {string} status Status of module
+ * Query users db table and show it.
  */
-function moduleStatus(status) {
-	$("#status-indicator").text("Status: " + status);
+function updateTable() {
+	moduleStatus("Querying table");
+	$.post("modules/post.php", {
+			module: "user_control",
+			operation: "get_user_table"
+		},
+		function(data, status) {
+			var err = getPhpVar(data, "error").val;
+			var table = getPhpVar(data, "table");
+			if (!plcOk(err)) {
+				moduleStatus("Table query error " + err);
+				return;
+			}
+			if (table.error) {
+				moduleStatus("Table query error");
+				return;
+			}
+			$("#manager-user-table").html(table.val);
+			moduleStatus("Table query OK");
+		});
 }

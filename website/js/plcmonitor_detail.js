@@ -1,18 +1,24 @@
 /** 
- * Javascript for manager.php
+ * Javascript for detail.php
  *
  * @author Pepe Melendez
  */
 
-g_plcs = [];
-
+/*** CONSTANTS */
 const READY_INPUT_VALUES = 1 << 0;
 const READY_OUTPUT_VALUES = 1 << 1;
 const READY_NAMES = 1 << 2;
 const READY_ALL = READY_INPUT_VALUES | READY_OUTPUT_VALUES | READY_NAMES;
 
+/*** GLOBAL VARIABLES */
+g_plcs = []; ///< Global PLCs object. {id, name, ai[], di[], do[], err, ready}[]
+
+/*** EVENT FUNCTIONS */
+
 /**
- * On document load. Set active navbar item, update table.
+ * Document. On load.
+ *
+ * Set webpage title, active navbar item, update table.
  */
 $(document).ready(function() {
 	setTitle("Detail");
@@ -20,10 +26,13 @@ $(document).ready(function() {
 	updatePlcs();
 });
 
-/**
- * Update detail table
- */
+/*** CUSTOM FUNCTIONS */
 
+/**
+ * Update plcs information.
+ *
+ * Populate g_plcs global object with ids and names. Call getIo.
+ */
 function updatePlcs() {
 	moduleStatus("Querying table");
 	$.post("modules/post.php", {
@@ -75,6 +84,9 @@ function updatePlcs() {
 		});
 }
 
+/**
+ * Populate g_plcs global object with inputs, outputs and names.
+ */
 function getIO() {
 	for (var i = 0; i < g_plcs.length; ++i) {
 		getInputs(i);
@@ -83,6 +95,11 @@ function getIO() {
 	}
 }
 
+/**
+ * Populate g_plcs global object with inputs.
+ *
+ * @param {integer} n PLC id
+ */
 function getInputs(n) {
 	$.post("modules/post.php", {
 			module: "control_inputs",
@@ -106,6 +123,11 @@ function getInputs(n) {
 		});
 }
 
+/**
+ * Populate g_plcs global object with outputs.
+ *
+ ** @param {integer} n PLC id
+ */
 function getOutputs(n) {
 	$.post("modules/post.php", {
 			module: "control_outputs",
@@ -127,6 +149,11 @@ function getOutputs(n) {
 		});
 }
 
+/**
+ * Populate g_plcs global object with io names.
+ *
+ * @param {integer} n PLC id
+ */
 function getNames(n) {
 	$.post("modules/post.php", {
 			module: "config_program",
@@ -155,6 +182,9 @@ function getNames(n) {
 		});
 }
 
+/**
+ * Update PLC html table and show it.
+ */
 function updateTable() {
 	// Check if plcs finished loading
 	for (var i = 0; i < g_plcs.length; ++i) {
@@ -186,15 +216,14 @@ function updateTable() {
 	}
 	$('[data-toggle="tooltip"]').tooltip();
 	moduleStatus("Table query OK");
-
-
 }
 
-
 /**
- *	Notify user through modal.
+ * Notify user through modal.
+ *
+ * @param {string} text Inner content of modal
+ * @param {string} title Title of modal
  */
-
 function notify(text, title = "Notificación") {
 	$("#notif-modal-titulo").text(title);
 	$("#notif-modal-body").text(text);
@@ -203,6 +232,7 @@ function notify(text, title = "Notificación") {
 
 /**
  * Report status of module
+ *
  * @param {string} status Status of module
  */
 function moduleStatus(status) {
