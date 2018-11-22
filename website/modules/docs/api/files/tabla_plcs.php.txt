@@ -5,10 +5,10 @@
 
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/user_control.php');
+include_once( dirname(__FILE__) . '/status.php');
+
 
 /**
  * PLC registration table module.
@@ -38,7 +38,7 @@ class TablaPlcs extends Module
 		if (!$exists)
 		{
 			$query = "
-			CREATE TABLE {$this->TABLE_NAME} (
+			CREATE TABLE {$this->table_name} (
 			id int NOT NULL AUTO_INCREMENT,
 			name VARCHAR(200) NOT NULL,
 			PRIMARY KEY (id),
@@ -100,7 +100,7 @@ class TablaPlcs extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$query = "INSERT INTO {$this->TABLE_NAME} (name) VALUES ('{$plc_name}')";
+		$query = "INSERT INTO {$this->table_name} (name) VALUES ('{$plc_name}')";
 		$r = mysqli_query($this->link, $query);
 		if (!$r)
 			return ERROR_QUERY;
@@ -131,7 +131,7 @@ class TablaPlcs extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$query = "SELECT id,name FROM {$this->TABLE_NAME} ORDER BY id ASC";
+		$query = "SELECT id,name FROM {$this->table_name} ORDER BY id ASC";
 		$result = mysqli_query($this->link, $query);
 		if (!$result)
 			return ERROR_QUERY;
@@ -151,11 +151,12 @@ class TablaPlcs extends Module
 		}
 
 		$status = array();
-		$i = 0;
+		$i = 0;		
 		foreach($ids as $id)
 		{
-			$stat = 0;
-			$r = arduinoStatus($this->link, $id , "get" , $stat);
+			$stat = 0;			
+			$plc_status = new PLCStatus();
+			$r = $plc_status->status($id , "get" , $stat);
 			if ($r != OK)
 				return $r;
 			$status[$i] = $stat;
@@ -166,24 +167,8 @@ class TablaPlcs extends Module
 		{
 			$this->printTable($ids, $names, $status, $message);	
 			$n = count($ids);
-
-			$p = "";
-			for($i = 0; $i < $n; $i++)
-			{
-				$p .= $status[$i];
-				if($i < $n - 1)
-					$p .= ",";
-			}
-			$this->setParameter("status_", $p, $message);
-
-			$p = "";
-			for($i = 0; $i < $n; $i++)
-			{
-				$p .= $ids[$i];
-				if($i < $n - 1)
-					$p .= ",";
-			}
-			$this->setParameter("ids_", $p, $message);
+			$this->setParameterArray("status_", $status, $n, $message);
+			$this->setParameterArray("ids_", $ids, $n, $message);
 		}
 		else
 		{
@@ -234,7 +219,7 @@ class TablaPlcs extends Module
 		foreach ($tables as $table)
 		{
 			$exists = False;
-			$r = tableExists($this->link, $table, $exists); 
+			$r = DbConnection::tableExists($this->link, $table, $exists); 
 			if($r != OK)
 				return $r;
 
@@ -246,7 +231,6 @@ class TablaPlcs extends Module
 			if (!$result)
 				return ERROR_QUERY;
 		}
-
 		return OK;
 	}
 
@@ -269,7 +253,7 @@ class TablaPlcs extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$query = "SELECT name FROM {$this->TABLE_NAME} WHERE id = {$plc_number}";
+		$query = "SELECT name FROM {$this->table_name} WHERE id = {$plc_number}";
 		$result = mysqli_query($this->link, $query);
 		if (!$result)
 			return ERROR_QUERY;
@@ -339,7 +323,8 @@ class TablaPlcs extends Module
 			return ERROR_ARGUMENTS;
 
 		$stat = null;
-		$r = arduinoStatus($this->link, $plc_number , "get" , $stat);
+		$plc_status = new PLCStatus();
+		$r = $plc_status->status($plc_number , "get" , $stat);
 		if ($r != OK)
 			return $r;
 
@@ -372,8 +357,7 @@ class TablaPlcs extends Module
 		      <td>{$name}</td>
 		      <td>{$stat} <span id = 'admin-status-badge-{$id}' class='badge badge-success'>OK</span> </td>
 		      ";
-			include_once("user_control.php");
-			if(adminSession())
+			if(UserControl::adminSession())
 			{
 				$p .= "
 		        <td>
@@ -385,6 +369,56 @@ class TablaPlcs extends Module
 			";		
 		}
 		$this->setParameter("table", $p, $message);
+	}
+
+	/** 
+	 * Find plc by id, get name.
+	 *
+	 * @param integer $id PLC ID.
+	 * @param {out}string $name PLC name in PLC table.
+	 */
+	public function findPlcById($id, &$name)
+	{ 
+		if (!$this->initialized())
+            return ERROR_INITIALIZE;
+		
+		$query = "SELECT id,name FROM {$this->table_name} WHERE id in ({$id})";
+		if ($result = mysqli_query($this->link, $query)) 
+		{
+			$row = mysqli_fetch_row($result);  
+			if ($row == NULL) 
+				return ERROR_QUERY; 
+			$name = $row[1];
+			return OK;
+		}
+
+		return ERROR_QUERY;
+	}
+
+	/** 
+	 * Get PLC list 
+	 *
+	 * @param {out}mixed $connection Database connection object.
+	 * @param {out}array $ids PLC IDs array.
+	 * @param {out}array $names PLC names array.
+	 */
+	public function getPlcList(&$ids, &$names = null)
+	{
+		if (!$this->initialized())
+            return ERROR_INITIALIZE;
+
+		$query = "SELECT id,name FROM plcs ORDER BY id ASC";
+		$result = mysqli_query($this->link, $query);
+		if (mysqli_num_rows($result) > 0) {
+			$i = 0;
+			while($row = mysqli_fetch_row($result)) {
+				$ids[$i] = $row[0];
+				$names[$i] = $row[1];
+				$i = $i + 1;
+			}
+			mysqli_free_result($result);
+		} 
+		return OK;
 	}
 }
 

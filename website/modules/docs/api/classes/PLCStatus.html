@@ -136,10 +136,10 @@
                                 <div class="accordion" style="margin-bottom: 0">
         <div class="accordion-group">
             <div class="accordion-heading">
-                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-1064835652"></a>
+                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-1304505362"></a>
                                 <a href="../namespaces/default.html" style="margin-left: 30px; padding-left: 0">\</a>
             </div>
-            <div id="namespace-1064835652" class="accordion-body collapse in">
+            <div id="namespace-1304505362" class="accordion-body collapse in">
                 <div class="accordion-inner">
 
                     
@@ -173,9 +173,9 @@
                                             </nav>
                     <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal"><i class="icon-code"></i></a>
 
-                    <h1><small>\</small>VizGraph</h1>
-                    <p><em>PLC visualization graph module.</em></p>
-                    <p>Contains functions to get or log multiple points in a given signal of a PLC.</p>
+                    <h1><small>\</small>PLCStatus</h1>
+                    <p><em>PLC status module.</em></p>
+                    <p>Contains functions to get and set the status of a PLC.</p>
                     
                                         
                     <section id="summary">
@@ -202,6 +202,7 @@
                                                                     <a href="../classes/Module.html#method_postRequest" class="">postRequest()</a><br />
                                                                     <a href="../classes/Module.html#method_tableExists" class="">tableExists()</a><br />
                                                                     <a href="../classes/Module.html#method_tableEmpty" class="">tableEmpty()</a><br />
+                                                                    <a href="../classes/PLCStatus.html#method_status" class="">status()</a><br />
                                                             </section>
                             <section class="span4">
                                                                     <em>No public properties found</em>
@@ -213,8 +214,8 @@
                         <section class="row-fluid protected">
                             <section class="span4">
                                                                     <a href="../classes/Module.html#method_initialize" class="">initialize()</a><br />
-                                                                    <a href="../classes/VizGraph.html#method_postRequestData" class="">postRequestData()</a><br />
-                                                                    <a href="../classes/VizGraph.html#method_postInitialize" class="">postInitialize()</a><br />
+                                                                    <a href="../classes/Module.html#method_postRequestData" class="">postRequestData()</a><br />
+                                                                    <a href="../classes/Module.html#method_postInitialize" class="">postInitialize()</a><br />
                                                             </section>
                             <section class="span4">
                                                                     <a href="../classes/Module.html#property_link" class="">$link</a><br />
@@ -229,10 +230,6 @@
                             <section class="span4">
                                                                     <a href="../classes/Module.html#method__initialize" class="">_initialize()</a><br />
                                                                     <a href="../classes/Module.html#method_connectToDatabase" class="">connectToDatabase()</a><br />
-                                                                    <a href="../classes/VizGraph.html#method_postSet" class="">postSet()</a><br />
-                                                                    <a href="../classes/VizGraph.html#method_postGet" class="">postGet()</a><br />
-                                                                    <a href="../classes/VizGraph.html#method_postGetBackup" class="">postGetBackup()</a><br />
-                                                                    <a href="../classes/VizGraph.html#method_fetchValDate" class="">fetchValDate()</a><br />
                                                             </section>
                             <section class="span4">
                                                                     <em>No private properties found</em>
@@ -248,14 +245,14 @@
                     
                     <dl>
                         <dt>File</dt>
-                            <dd><a href="../files/viz_graph.html"><div class="path-wrapper">viz_graph.php</div></a></dd>
+                            <dd><a href="../files/status.html"><div class="path-wrapper">status.php</div></a></dd>
                                                 <dt>Package</dt>
                             <dd><div class="namespace-wrapper">Default</div></dd>
                                                 <dt>Class hierarchy</dt>
                             <dd class="hierarchy">
                                                                                                                                                                                                                                                                                                 
                                         <div class="namespace-wrapper"><a href="../classes/Module.html">\Module</a></div>
-                                                                                                    <div class="namespace-wrapper">\VizGraph</div>
+                                                                                                    <div class="namespace-wrapper">\PLCStatus</div>
                             </dd>
 
                         
@@ -701,6 +698,50 @@ To do: change to Json</p>
         </aside>
     </div>
 
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_status" name="method_status" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">status()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">status(integer  <span class="argument">$id</span>, string  <span class="argument">$operation = &quot;set&quot;</span>, string  <span class="argument">$status = null</span>) </pre>
+                <p><em>PLCstatus handler</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>integer</td>
+                                <td>$id </td>
+                                <td><p>PLC Id.</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>string</td>
+                                <td>$operation </td>
+                                <td><p>&quot;set&quot; or &quot;get&quot;.</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>string</td>
+                                <td>$status </td>
+                                <td><p>last online date.</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr><td colspan="2"><em>None found</em></td></tr>
+                            </table>
+        </aside>
+    </div>
+
                                                     <div class="row-fluid">
         <div class="span8 content class">
             <a id="method_initialize" name="method_initialize" class="anchor"></a>
@@ -739,13 +780,8 @@ To do: change to Json</p>
                 <h3 class="protected ">postRequestData()</h3>
                 <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
                 <pre class="signature" style="margin-right: 54px;">postRequestData(string  <span class="argument">$operation</span>, \{out}string  <span class="argument">$message</span>) : integer</pre>
-                <p><em>Post Request handler.</em></p>
-                <p>When accessed through a POST request, given a POST parameter &quot;operation&quot;, execute a given function.</p>
-<ul>
-<li>operation | function</li>
-<li>&quot;set&quot; | postSet</li>
-<li>&quot;get&quot; | postGet</li>
-</ul>
+                <p><em>Post request handler to be defined by submodule.</em></p>
+                <p>If not defined, returns OK.</p>
 
                                     <h4>Parameters</h4>
                     <table class="table table-condensed table-hover">
@@ -771,7 +807,9 @@ To do: change to Json</p>
         <aside class="span4 detailsbar">
             <h1><i class="icon-arrow-down"></i></h1>
                                                             <dl>
-                                                                            </dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/Module.html"><div class="path-wrapper">\Module</div></a></dd>
+                                                            </dl>
             <h2>Tags</h2>
             <table class="table table-condensed">
                                     <tr><td colspan="2"><em>None found</em></td></tr>
@@ -786,20 +824,8 @@ To do: change to Json</p>
                 <h3 class="protected ">postInitialize()</h3>
                 <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
                 <pre class="signature" style="margin-right: 54px;">postInitialize() : integer</pre>
-                <p><em>Prepare module for POST request handler.</em></p>
-                <p>Uses the following POST parameters:</p>
-<ul>
-<li>&quot;plc_number&quot;</li>
-<li>&quot;signal_type&quot; - (value can be either &quot;di&quot; or &quot;ai&quot;)</li>
-<li>&quot;signal_number&quot;</li>
-</ul>
-<p>Checks if PLC exists in database (findPlcById in plc_util.php). If not, returns error.</p>
-<p>Creates plc{$plc<em>number}</em>{$signal_type}{$signal_number} table if it does not exist.
-Table contains:</p>
-<ul>
-<li>timeStamp TIMESTAMP NOT NULL PRIMARY KEY</li>
-<li>val float(10,2) NOT NULL</li>
-</ul>
+                <p><em>Prepare module for post request, to be defined by submodule.</em></p>
+                <p>If not defined, returns OK.</p>
 
                 
                 
@@ -812,7 +838,9 @@ Table contains:</p>
         <aside class="span4 detailsbar">
             <h1><i class="icon-arrow-down"></i></h1>
                                                             <dl>
-                                                                            </dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/Module.html"><div class="path-wrapper">\Module</div></a></dd>
+                                                            </dl>
             <h2>Tags</h2>
             <table class="table table-condensed">
                                     <tr><td colspan="2"><em>None found</em></td></tr>
@@ -879,183 +907,16 @@ Table contains:</p>
         </aside>
     </div>
 
-                                    <div class="row-fluid">
-        <div class="span8 content class">
-            <a id="method_postSet" name="method_postSet" class="anchor"></a>
-            <article class="method">
-                <h3 class="private ">postSet()</h3>
-                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">postSet(\{out}string  <span class="argument">$message</span>) : integer</pre>
-                <p><em>Log a signal point</em></p>
-                <p>Using the following POST parameters, log a value to the table:</p>
-<ul>
-<li>&quot;value&quot;</li>
-</ul>
-
-                                    <h4>Parameters</h4>
-                    <table class="table table-condensed table-hover">
-                                                    <tr>
-                                <td>\{out}string</td>
-                                <td>$message </td>
-                                <td></td>
-                            </tr>
-                                            </table>
-                
-                
-                                    <h4>Returns</h4>
-                    integer
-                                            &mdash; <p>Error code</p>
-                                    				
-                            </article>
-        </div>
-        <aside class="span4 detailsbar">
-            <h1><i class="icon-arrow-down"></i></h1>
-                                                            <dl>
-                                                                            </dl>
-            <h2>Tags</h2>
-            <table class="table table-condensed">
-                                    <tr><td colspan="2"><em>None found</em></td></tr>
-                            </table>
-        </aside>
-    </div>
-
-                                    <div class="row-fluid">
-        <div class="span8 content class">
-            <a id="method_postGet" name="method_postGet" class="anchor"></a>
-            <article class="method">
-                <h3 class="private ">postGet()</h3>
-                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">postGet(\{out}string  <span class="argument">$message</span>) : integer</pre>
-                <p><em>Get signal from dates selected</em></p>
-                <p>Uses the following POST parameters:</p>
-<ul>
-<li>&quot;date_start&quot;</li>
-<li>&quot;date_end&quot;</li>
-<li>&quot;signal_name&quot; (only used to return the same signal name)</li>
-</ul>
-<p>Message format: values(val1, ... , valN)dates(date1, ..., dateN)name(signal_name)</p>
-
-                                    <h4>Parameters</h4>
-                    <table class="table table-condensed table-hover">
-                                                    <tr>
-                                <td>\{out}string</td>
-                                <td>$message </td>
-                                <td></td>
-                            </tr>
-                                            </table>
-                
-                
-                                    <h4>Returns</h4>
-                    integer
-                                            &mdash; <p>Error code</p>
-                                    				
-                            </article>
-        </div>
-        <aside class="span4 detailsbar">
-            <h1><i class="icon-arrow-down"></i></h1>
-                                                            <dl>
-                                                                            </dl>
-            <h2>Tags</h2>
-            <table class="table table-condensed">
-                                    <tr><td colspan="2"><em>None found</em></td></tr>
-                            </table>
-        </aside>
-    </div>
-
-                                    <div class="row-fluid">
-        <div class="span8 content class">
-            <a id="method_postGetBackup" name="method_postGetBackup" class="anchor"></a>
-            <article class="method">
-                <h3 class="private ">postGetBackup()</h3>
-                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">postGetBackup(\{out}string  <span class="argument">$message</span>) : integer</pre>
-                <p><em>Gets backup (all the information in the table)</em></p>
-                <p>Message format: values(val1, ... , valN)dates(date1, ..., dateN)</p>
-
-                                    <h4>Parameters</h4>
-                    <table class="table table-condensed table-hover">
-                                                    <tr>
-                                <td>\{out}string</td>
-                                <td>$message </td>
-                                <td></td>
-                            </tr>
-                                            </table>
-                
-                
-                                    <h4>Returns</h4>
-                    integer
-                                            &mdash; <p>Error code</p>
-                                    				
-                            </article>
-        </div>
-        <aside class="span4 detailsbar">
-            <h1><i class="icon-arrow-down"></i></h1>
-                                                            <dl>
-                                                                            </dl>
-            <h2>Tags</h2>
-            <table class="table table-condensed">
-                                    <tr><td colspan="2"><em>None found</em></td></tr>
-                            </table>
-        </aside>
-    </div>
-
-                                    <div class="row-fluid">
-        <div class="span8 content class">
-            <a id="method_fetchValDate" name="method_fetchValDate" class="anchor"></a>
-            <article class="method">
-                <h3 class="private ">fetchValDate()</h3>
-                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
-                <pre class="signature" style="margin-right: 54px;">fetchValDate(\DateTime  <span class="argument">$date_start</span>, \DateTime  <span class="argument">$date_end</span>, \{out}string  <span class="argument">$message</span>) : integer</pre>
-                <p><em>Fetch values and dates from table.</em></p>
-                <p>Message format: values(val1, ... , valN)dates(date1, ..., dateN)</p>
-
-                                    <h4>Parameters</h4>
-                    <table class="table table-condensed table-hover">
-                                                    <tr>
-                                <td>\DateTime</td>
-                                <td>$date_start </td>
-                                <td></td>
-                            </tr>
-                                                    <tr>
-                                <td>\DateTime</td>
-                                <td>$date_end </td>
-                                <td></td>
-                            </tr>
-                                                    <tr>
-                                <td>\{out}string</td>
-                                <td>$message </td>
-                                <td></td>
-                            </tr>
-                                            </table>
-                
-                
-                                    <h4>Returns</h4>
-                    integer
-                                            &mdash; <p>Error code</p>
-                                    				
-                            </article>
-        </div>
-        <aside class="span4 detailsbar">
-            <h1><i class="icon-arrow-down"></i></h1>
-                                                            <dl>
-                                                                            </dl>
-            <h2>Tags</h2>
-            <table class="table table-condensed">
-                                    <tr><td colspan="2"><em>None found</em></td></tr>
-                            </table>
-        </aside>
-    </div>
-
                                     </div>
     </section>
 
     <div id="source-view" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="source-view-label" aria-hidden="true">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h3 id="source-view-label">viz_graph.php</h3>
+            <h3 id="source-view-label">status.php</h3>
         </div>
         <div class="modal-body">
-            <pre data-src="../files/viz_graph.php.txt" class="language-php line-numbers"></pre>
+            <pre data-src="../files/status.php.txt" class="language-php line-numbers"></pre>
         </div>
     </div>
 

@@ -1,4 +1,3 @@
-
 <?php
 /**
  * PLC actions module
@@ -6,10 +5,9 @@
 
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
+include_once( dirname(__FILE__) . '/user_control.php');
 
 /**
  * PLC actions module.
@@ -50,8 +48,8 @@ class Actions extends Module
 
 		$this->table_name = "plc{$plc_number}_actions";
 
-		$name = "";
-		$r = findPlcById($this->link, $plc_number, $name);
+		$plc_table = new TablaPlcs();
+		$r = $plc_table->findPlcById($plc_number);
 		if ($r != OK)
 		  return $r;
 
@@ -79,7 +77,6 @@ class Actions extends Module
 		  if (!$r)
 		    return ERROR_QUERY;
 		}
-
 		return OK;
     }
 
@@ -97,12 +94,14 @@ class Actions extends Module
 	 */
 	protected function postRequestData($operation, &$message)
 	{
+		echo("prd ");
 		switch ($operation) 
 		{
-		    case "add": return $this->postaAdd($message);
+		    case "add": return $this->postAdd($message);
 		    case "get": return $this->postGet($message);
 		    case "delete": return $this->postDelete($message);
 		    case "email": return $this->postEmail($message);
+		    case "action_box": return $this->postActionBox($message);
 		    default: return ERROR_ARGUMENTS; 
 	    }
 	}
@@ -118,6 +117,7 @@ class Actions extends Module
 	*/
 	private function postAdd(&$message)
 	{
+		echo("pa ");
 		$b = True;
 		$input = $threshold = $updown = $output = $email = $notification_interval_s = $action_type = $delay_s = 0;
 		$b = $b && $this->getPostParameter("input", $input);
@@ -141,12 +141,11 @@ class Actions extends Module
 		}
 
 		$query = "
-		INSERT INTO = {$this->table_name} 
+		INSERT INTO {$this->table_name} 
 		(input, threshold, updown, output, email, notification_interval_s, action_type, delay_s) 
 		VALUES
 		('{$input}',{$threshold},{$updown},{$output},'{$email}',{$notification_interval_s},{$action_type},{$delay_s})";
 
-		// Execute query
 		$r = mysqli_query($this->link, $query);
 		if (!$r)
 			return ERROR_QUERY;
@@ -212,10 +211,10 @@ class Actions extends Module
 		foreach ($inputs as $i)
 		{
 			array_push($inputs_types, (strpos($i, 'di') !== false) ? TYPE_DIGITAL : TYPE_ANALOG);
-			array_push($inputs_numbers, substr($inputs[$i], 2));
+			array_push($inputs_numbers, substr($i, 2));
 		}
 		$this->setParameterArray("inputs_types", $inputs_types, $n, $message);
-		$this->setParameterArray("inputs_types", $inputs_numbers, $n, $message);
+		$this->setParameterArray("inputs_numbers", $inputs_numbers, $n, $message);
 
 		$this->setParameterArray("thresholds", $thresholds, $n, $message);
 		$this->setParameterArray("updowns", $updowns, $n, $message);
@@ -291,6 +290,124 @@ class Actions extends Module
 		return OK;
 	}
 
+	/** 
+	* Output action box
+	*
+	* Using the following POST parameters, output this number of action boxes:
+	* * "number_of_actions"
+	* 
+	* @param {out}string $message
+	* @return integer Error code
+	*/
+	private function postActionBox(&$message)
+	{
+		$b = True;
+		$number_of_actions= 0;
+		$b = $b && $this->getPostParameter("number_of_actions", $number_of_actions);
+
+		if (!$b)
+			return ERROR_ARGUMENTS;
+
+		$p = "";
+		for($i = 0; $i < $number_of_actions; $i++)
+		{
+		  $index = $i + 1;
+		  if ($this->getPostParameter("modal"))
+		    $index = 0;
+
+		  $p .=  "
+			<div class = 'viz-accion card'>
+			  <div class='card-header viz-action-header' id = 'viz-action-header{$index}'>
+			    <span id = 'viz-action-id{$index}'> </span>";
+		  if(UserControl::validatePermissions(PERMISSIONS_ACTIONS))
+		  {
+		    $p .= "
+		    	<button type='button' class='btn btn-danger viz-action-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal' id = 'viz-action-borrar-boton{$index}'>Borrar</button>";
+		  }  
+
+		  $p .= "
+			  </div>
+			  <div class = 'card-body'>
+			    <!-- Empieza primera fila -->
+			    <div class='input-group mb-3'>
+			      <!-- Label nivel -->
+			      <div class='input-group-prepend'>
+			        <label class='input-group-text'>Nivel:</label>
+			      </div> 
+			      <!-- Input nivel -->
+			      <input class='form-control viz-action-threshold' type='number' placeholder='Nivel' id = 'viz-action-threshold{$index}'>
+			      <!-- Checkbox arriba / abajo -->
+			      <div class='input-group-append'>
+			        <div class='input-group-text'>                  
+			          Arriba / abajo
+			          <input class ='viz-checkbox' type='checkbox' aria-label='Checkbox for following text input' id = 'viz-action-updown{$index}'>
+			        </div>
+			      </div><!-- Acaba checkbox arriba / abajo -->
+			      <!-- Label salida -->
+			      <div class='input-group-prepend'>
+			        <label class='input-group-text'>Salida:</label>
+			      </div>
+			      <!-- Select salida -->
+			      <select class='custom-select viz-action-output' id = 'viz-action-output{$index}'>
+			      </select>
+			    </div> <!-- Acaba primera fila -->
+			    <!-- Empieza segunda fila -->
+			    <div class='input-group mb-3'>
+			      <!-- Label email -->
+			      <div class='input-group-prepend'>
+			        <label class='input-group-text'>Email:</label>
+			      </div>
+			      <!-- Input email -->
+			      <input class='form-control viz-action-email' type='text' placeholder='name@example.com' id = 'viz-action-email{$index}'>
+			      <!-- Label intervalo de notificaciones -->
+			      <div class='input-group-prepend'>
+			        <label class='input-group-text'>Intervalo de notificaciones:</label>
+			      </div>
+			      <!-- Intervalo de notificaciones -->
+			      <input class='form-control' type='number' placeholder='0' id = 'viz-action-interval{$index}'>
+			      <!-- Select minutos/horas/dias -->
+			      <select class='custom-select' id = 'viz-action-interval-suffix{$index}'>
+			      </select>
+			    </div> <!-- Acaba segunda fila -->
+			    <!-- Empieza tercera fila -->
+			    <div class='input-group'>
+			      <!-- Radio permanente -->
+			      <div class='input-group-prepend'>
+			        <div class='input-group-text'>                  
+			          Permanente
+			          <input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_PERMANENT . " >
+			        </div>
+			      </div>
+			      <!--Radio temporizador -->
+			      <div class='input-group-prepend'>
+			        <div class='input-group-text'>                  
+			          Temporizador
+			          <input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_DELAY . ">
+			        </div>
+			      </div>
+			      <!-- Input temporizador -->
+			      <input type='text' class='form-control' aria-label='Text input with radio button' placeholder = 'Tiempo activo' id = 'viz-action-delay{$index}'>
+			      <!-- Select segundos minutos horas temporizador -->
+			      <select class='custom-select' id = 'viz-action-delay-suffix{$index}'>
+			      </select>
+			      <!-- Radio durante -->
+			      <div class='input-group-prepend'>
+			        <div class='input-group-text'>                  
+			          Durante
+			          <input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' data-action-type = " . ACTION_EVENT . ">
+			        </div>
+			      </div>
+			    </div> <!-- Acaba tercera fila -->
+			  </div>
+			</div> <!-- Acaban acciones -->
+			  ";   
+		}
+
+		$this->setParameter("table", $p, $message);
+
+		return OK;
+	}
+
 	/**
 	* Compose Email.
 	*
@@ -309,7 +426,7 @@ class Actions extends Module
 		$message = "Entrada {$input} ha pasado el threshold {$threshold}" ;
 		$message .= ($updown == 0) ? "arriba" : "abajo";
 		$subject = "Alerta";
-		$header = "From: Alerta PLC Monitor";
+		$header = "From: Alerta SCADA";
 	}
 }
 ?>

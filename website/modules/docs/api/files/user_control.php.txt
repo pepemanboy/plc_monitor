@@ -5,10 +5,8 @@
 
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
 
 /**
  * User control module.
@@ -42,6 +40,7 @@ class UserControl extends Module
      */
     protected function initialize()
     {
+
     	$this->table_name = "plc_users";
 		$exists = False;
 		$r = $this->tableExists($exists); 
@@ -62,8 +61,9 @@ class UserControl extends Module
 			";
 			$r = mysqli_query($this->link, $query);
 			if (!$r)
-				return ERROR_QUERY;
+				return $r;
 		}
+
 
 		$empty = False;
 		$r = $this->tableEmpty($empty);
@@ -76,7 +76,6 @@ class UserControl extends Module
 			if (!$r)
 				return ERROR_QUERY;
 		}
-
 		return OK;
     }
 
@@ -405,6 +404,5 @@ class UserControl extends Module
 
 		return OK;
 	}
-
 }
 ?>

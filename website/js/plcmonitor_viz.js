@@ -47,8 +47,6 @@ $(document).ready(function() {
 		date: new Date(today_10)
 	});
 
-	// $("#datetimepicker2").datetimepicker("setDate", moment().format('YYYY-MM-DD HH:mm:ss'));
-
 });
 
 // Cuando se pica algun plc en el dropdown, actualizar g_plc

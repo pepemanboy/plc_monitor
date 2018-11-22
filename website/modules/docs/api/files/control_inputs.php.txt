@@ -5,10 +5,8 @@
 
 session_start();
 
-include_once("definitions.php");
-include_once("connect.php");
-include_once("plc_util.php");
-include_once("module.php");
+include_once( dirname(__FILE__) . '/module.php');
+include_once( dirname(__FILE__) . '/tabla_plcs.php');
 
 /**
  * PLC control inputs module.
@@ -45,8 +43,8 @@ class ControlInputs extends Module
 
 		$this->table_name = "plc{$plc_number}_inputs";
 
-		$name = "";
-		$r = findPlcById($this->link,$plc_number,$name);
+		$plc_table = new TablaPlcs();
+		$r = $plc_table->findPlcById($plc_number);
 		if ($r != OK)
 		  return $r;
 
@@ -74,7 +72,7 @@ class ControlInputs extends Module
 				ai6 int(11) NOT NULL	
 			)
 			";
-			$r = mysqli_query($this->link,$query);
+			$r = mysqli_query($this->link, $query);
 			if (!$r)
 				return ERROR_QUERY;
 		}
