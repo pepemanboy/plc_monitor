@@ -147,9 +147,12 @@ uint8_t _getArray(void * arr, uint8_t type, const char * key, uint8_t n)
     switch(type)
     {
       case type_uint8: ((uint8_t *)arr)[i] = (uint8_t)strtol(a,0,10); break;
-      case type_int: ((int *)arr)[i] = (int)strtol(a,0,10); break;
+      case type_int8: ((int8_t *)arr)[i] = (int8_t)strtol(a,0,10); break;
+      case type_uint16: ((uint16_t *)arr)[i] = (uint16_t)strtol(a,0,10); break;
+      case type_int16: ((int16_t *)arr)[i] = (int16_t)strtol(a,0,10); break;
+      case type_uint32: ((uint32_t *)arr)[i] = (uint32_t)strtol(a,0,10); break;
+      case type_int32: ((int32_t *)arr)[i] = (int32_t)strtol(a,0,10); break;
       case type_float: ((float *)arr)[i] = (float)atof(a); break;
-      case type_long: ((long *)arr)[i] = (long)strtol(a,0,10); break;
     }
     b = a + strlen(a) + 1;
     memset(a+strlen(a),d,1); // Restore token  
@@ -163,8 +166,8 @@ uint8_t _getArray(void * arr, uint8_t type, const char * key, uint8_t n)
 */
 uint8_t _waitClientAvailable()
 {
-  int i = 0;
-  int d = PLC_TIMEOUT_MS/PLC_TIMEOUT_DELAY_MS;
+  int16_t i = 0;
+  int16_t d = PLC_TIMEOUT_MS/PLC_TIMEOUT_DELAY_MS;
   while(!client.available())
   {
     delay(PLC_TIMEOUT_DELAY_MS);
@@ -181,8 +184,8 @@ uint8_t _waitClientAvailable()
 */
 uint8_t _waitClientDisconnect()
 {
-  int i = 0;
-  int d = PLC_TIMEOUT_MS/PLC_TIMEOUT_DELAY_MS;
+  int16_t i = 0;
+  int16_t d = PLC_TIMEOUT_MS/PLC_TIMEOUT_DELAY_MS;
   while(client.connected())
   {
     delay(PLC_TIMEOUT_DELAY_MS);
@@ -288,8 +291,8 @@ uint8_t _post(const char * url, const char * params)
   if(strstr(char_buf,"Transfer-Encoding: chunked"))
   {
     char n_[4] = "";
-    int nb;
-    int i = 0;
+    int16_t nb;
+    int16_t i = 0;
 
     char *a_;
     
@@ -420,7 +423,7 @@ uint8_t _retryPost(const char * url, const char * params, const char * msg)
  * @param e placeholder for outputs array
  * @return error code
 */
-uint8_t getResets(int * rr)
+uint8_t getResets(int32_t * rr)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
@@ -431,7 +434,7 @@ uint8_t getResets(int * rr)
     return Error;
   
   // Get resets
-  r = _getArray(rr,type_int,"resets(",DIGITAL_INPUT_COUNT);
+  r = _getArray(rr,type_int32,"resets(",DIGITAL_INPUT_COUNT);
   if (r != Ok)
     return r;
 
@@ -446,7 +449,7 @@ uint8_t getResets(int * rr)
  * @param e placeholder for outputs array
  * @return error code
 */
-uint8_t getDigitalInputs(int * di)
+uint8_t getDigitalInputs(uint32_t * di)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
@@ -456,8 +459,8 @@ uint8_t getDigitalInputs(int * di)
   if (checkErrors() != Ok)
     return Error;
   
-  // Get resets
-  r = _getArray(di,type_int,"di(",DIGITAL_INPUT_COUNT);
+  // Get counter values
+  r = _getArray(di,type_uint32,"di(",DIGITAL_INPUT_COUNT);
   if (r != Ok)
     return r;
 
@@ -530,7 +533,7 @@ uint8_t setOutputs(bool * dout)
  * @param di digital input array
  * @param analog input array
 */
-uint8_t setInputs(int * di, int * ai)
+uint8_t setInputs(uint32_t * di, uint32_t * ai)
 {
   char p[QUERY_BUFFER_SIZE];
   sprintf(p,"plc_number=%d&operation=set&",PLC_ID);
@@ -606,7 +609,7 @@ uint8_t logInput(uint8_t n, uint8_t type, float val)
  * @param delays_S
  * @return error code
 */
-uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbers, uint8_t * ids, float * thresholds, uint8_t * updowns, uint8_t * outputs, long * notification_interval_s, uint8_t * action_types, long * delays_s)
+uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbers, uint8_t * ids, float * thresholds, uint8_t * updowns, uint8_t * outputs, int32_t * notification_interval_s, uint8_t * action_types, int32_t * delays_s)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q,"plc_number=%d&operation=get&arduino=true",PLC_ID);
@@ -625,7 +628,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
   p = strtok(p,")");
   if (!p)
     return Error;
-  int n = strtol(p,0,10);  
+  int16_t n = strtol(p,0,10);  
   memset(p+strlen(p),')',1); // Restore strtok
   *num = n;
   
@@ -660,7 +663,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
     return r;
 
   // Get notification interval
-  r = _getArray(notification_interval_s,type_long,"notification_intervals_s(",n);
+  r = _getArray(notification_interval_s,type_int32,"notification_intervals_s(",n);
   if (r != Ok)
     return r;
 
@@ -670,7 +673,7 @@ uint8_t getActions(uint8_t * num, uint8_t * inputs_types, uint8_t * inputs_numbe
     return r;
 
   // Get delays
-  r = _getArray(delays_s,type_long,"delays_s(",n);
+  r = _getArray(delays_s,type_int32,"delays_s(",n);
   if (r != Ok)
     return r;
 

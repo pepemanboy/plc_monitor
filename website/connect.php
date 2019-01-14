@@ -40,6 +40,15 @@ function connectToDatabase(&$connection, $db = DATABASE)
 		_debug("Failed to connect to MySQL and database: " . mysqli_connect_error());
 		return ERROR_CONNECTION;
 	}
+
+	$query = "SET time_zone = '-06:00';";
+	$r = mysqli_query($connection, $query);
+	if (!$r)
+	{
+		_debug("Failed to set timezone");
+		return ERROR_CONNECTION;
+	}
+
 	return OK;
 }
 
