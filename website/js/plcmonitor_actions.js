@@ -16,44 +16,34 @@ var g_values = [];
 
 var g_actions = [];
 
-// On load
+/**
+ * Document. On load.
+ *
+ * Set webpage title, active navbar item.
+ */
 $(document).ready(function() {
 	setTitle("Actions");
-	$("#navbar-item-actions").addClass("active");
-	$("#navbar-item-actions").attr("href", "#");
+	activeNavbarItem("active");
 });
 
-// Cuando se pica algun plc en el dropdown, actualizar g_plc
+/**
+* Dropdown plc. On click.
+*
+* Update dropdown text, update g_plc with selected plc number, retrieve and display actions.
+*/
 $('.dropdown-plc').click(function() {
 	$(".plc-dropdown-menu").text($(this).text());
 	g_plc = Number($(this).attr('data-plc-number'));
-	$(".senales-dropdown-menu").text('Selecciona una senal');
-	g_signal_number = 0;
-	g_signal_type = "";
-	updateSignalDropdown(g_plc);
-	// displayActions([],0,0,0);
-	$("#viz-agregar-accion-boton").text("Selecciona una señal");
-	getActions(g_plc, 0, 0);
-});
-
-// Cuando se pica alguna senal en el dropdown, actualizar g_signal
-$('.dropdown-senales').click(function() {
-	if (g_plc < 1) {
-		vizStatus("Ningun PLC seleccionado");
-		return;
-	}
-	$(".senales-dropdown-menu").text($(this).text());
-	g_signal_number = Number($(this).attr('data-signal-number'));
-	g_signal_type = $(this).attr('data-signal-type');
 	$("#viz-agregar-accion-boton").removeClass("disabled");
-	vizStatus("OK");
-	getActions(g_plc, g_signal_number, g_signal_type);
-	var sn = g_signal_type.toUpperCase() + g_signal_number;
-	$("#viz-agregar-accion-boton").text("Agregar accion a " + sn);
+	// getActions(g_plc, 0, 0);
 });
 
-// Update signal dropdown names. n is plc number
-function updateSignalDropdown(n) {
+/**
+* Update variables dropdown. (di 1-6, ai 1-6, dout 1-6)
+*
+* @param {string} dropdown_name Dropdown to fill with action variables
+*/
+function updateVariablesDropdown(dropdown_name) {
 	if (g_plc < 1)
 		return false;
 
@@ -61,40 +51,72 @@ function updateSignalDropdown(n) {
 
 	$.post("modules/post.php", {
 			module: "config_program",
-			plc_number: n,
+			plc_number: g_plc,
 			operation: "get"
 		},
 		function(data, status) {
-
 			var err = getPhpVariable(data, "error");
 			vizStatus(err);
 			if (!plcOk(err))
 				return;
 
-			for (var i = 1; i <= 6; i++) {
-				di = getPhpArray(data, "di" + i);
-				ai = getPhpArray(data, "ai" + i);
-				g_do_names[i - 1] = getPhpArray(data, "do" + i)[0];
+			$(dropdown_name).html("");
 
-				$("#viz-signal-dropdown-di" + i).text("DI" + i + ": " + di[0]);
-				$("#viz-signal-dropdown-ai" + i).text("AI" + i + ": " + ai[0]);
+			$(dropdown_name).append( new Option ("None", "none"));
+
+			for (var i = 1; i <= 6; i++) {
+				var di = getPhpArray(data, "di" + i);
+				$(dropdown_name).append( new Option ("DI" + i + ": " + di[0], "di" + i));
 			}
 
+			for (var i = 1; i <= 6; i++) {
+				ai = getPhpArray(data, "ai" + i);
+				$(dropdown_name).append( new Option ("AI" + i + ": " + ai[0], "ai" + i));
+			}
+
+			for (var i = 1; i <= 6; i++) {
+				dout = getPhpArray(data, "do" + i);
+				$(dropdown_name).append( new Option ("DO" + i + ": " + dout[0], "do" + i));
+			}
 		});
 }
 
-// Report input status
+/**
+* Report status of actions module
+*/
 function vizStatus(status) {
 	$("#viz-status-indicator").text("Status: " + status);
 }
 
 
-$('.datetimepicker-input').on('input', function(e) {
-	// No dates
-	if ($("#datetimepicker1").val() == "" || $("#datetimepicker2").val() == "")
-		return false;
-	$("#viz-visualizar-fechas-boton").removeClass("disabled");
+$("#viz-agregar-accion-boton").click(function() {
+	showModalAction();
 });
+
+function showModalAction() {
+	$.post("modules/post.php", {
+			module: "viz_action",
+			operation: "action_box",
+			plc_number: g_plc,
+			number_of_actions: 1,
+			modal: true,
+		},
+		function(data, status) {
+			var err = getPhpVariable(data, "error");
+			vizStatus(err);
+			if (!plcOk(err))
+				return;
+
+			var a = getPhpVariable(data, "table");
+			$("#viz-agregar-modal-body").html(a);
+			updateVariablesDropdown(".actions-variables-dropdown");
+		});
+}
+
+
+
+
+/*
 
 // Obtener acciones. N es el numero de plc
 function getActions(plc_number, signal_number, signal_type) {
@@ -144,22 +166,19 @@ function getActions(plc_number, signal_number, signal_type) {
 		});
 }
 
-function displayActions(actions, signal_number, signal_type) {
-	// Filter for selected input
-	var signal_name = signal_type + signal_number;
-	var inputActions = actions.filter(function(el) {
-		return el.input == signal_name;
-	});
-	inputActions = actions;
-	if (inputActions.length < 1) {
+function displayActions(actions, signal_number, signal_type) 
+{
+	if (actions.length < 1) 
+	{
 		$("#viz-actions-row").html("");
 		return;
 	}
+
 	$.post("modules/post.php", {
 			module: "viz_action",
 			operation: "action_box",
 			plc_number: g_plc,
-			number_of_actions: inputActions.length
+			number_of_actions: actions.length
 		},
 		function(data, status) {
 			var err = getPhpVariable(data, "error");
@@ -169,7 +188,7 @@ function displayActions(actions, signal_number, signal_type) {
 
 			var a = getPhpVariable(data, "table");
 			$("#viz-actions-row").html(a);
-			fillActions(inputActions);
+			fillActions(actions);
 		});
 }
 
@@ -459,3 +478,4 @@ function verifyAction() {
 
 	return true;
 }
+*/

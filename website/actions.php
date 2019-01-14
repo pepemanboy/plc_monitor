@@ -15,7 +15,7 @@ UserControl::validateSession(); // Will redirect if fails
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
   <!-- CSS propio -->
   <link rel = "stylesheet" href = "css/plcmonitor.css">
-  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" />
+  <link rel="stylesheet" href="css/font-awesome.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
   <!-- Titulo de pagina --> 
   <title>PLC Monitor - Actions</title>
@@ -43,35 +43,7 @@ UserControl::validateSession(); // Will redirect if fails
           <?php include("control_devices_dropdown.php"); ?>
         </div>
       </div> <!-- Acaba dropdown plcs -->
-      <!-- Dropdown senales -->
-      <div class="dropdown dropdown-visualizador-senales">
-        <a class="btn btn-info dropdown-toggle senales-dropdown-menu" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display='static'>
-          Selecciona una senal
-        </a>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-          <?php 
-          for($i = 1; $i <= 6; $i++)
-          {
-            echo("
-              <a class='dropdown-item dropdown-senales' data-signal-type = 'di' data-signal-number = '" . $i . "' id = 'viz-signal-dropdown-di" . $i . "' href='#'>
-                Digital input " . $i . "
-              </a>
-              ");
-          }
-
-          for($i = 1; $i <= 6; $i++)
-          {
-            echo("
-              <a class='dropdown-item dropdown-senales' data-signal-type = 'ai' data-signal-number = '" . $i . "' id = 'viz-signal-dropdown-ai" . $i . "' href='#'>
-                Analog input " . $i . "
-              </a>
-              ");
-          }
-          ?>
-         
-        </div>
-      </div> <!-- Acaba dropdown senales -->
-    </div> <!-- Acaba titulo y dropdowns -->
+    </div> <!-- Acaba titulo y dropdown -->
     
     <!-- Boton de agregar accion -->
     <div class ='row'>
@@ -80,7 +52,13 @@ UserControl::validateSession(); // Will redirect if fails
     if(UserControl::validatePermissions(PERMISSIONS_ACTIONS))
     {
       echo("
-        <button type='button' class='btn btn-success btn-lg btn-block viz-agregar-accion-boton disabled' id = 'viz-agregar-accion-boton' data-toggle='modal' data-target='#viz-agregar-modal'>Selecciona una señal</button>
+        <div class = 'col-6'>
+        <button type='button' class='btn btn-success btn-lg btn-block disabled' id = 'viz-agregar-accion-boton' data-toggle='modal' data-target='#viz-agregar-modal'>Agregar una acción</button>
+        </div>
+
+        <div class = 'col-6'>
+        <button type='button' class='btn btn-success btn-lg btn-block viz-agregar-accion-boton disabled' id = 'viz-agregar-accion-boton' data-toggle='modal' data-target='#viz-agregar-modal'>Agregar una tarea programada</button>
+        </div>        
       ");
     }
     ?>

@@ -39,45 +39,45 @@ class Actions extends Module
      */
     protected function postInitialize()
     {
-		$b = True;
-		$plc_number = 0;
-		$b = $b && $this->getPostParameter("plc_number", $plc_number);
+    	$b = True;
+    	$plc_number = 0;
+    	$b = $b && $this->getPostParameter("plc_number", $plc_number);
 
-		if (!$b)
-			return ERROR_ARGUMENTS;
+    	if (!$b)
+    		return ERROR_ARGUMENTS;
 
-		$this->table_name = "plc{$plc_number}_actions";
+    	$this->table_name = "plc{$plc_number}_actions";
 
-		$plc_table = new TablaPlcs();
-		$r = $plc_table->findPlcById($plc_number);
-		if ($r != OK)
-		  return $r;
+    	$plc_table = new TablaPlcs();
+    	$r = $plc_table->findPlcById($plc_number);
+    	if ($r != OK)
+    		return $r;
 
-		$exists = False;
-		$r = $this->tableExists($exists); 
-		if ($r != OK)
-			return $r;
+    	$exists = False;
+    	$r = $this->tableExists($exists); 
+    	if ($r != OK)
+    		return $r;
 
-		if (!$exists)
-		{
-		  $query = "
-		  CREATE TABLE {$this->table_name} (
-		  id int NOT NULL AUTO_INCREMENT,
-		  input VARCHAR(10) NOT NULL,
-		  threshold float(12,2) NOT NULL,
-		  updown BIT NOT NULL,
-		  output int(11) NOT NULL,
-		  email VARCHAR(200) NOT NULL,
-		  notification_interval_s int(11) NOT NULL,
-		  action_type int(11) NOT NULL,
-		  delay_s int(11) NOT NULL,
-		  PRIMARY KEY (id))";
+    	if (!$exists)
+    	{
+    		$query = "
+    		CREATE TABLE {$this->table_name} (
+    		id int NOT NULL AUTO_INCREMENT,
+    		input VARCHAR(10) NOT NULL,
+    		threshold float(12,2) NOT NULL,
+    		updown BIT NOT NULL,
+    		output int(11) NOT NULL,
+    		email VARCHAR(200) NOT NULL,
+    		notification_interval_s int(11) NOT NULL,
+    		action_type int(11) NOT NULL,
+    		delay_s int(11) NOT NULL,
+    		PRIMARY KEY (id))";
 
-		  $r = mysqli_query($this->link, $query);
-		  if (!$r)
-		    return ERROR_QUERY;
-		}
-		return OK;
+    		$r = mysqli_query($this->link, $query);
+    		if (!$r)
+    			return ERROR_QUERY;
+    	}
+    	return OK;
     }
 
     /** PRIVATE FUNCTIONS */
@@ -92,19 +92,19 @@ class Actions extends Module
 	 * * "delete" | postDelete
 	 * * "email" | postEmail
 	 */
-	protected function postRequestData($operation, &$message)
-	{
-		echo("prd ");
-		switch ($operation) 
-		{
-		    case "add": return $this->postAdd($message);
-		    case "get": return $this->postGet($message);
-		    case "delete": return $this->postDelete($message);
-		    case "email": return $this->postEmail($message);
-		    case "action_box": return $this->postActionBox($message);
-		    default: return ERROR_ARGUMENTS; 
-	    }
-	}
+    protected function postRequestData($operation, &$message)
+    {
+    	echo("prd ");
+    	switch ($operation) 
+    	{
+    		case "add": return $this->postAdd($message);
+    		case "get": return $this->postGet($message);
+    		case "delete": return $this->postDelete($message);
+    		case "email": return $this->postEmail($message);
+    		case "action_box": return $this->postActionBox($message);
+    		default: return ERROR_ARGUMENTS; 
+    	}
+    }
 
 	/** 
 	* Add an action.
@@ -137,7 +137,7 @@ class Actions extends Module
 			$query = "DELETE FROM {$this->table_name} WHERE output = {$output};";
 			$r = mysqli_query($this->link, $query);
 			if (!$r)
-			  return ERROR_QUERY;    
+				return ERROR_QUERY;    
 		}
 
 		$query = "
@@ -311,96 +311,172 @@ class Actions extends Module
 		$p = "";
 		for($i = 0; $i < $number_of_actions; $i++)
 		{
-		  $index = $i + 1;
-		  if ($this->getPostParameter("modal"))
-		    $index = 0;
+			$index = $i + 1;
+			if ($this->getPostParameter("modal"))
+				$index = 0;
 
-		  $p .=  "
+			$p .=  "
 			<div class = 'viz-accion card'>
-			  <div class='card-header viz-action-header' id = 'viz-action-header{$index}'>
-			    <span id = 'viz-action-id{$index}'> </span>";
-		  if(UserControl::validatePermissions(PERMISSIONS_ACTIONS))
-		  {
-		    $p .= "
-		    	<button type='button' class='btn btn-danger viz-action-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal' id = 'viz-action-borrar-boton{$index}'>Borrar</button>";
-		  }  
+			<div class='card-header viz-action-header' id = 'viz-action-header{$index}'>
+			<span id = 'viz-action-id{$index}'> </span>";
+			else if(UserControl::validatePermissions(PERMISSIONS_ACTIONS))
+			{
+				$p .= "
+				<button type='button' class='btn btn-danger viz-action-borrar-boton' data-toggle='modal' data-target='#viz-borrar-modal' id = 'viz-action-borrar-boton{$index}'>Borrar</button>";
+			}  
+			
 
-		  $p .= "
-			  </div>
-			  <div class = 'card-body'>
-			    <!-- Empieza primera fila -->
-			    <div class='input-group mb-3'>
-			      <!-- Label nivel -->
-			      <div class='input-group-prepend'>
-			        <label class='input-group-text'>Nivel:</label>
-			      </div> 
-			      <!-- Input nivel -->
-			      <input class='form-control viz-action-threshold' type='number' placeholder='Nivel' id = 'viz-action-threshold{$index}'>
-			      <!-- Checkbox arriba / abajo -->
-			      <div class='input-group-append'>
-			        <div class='input-group-text'>                  
-			          Arriba / abajo
-			          <input class ='viz-checkbox' type='checkbox' aria-label='Checkbox for following text input' id = 'viz-action-updown{$index}'>
-			        </div>
-			      </div><!-- Acaba checkbox arriba / abajo -->
-			      <!-- Label salida -->
-			      <div class='input-group-prepend'>
-			        <label class='input-group-text'>Salida:</label>
-			      </div>
-			      <!-- Select salida -->
-			      <select class='custom-select viz-action-output' id = 'viz-action-output{$index}'>
-			      </select>
-			    </div> <!-- Acaba primera fila -->
-			    <!-- Empieza segunda fila -->
-			    <div class='input-group mb-3'>
-			      <!-- Label email -->
-			      <div class='input-group-prepend'>
-			        <label class='input-group-text'>Email:</label>
-			      </div>
-			      <!-- Input email -->
-			      <input class='form-control viz-action-email' type='text' placeholder='name@example.com' id = 'viz-action-email{$index}'>
-			      <!-- Label intervalo de notificaciones -->
-			      <div class='input-group-prepend'>
-			        <label class='input-group-text'>Intervalo de notificaciones:</label>
-			      </div>
-			      <!-- Intervalo de notificaciones -->
-			      <input class='form-control' type='number' placeholder='0' id = 'viz-action-interval{$index}'>
-			      <!-- Select minutos/horas/dias -->
-			      <select class='custom-select' id = 'viz-action-interval-suffix{$index}'>
-			      </select>
-			    </div> <!-- Acaba segunda fila -->
-			    <!-- Empieza tercera fila -->
-			    <div class='input-group'>
-			      <!-- Radio permanente -->
-			      <div class='input-group-prepend'>
-			        <div class='input-group-text'>                  
-			          Permanente
-			          <input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_PERMANENT . " >
-			        </div>
-			      </div>
-			      <!--Radio temporizador -->
-			      <div class='input-group-prepend'>
-			        <div class='input-group-text'>                  
-			          Temporizador
-			          <input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_DELAY . ">
-			        </div>
-			      </div>
-			      <!-- Input temporizador -->
-			      <input type='text' class='form-control' aria-label='Text input with radio button' placeholder = 'Tiempo activo' id = 'viz-action-delay{$index}'>
-			      <!-- Select segundos minutos horas temporizador -->
-			      <select class='custom-select' id = 'viz-action-delay-suffix{$index}'>
-			      </select>
-			      <!-- Radio durante -->
-			      <div class='input-group-prepend'>
-			        <div class='input-group-text'>                  
-			          Durante
-			          <input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' data-action-type = " . ACTION_EVENT . ">
-			        </div>
-			      </div>
-			    </div> <!-- Acaba tercera fila -->
-			  </div>
+			$p .= "
+			</div>
+			<!-- Empieza body de action card -->
+			<div class = 'card-body'>
+			<strong> Variables </strong>
+			";
+
+			for ($j = 0; $j < 2; $j++)
+			{
+				$p .= "
+				<!-- Empieza fila -->
+				<div class='input-group mb-3'>
+
+				<!-- Label variable -->
+				<div class='input-group-prepend'>
+				<label class='input-group-text'>Variable: </label>
+				</div> 			
+				<! -- Select variable -->		
+				<select class='custom-select actions-variables-dropdown'> </select>
+
+				<!-- Checkbox mayor / menor que -->
+				<div class='input-group-append'>
+				<div class='input-group-text'>                  
+				Mayor <i class='fa fa-square-o icon'> </i> menor <i class='fa fa-check-square-o icon'> </i>
+				<input class ='viz-checkbox' type='checkbox' id = 'viz-action-updown{$index}'>
+				</div>
+				</div><!-- Acaba checkbox -->
+
+				<!-- Label nivel -->
+				<div class='input-group-prepend'>
+				<label class='input-group-text'>Nivel:</label>
+				</div> 
+				<!-- Input nivel -->
+				<input class='form-control viz-action-threshold' type='number' placeholder='Nivel' id = 'viz-action-threshold{$index}'>
+
+				</div> <!-- Acaba fila -->
+				";
+
+				if ($j != 1)
+				{
+					$p .= "
+					<!-- Empieza fila -->
+					<div class='input-group mb-3'>
+
+					<!-- Checkbox AND / OR -->
+					<div class='input-group-addon'>
+					<div class='input-group-text'>                  
+					AND <i class='fa fa-square-o icon'> </i> OR <i class='fa fa-check-square-o icon'> </i>
+					<input class ='viz-checkbox' type='checkbox' id = 'viz-action-updown{$index}'>
+					</div>
+					</div><!-- Acaba checkbox -->
+
+					</div> <!-- Acaba fila -->
+					";
+				}
+			}
+
+			$p .= "
+			<strong> Salida </strong>
+
+			<!-- Empieza fila -->
+			<div class='input-group mb-3'>
+
+			<!-- Label output -->
+			<div class='input-group-prepend'>
+			<label class='input-group-text'>Output: </label>
+			</div> 			
+			<!-- Select output -->		
+			<select class='custom-select actions-outputs-dropdown'> </select>
+
+			<!-- Checkbox high / low -->
+			<div class='input-group-append'>
+			<div class='input-group-text'>                  
+			Low <i class='fa fa-square-o icon'> </i> High <i class='fa fa-check-square-o icon'> </i>
+			<input class ='viz-checkbox' type='checkbox' id = 'viz-action-updown{$index}'>
+			</div>
+			</div><!-- Acaba checkbox -->
+
+			</div> <!-- Acaba fila -->
+
+			<!-- Empieza fila -->
+			<div class='input-group mb-3'>
+
+			<!-- Radio permanente -->
+			<div class='input-group-prepend'>
+			<div class='input-group-text'>                  
+			Permanente
+			<input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_PERMANENT . " >
+			</div>
+			</div>
+			<!--Radio temporizador -->
+			<div class='input-group-prepend'>
+			<div class='input-group-text'>                  
+			Temporizador
+			<input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' aria-label='Radio button for following text input' id='' data-action-type = " . ACTION_DELAY . ">
+			</div>
+			</div>
+			<!-- Input temporizador -->
+			<input type='text' class='form-control' aria-label='Text input with radio button' placeholder = 'Tiempo activo' id = 'viz-action-delay{$index}'>
+			<!-- Select segundos minutos horas temporizador -->
+			<select class='custom-select' id = 'viz-action-delay-suffix{$index}'>
+			</select>
+			<!-- Radio durante -->
+			<div class='input-group-append'>
+			<div class='input-group-text'>                  
+			Durante
+			<input type='radio' class = 'viz-radio' name = 'viz-action-radios{$index}' data-action-type = " . ACTION_EVENT . ">
+			</div>
+			</div>
+
+			</div> <!-- Acaba fila -->
+			";
+
+			$p .= "
+			<strong> Notificaciones </strong>
+
+			<!-- Empieza fila -->
+			<div class='input-group mb-3'>
+
+			<!-- Label email -->
+			<div class='input-group-prepend'>
+			<label class='input-group-text'>Email:</label>
+			</div>
+			<!-- Input email -->
+			<input class='form-control viz-action-email' type='text' placeholder='name@example.com' id = 'viz-action-email{$index}'>
+			<!-- Label intervalo de notificaciones -->
+			<div class='input-group-prepend'>
+			<label class='input-group-text'>Intervalo de notificaciones:</label>
+			</div>
+			<!-- Intervalo de notificaciones -->
+			<input class='form-control' type='number' placeholder='0' id = 'viz-action-interval{$index}'>
+			<!-- Select minutos/horas/dias -->
+			<select class='custom-select' id = 'viz-action-interval-suffix{$index}'>
+			</select>
+
+			</div> <!-- Acaba fila -->
+
+
+			";
+
+
+
+
+
+			
+
+			$p .= "
+
+			</div> <!-- Acaba body de action card -->
 			</div> <!-- Acaban acciones -->
-			  ";   
+			";   
 		}
 
 		$this->setParameter("table", $p, $message);

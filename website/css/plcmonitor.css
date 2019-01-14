@@ -10,6 +10,11 @@ body {
 
 }
 
+.icon{
+	margin-left: 10px;
+	margin-right:10px;
+}
+
 .boton-refrescar{
 	margin-left: 20px;
 }
@@ -152,4 +157,8 @@ body {
 
 .options-title-row{
 	margin-bottom: 20px;
+}
+
+.actions-variables-dropdown{
+	min-width: 150px;
 }
