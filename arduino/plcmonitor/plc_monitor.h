@@ -189,9 +189,9 @@ uint8_t _plcGetActions()
 	float thresholds[MAX_ACTIONS];
 	uint8_t updowns[MAX_ACTIONS];
 	uint8_t outputs[MAX_ACTIONS];
-	long notification_interval_s[MAX_ACTIONS];
+	int32_t notification_interval_s[MAX_ACTIONS];
 	uint8_t action_types[MAX_ACTIONS];
-	long delays_s[MAX_ACTIONS];
+	int32_t delays_s[MAX_ACTIONS];
 
 	uint8_t r = getActions(&n,inputs_types, inputs_numbers,ids,thresholds,updowns,outputs,notification_interval_s,action_types,delays_s);
 	if(r != Ok)
@@ -270,8 +270,7 @@ uint8_t _plcGetOutputs()
 /* Get counters from the server */
 uint8_t _plcGetCounters()
 {
-  
-  long di[DIGITAL_INPUT_COUNT];
+  uint32_t di[DIGITAL_INPUT_COUNT];
 
   uint8_t r = getDigitalInputs(di);
   if (r != Ok)
@@ -294,8 +293,8 @@ uint8_t _plcGetCounters()
 /* Get reset counters from the server */
 uint8_t _plcResetCounters()
 {
+  int32_t rr[DIGITAL_INPUT_COUNT];
 
-  long rr[DIGITAL_INPUT_COUNT];
   uint8_t r = getResets(rr);
   if (r != Ok)
   {
@@ -347,13 +346,14 @@ uint8_t _plcSendOutputs()
 uint8_t _plcSendInputs()
 {
 	uint8_t i;
-	long din[DIGITAL_INPUT_COUNT];
-	long ain[ANALOG_INPUT_COUNT];
+
+	uint32_t din[DIGITAL_INPUT_COUNT];
+	uint32_t ain[ANALOG_INPUT_COUNT];
 
 	for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
 	{
 		din[i] = plcDevice.din[i].value;
-		ain[i] = plcDevice.ain[i].value;
+		ain[i] = plcDevice.ain[i].reading;
 	}
 
 	uint8_t r = setInputs(din,ain);

@@ -64,11 +64,13 @@ enum error_codes
 /* Data types */
 enum data_types
 {
-  type_int = 1, ///< Int 32
-  type_float, ///< Float
-  type_uint8, ///< Uint 8
-  type_long, ///< Long
-  type_ulong, ///< Unsigned long
+  type_uint8 = 1,
+  type_int8,
+  type_uint16,
+  type_int16,
+  type_uint32,
+  type_int32,
+  type_float,
 };
 
 /* Concatenate a string and a character*/
