@@ -33,6 +33,8 @@ class Module
     protected $initialized = False;
     /** @var string Table name in database. */
     protected $table_name = "";
+    /** Json parameters */
+    protected $json_parameters = array();
 
     /*** METHOD PROTOYPES, TO BE DEFINED BY SUBMODULES */
 
@@ -227,7 +229,9 @@ class Module
         $r = $this->postRequestData($operation, $message);
 
         end:
-        echo("{{$message}error({$r})}");
+        // echo("{{$message}error({$r})}");
+        $this->setJsonParameter("error", $r);
+        echo json_encode($this->json_parameters, JSON_NUMERIC_CHECK);
 
         return $r;
     }
@@ -260,6 +264,15 @@ class Module
     public function tableEmpty(&$empty)
     {
         return DbConnection::tableEmpty($this->link, $this->table_name, $empty);
+    }
+
+    /**
+    * Add parameter to Json
+    *
+    */
+    public function setJsonParameter($name, $value)
+    {
+        $this->json_parameters[$name] = $value;
     }
 }
 

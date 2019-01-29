@@ -184,7 +184,7 @@ class ControlInputs extends Module
 		    }
 		    else // Arduino
 		    {
-		    	$this->setParameterArray("di", $di, 6, $message);
+		    	$this->setJsonParameter("di", $di);
 		    }
 		    mysqli_free_result($result);
 		}

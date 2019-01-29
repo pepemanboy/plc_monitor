@@ -8,7 +8,7 @@ include_once( dirname(__FILE__) . "/customize.php");
 include_once( dirname(__FILE__) . "/reset_counter.php");
 include_once( dirname(__FILE__) . "/tabla_plcs.php");
 include_once( dirname(__FILE__) . "/user_control.php");
-include_once( dirname(__FILE__) . "/viz_action.php");
+// include_once( dirname(__FILE__) . "/viz_action.php");
 include_once( dirname(__FILE__) . "/viz_graph.php");
 
 $module_name = $_POST["module"];
@@ -23,7 +23,7 @@ switch ($module_name) {
 	case "reset_counter": $module = new ResetCounter(); break;
 	case "tabla_plcs": $module = new TablaPlcs(); break;
 	case "user_control": $module = new UserControl(); break;
-	case "viz_action": $module = new Actions(); break;
+	// case "viz_action": $module = new Actions(); break;
 	case "viz_graph": $module = new VizGraph(); break;
 	default: die("{error(" . ERROR_ARGUMENT . ")}");
 }

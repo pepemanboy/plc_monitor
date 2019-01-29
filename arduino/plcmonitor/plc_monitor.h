@@ -23,28 +23,6 @@ uint8_t _internalUpdate();
 /* Clear object using pointer */
 #define clearObject(p) memset((p), 0, sizeof(*(p)))
 
-/* Action structure */
-typedef struct Action Action;
-struct Action
-{	
-	uint8_t id; ///< Action id
-	uint8_t type; ///< Action type
-	uint8_t input_type; ///< Input number that will trigger the action
-	uint8_t input_number; ///< Input number that will trigger the action
-	float threshold; ///< Threshold for input value
-	uint8_t threshold_side; ///< Threshold side that triggers the action
-	uint8_t output; ///< Related output
-  uint32_t delay_elapsed_ms; ///< Time since trigger
-  uint32_t delay_ms; ///< Time for trigger to activate
-	bool delay_triggered; ///< Delay triggered flag
-  bool delay_finished; ///< Delay finished flag
-	int32_t notification_period_ms; ///< Notification period
-  uint32_t notification_elapsed_ms; ///< Elapsed ms since last notification was sent
-	bool permanent_triggered; ///< Permanent action triggered flag
-	bool event_triggered; ///< Event action triggered flag
-  bool notification_triggered; ///< First notification sent flag
-};
-
 /* Gain Offset Structure */
 typedef struct plc_gof plc_gof;
 struct plc_gof
@@ -84,14 +62,10 @@ struct PlcDevice
   plc_in_t * din; ///< Digital inputs
   plc_in_t * ain; ///< Analog inputs
   plc_do_t dout[OUTPUT_COUNT]; ///< Digital outputs
-	Action actions[MAX_ACTIONS]; ///< Actions
-  uint8_t actions_number; ///< Number of actions
   uint32_t timeStamp; ///< Timestamp
 	uint8_t logErrors; ///< Logging errors
 	uint8_t ioErrors; ///< IO errors
-	uint8_t actionErrors; ///< action errors
 	bool initialized; ///< Initialized flag
-  bool pendingOutputs[OUTPUT_COUNT]; ///< Pending to send outputs from actions
 };
 
 /* Global plcDevice */
@@ -99,7 +73,6 @@ PlcDevice plcDevice;
 
 /* Function prototype declarations */
 uint8_t _startupSequence();
-uint8_t _checkActions();
 uint8_t _setOutputs();
 
 /* Initialize plcDevice */
@@ -179,70 +152,6 @@ uint8_t _plcGetConfig()
 	return Ok;
 }
 
-/* Get actions from server */
-uint8_t _plcGetActions()
-{
-	uint8_t n; // Number of actions
-	uint8_t inputs_types[MAX_ACTIONS];
-	uint8_t inputs_numbers[MAX_ACTIONS];
-  uint8_t ids[MAX_ACTIONS];
-	float thresholds[MAX_ACTIONS];
-	uint8_t updowns[MAX_ACTIONS];
-	uint8_t outputs[MAX_ACTIONS];
-	int32_t notification_interval_s[MAX_ACTIONS];
-	uint8_t action_types[MAX_ACTIONS];
-	int32_t delays_s[MAX_ACTIONS];
-
-	uint8_t r = getActions(&n,inputs_types, inputs_numbers,ids,thresholds,updowns,outputs,notification_interval_s,action_types,delays_s);
-	if(r != Ok)
-  {
-    plcDebug("Failed to get actions. Error = ", r);
-    return r;
-  }
-
-  plcDevice.actions_number = n;
-
-	// Store old actions and initialize actions in 0
-	Action actions_[MAX_ACTIONS];
-  memcpy(actions_,plcDevice.actions,sizeof(plcDevice.actions));
-  memset(&plcDevice.actions, 0, sizeof(plcDevice.actions));
-
-	// Fetch new actions
-	for (uint8_t i = 0; i < n; ++i)
-	{
-    // Check if action exists
-    bool e = false; 
-    uint8_t j;
-    for (j = 0; j < MAX_ACTIONS; ++j)
-    {
-			if (ids[i] == actions_[j].id)
-      {
-        e = true;
-        break;
-      }
-		}
-		// Fill action
-		plcDevice.actions[i].id = ids[i];
-		plcDevice.actions[i].type = action_types[i];
-		plcDevice.actions[i].input_type = inputs_types[i];
-		plcDevice.actions[i].input_number = inputs_numbers[i];
-		plcDevice.actions[i].threshold = thresholds[i];
-		plcDevice.actions[i].threshold_side = updowns[i] == 0 ? threshold_trigger_above : threshold_trigger_below;
-		plcDevice.actions[i].output = outputs[i];
-		plcDevice.actions[i].delay_elapsed_ms = e ? actions_[j].delay_elapsed_ms : 0;
-		plcDevice.actions[i].delay_ms = delays_s[i] * 1000;
-		plcDevice.actions[i].delay_triggered = e ? actions_[j].delay_triggered : false;
-    plcDevice.actions[i].delay_finished = e ? actions_[j].delay_finished : false;
-		plcDevice.actions[i].notification_period_ms = notification_interval_s[i] * 1000;
-		plcDevice.actions[i].notification_elapsed_ms = e ? actions_[j].notification_elapsed_ms : 0;
-		plcDevice.actions[i].permanent_triggered = e ? actions_[j].permanent_triggered : false;
-		plcDevice.actions[i].event_triggered = e ? actions_[j].event_triggered : false;
-    plcDevice.actions[i].notification_triggered = e ? actions_[j].notification_triggered : false;
-	}
-
-	return Ok;
-}
-
 /* Get outputs from server */
 uint8_t _plcGetOutputs()
 {
@@ -256,19 +165,13 @@ uint8_t _plcGetOutputs()
     return r;    
   }
 
-	for (i = 0; i < OUTPUT_COUNT; i ++)
-	{
-    if(!plcDevice.pendingOutputs[i])
-		  plcDevice.dout[i].value = outputs[i] ? 1 : 0;
-	}
-
   _setOutputs();
 
 	return Ok;
 }
 
 /* Get counters from the server */
-uint8_t _plcGetCounters()
+res_t _plcGetCounters()
 {
   uint32_t di[DIGITAL_INPUT_COUNT];
 
@@ -291,7 +194,7 @@ uint8_t _plcGetCounters()
 }
 
 /* Get reset counters from the server */
-uint8_t _plcResetCounters()
+res_t _plcResetCounters()
 {
   int32_t rr[DIGITAL_INPUT_COUNT];
 
@@ -307,38 +210,6 @@ uint8_t _plcResetCounters()
     if(rr[i] < 0) continue;
     plcDevice.din[i].value = rr[i];
   }
-  return Ok;
-}
-
-/* Send outputs to server */
-uint8_t _plcSendOutputs()
-{  
-  // Check if there are pending outputs to send
-  bool b = false;
-  for (uint8_t i = 0; i < OUTPUT_COUNT; ++i)
-    if(plcDevice.pendingOutputs[i])
-    {
-      b = true;
-      break;
-    }
-  if (!b) return Ok;
-  
-  uint8_t i;
-  bool dout[OUTPUT_COUNT];
-
-  for (i = 0; i < OUTPUT_COUNT; i ++)
-  {
-    dout[i] = plcDevice.dout[i].value == 0 ? false : true;
-  }
-
-  uint8_t r = setOutputs(dout);
-  if (r != Ok)
-  {
-    plcDebug("Failed to send outputs. Error = ", r);
-    return r;
-  }
-
-  memset(&plcDevice.pendingOutputs,0,sizeof(plcDevice.pendingOutputs));
   return Ok;
 }
 
@@ -377,19 +248,6 @@ uint8_t _plcLogInput(plc_in_t * input)
   return Ok;
 }
 
-/* Send email notification */
-uint8_t _sendNotification(Action * action)
-{
-  uint8_t r = sendEmail(action->id);
-  if (r != Ok)
-  {
-    plcDebug("Failed to send notification. Error = ", r);
-    return r;
-  }
-  plcDebug("Sending notification");
-	return r;
-}
-
 /* Digital input types string name */
 String _typeString(uint8_t n)
 {
@@ -413,7 +271,6 @@ void _printPlcDevice()
   // Plc info
   Serial_print("PLC ID:" + String(plcDevice.id));
   Serial_print(" timestamp: " + String(plcDevice.timeStamp));
-  Serial_println(" actions: " + String(plcDevice.actions_number));
   // Digital inputs
   for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
@@ -447,34 +304,8 @@ void _printPlcDevice()
     Serial_println(" Value: " + String(plcDevice.dout[i].value));
   }
 
-  // Actions
-  for (i = 0; i < plcDevice.actions_number; i ++)
-  {    
-    // uint8_t action_type = plcDevice.actions[i].type;
-    // if (action_type == action_None) continue;
-    
-    Serial_print("Action #" + String(i));
-		Serial_print(" ID: " + String(plcDevice.actions[i].id));
-    Serial_print(" Type: " + String(plcDevice.actions[i].type));
-    Serial_print(", Input type: " +  _typeString(plcDevice.actions[i].input_type));
-    Serial_print(", Input number: " + String(plcDevice.actions[i].input_number));
-    Serial_print(", Output: " + String(plcDevice.actions[i].output));
-    Serial_print(", Threshold: " + String(plcDevice.actions[i].threshold));
-    Serial_print(", Threshold side: " + String(plcDevice.actions[i].threshold_side));
-    Serial_print(", Delay_Elapsed_ms: " + String(plcDevice.actions[i].delay_elapsed_ms));
-    Serial_print(", Delay_ms: " + String(plcDevice.actions[i].delay_ms));
-		Serial_print(", Notif: " + String(plcDevice.actions[i].notification_period_ms));
-		Serial_print(", Notif elapsed: " + String(plcDevice.actions[i].notification_elapsed_ms));
-		Serial_print(", Delay triggered: " + String(plcDevice.actions[i].delay_triggered));
-		Serial_print(", Delay finished: " + String(plcDevice.actions[i].delay_finished));
-		Serial_print(", Event triggered: " + String(plcDevice.actions[i].event_triggered));
-		Serial_print(", Permanent triggered: " + String(plcDevice.actions[i].permanent_triggered));
-    Serial_println(", Notification triggered: " + String(plcDevice.actions[i].notification_triggered));
-  }
-
 	// Errors
 	Serial_print("Errors. Error io: " + String(plcDevice.ioErrors));
-	Serial_print(" Error actions: " + String(plcDevice.actionErrors));
 	Serial_println(" Error log: " + String(plcDevice.logErrors));
 
   Serial_println("-------------------------------");\
@@ -502,7 +333,6 @@ void mockInputs()
     }
   }
 }
-
 
 /* Digital read */
 uint8_t _plcDigitalRead(uint8_t d)
@@ -553,13 +383,6 @@ void _updateTimestamps()
   for (i = 0; i < INPUT_COUNT; i ++)
 	{
     plcDevice.in[i].log_elapsed_ms += e;
-  }
-
-  // Action timestamps
-  for (i = 0; i < plcDevice.actions_number; ++ i)
-  {
-    plcDevice.actions[i].notification_elapsed_ms += e;
-    plcDevice.actions[i].delay_elapsed_ms += e;
   }
 }
 
@@ -626,7 +449,6 @@ uint8_t _internalUpdate()
 {
   _updateTimestamps();
   _readInputs();
-  _checkActions();
 }
 
 /* Update io */
@@ -647,137 +469,6 @@ uint8_t _updateIo()
  return plcDevice.ioErrors = r;
 }
 
-/* Get action input value */
-float _actionInputValue(Action * action)
-{
-	if (action->input_type == input_Analog)
-  {
-    return plcDevice.ain[action->input_number-1].value;
-	}
-	else
-  {
-    return plcDevice.din[action->input_number-1].value;
-  }
-}
-
-/* Check if action passed the threshold */
-bool _thresholdPassed(Action * action)
-{
-  if (action->threshold_side == threshold_trigger_above)
-    return _actionInputValue(action) > action->threshold;
-  else
-    return _actionInputValue(action) < action->threshold;
-}
-
-/* Check actions. Return true if need to send outputs */
-uint8_t _checkActions()
-{  
-  for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
-  {
-    uint8_t output = plcDevice.actions[i].output - 1;
-    if(output >= 0)
-    {
-      switch (plcDevice.actions[i].type)
-      {
-        case action_None: 
-          break;
-        case action_Permanent:
-          if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].permanent_triggered)
-          {
-            _plcDigitalWrite(output, HIGH);
-            plcDevice.pendingOutputs[output] = true;
-            plcDevice.actions[i].permanent_triggered = true;
-          }
-          if (plcDevice.dout[output].value == LOW && plcDevice.actions[i].permanent_triggered && !_thresholdPassed(&plcDevice.actions[i]))
-          {
-            plcDevice.actions[i].permanent_triggered = false;
-          }
-          break;
-        case action_Event:
-          if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].event_triggered)
-          {
-            _plcDigitalWrite(output,HIGH);
-            plcDevice.pendingOutputs[output] = true;
-            plcDevice.actions[i].event_triggered = true;
-          }
-          else if (!_thresholdPassed(&plcDevice.actions[i]) && plcDevice.actions[i].event_triggered)
-          {
-            _plcDigitalWrite(output,LOW);
-            plcDevice.pendingOutputs[output] = true;
-            plcDevice.actions[i].event_triggered = false;
-          }
-          break;
-        case action_Delay:
-          if (_thresholdPassed(&plcDevice.actions[i]) && !plcDevice.actions[i].delay_triggered)
-          {
-            plcDevice.actions[i].delay_triggered = true;
-            _plcDigitalWrite(output, HIGH);
-            plcDevice.pendingOutputs[output] = true;
-            plcDevice.actions[i].delay_elapsed_ms = 0;            
-          }
-          if (!plcDevice.actions[i].delay_finished && plcDevice.actions[i].delay_triggered && (plcDevice.actions[i].delay_elapsed_ms > plcDevice.actions[i].delay_ms))
-          {
-            _plcDigitalWrite(output, LOW);
-            plcDevice.pendingOutputs[output] = true;
-            plcDevice.actions[i].delay_finished = true;
-          }    
-          if (!_thresholdPassed(&plcDevice.actions[i]) && (plcDevice.actions[i].delay_finished || ((plcDevice.dout[output].value == LOW )&& (plcDevice.actions[i].delay_triggered))))
-          {
-            plcDevice.actions[i].delay_finished = false;
-            plcDevice.actions[i].delay_triggered = false;
-          }
-          break;    
-      }
-    }      
-  } 
-
-  return Ok;
-}
-
-/* Update actions */
-uint8_t _updateActions()
-{
-	uint8_t r = Ok;
-  
-  r |= _plcGetActions();
-  _checkActions();  
-
-  r |= _plcSendOutputs();
-
-  // Send notifications
-  for (uint8_t i = 0; i < plcDevice.actions_number; ++i)
-  {          
-    // Notifications
-    if (plcDevice.actions[i].notification_period_ms != 0)
-    {
-      if (_thresholdPassed(&plcDevice.actions[i]))
-      {
-        bool b = false;
-        if(!plcDevice.actions[i].notification_triggered)
-        {          
-          b = true;
-          plcDevice.actions[i].notification_triggered = true;
-        }
-        else if((plcDevice.actions[i].notification_elapsed_ms > plcDevice.actions[i].notification_period_ms) && (plcDevice.actions[i].notification_period_ms > 0))
-        {
-          b = true;
-        }   
-        if (b) // Send notification
-        {
-          r |= _sendNotification(&plcDevice.actions[i]);                    
-          plcDevice.actions[i].notification_elapsed_ms = 0;
-        }        
-      }
-      else // Threshold not passed
-      {
-        plcDevice.actions[i].notification_triggered = false;
-      }         
-    }
-  }
-  
-	return plcDevice.actionErrors = r;
-}
-
 /* Startup sequence */
 uint8_t _startupSequence()
 {
@@ -788,12 +479,10 @@ uint8_t _startupSequence()
     r |= _plcGetConfig();
     r |= _plcResetCounters(); // Dismiss
     r |= _plcGetCounters();  
-    r |= _plcGetActions(); 
     r |= _plcGetOutputs();
   }
   return r;
 }
-
 
 /* Update plc */
 uint8_t updatePlc()
@@ -801,7 +490,6 @@ uint8_t updatePlc()
   uint8_t r = Ok;
   
 	r |= _updateIo();
-  r |= _updateActions();
 	r |= _logInputs();
 
   ethernetResetWatchdog(); 
@@ -826,6 +514,7 @@ uint8_t displayRaw()
 void plc_init()
 {
   _initPlcMonitor();
+  _printPlcDevice();
 }
 
 void plc_mainLoop()

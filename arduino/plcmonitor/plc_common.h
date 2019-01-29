@@ -61,6 +61,8 @@ enum error_codes
   Error_maintain = 1<<7, ///<Cannot maintain connection
 };
 
+typedef uint8_t res_t;
+
 /* Data types */
 enum data_types
 {
@@ -121,7 +123,7 @@ void Serial_println(String s = "")
 void plcDebug(const char * s, int32_t n = 0)
 {
   #ifdef DEBUG
-  Serial_println("Debug: " + String(s) + String(n));
+  Serial_println("Debug: " + String(s) + " [" + String(n) + "]");
   #endif
   return;
 }
@@ -143,7 +145,7 @@ void lcdText(const char * s)
 }
 
 /* Error code string */
-uint8_t errorString(uint8_t e, char * s)
+res_t errorString(res_t e, char * s)
 {
   if (!s) return Error;
   switch(e)

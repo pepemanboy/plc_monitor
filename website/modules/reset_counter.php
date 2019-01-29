@@ -163,7 +163,7 @@ class ResetCounter extends Module
 		if ($result = mysqli_query($this->link, $query)) 
 		{
 		    $row = mysqli_fetch_row($result);   
-		    $this->setParameterArray("resets", $row, 6, $message);
+		    $this->setJsonParameter("resets", $row);
 		    mysqli_free_result($result);
 		}
 		else

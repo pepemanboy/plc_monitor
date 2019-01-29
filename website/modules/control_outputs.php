@@ -185,8 +185,17 @@ class ControlOutputs extends Module
 
 		if ($result = mysqli_query($this->link, $query)) 
 		{
-		    $row = mysqli_fetch_row($result);   
-		    $this->setParameterArray("digital_outputs", $row, 6, $message);
+		    $row = mysqli_fetch_row($result);  
+		     
+		    if(!$this->getPostParameter("arduino"))
+		    {		    	
+		    	$this->setParameterArray("digital_outputs", $row, 6, $message);
+		    }
+		    else // Arduino
+		    {
+		    	$this->setJsonParameter("do", $row);
+		    }		    
+		    
 		    mysqli_free_result($result);
 		}
 		else

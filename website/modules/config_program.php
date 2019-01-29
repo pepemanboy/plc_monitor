@@ -254,16 +254,23 @@ class Config extends Module
 			$row = mysqli_fetch_assoc($result);  
 			if ($this->getPostParameter("arduino"))
 			{
+				$di = array();
+				$ai = array();
 				for ($i = 1; $i <= 6; $i ++)
 				{
-					$this->setParameter("di{$i}", "{$row["di{$i}_freq"]},{$row["di{$i}_count"]}", $message);
-					$this->setParameter("ai{$i}", "{$row["ai{$i}_freq"]},{$row["ai{$i}_gain"]},{$row["ai{$i}_offs"]}", $message);
+					array_push($di, array("f" => $row["di{$i}_freq"], "c" =>$row["di{$i}_count"]));
+					array_push($ai, array("f" => $row["ai{$i}_freq"], "g" => $row["ai{$i}_gain"], "o" => $row["ai{$i}_offs"]));
+					// $di[$i] = array("f" => $row["di{$i}_freq"], "c" =>$row["di{$i}_count"]);
+					// $ai[$i] = array("f" => $row["ai{$i}_freq"], "g" => $row["ai{$i}_gain"], "o" => $row["ai{$i}_offs"]);
 				}
+				$this->setJsonParameter("di", $di);
+				$this->setJsonParameter("ai", $ai);
 			} 
 			else
 			{
 				for ($i = 1; $i <= 6; $i ++)
 				{
+					/** @TODO: change to Json **/
 					$this->setParameter("di{$i}", "{$row["di{$i}_name"]},{$row["di{$i}_freq"]},{$row["di{$i}_count"]}", $message);
 					$this->setParameter("ai{$i}", "{$row["ai{$i}_name"]},{$row["ai{$i}_freq"]},{$row["ai{$i}_gain"]},{$row["ai{$i}_offs"]}", $message);
 					$this->setParameter("do{$i}", "{$row["do{$i}_name"]}", $message);
