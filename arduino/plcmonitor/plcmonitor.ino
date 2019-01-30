@@ -5,5 +5,5 @@ void setup() {
 }
 
 void loop() {
-  // plc_mainLoop();
+  plc_mainLoop();
 }

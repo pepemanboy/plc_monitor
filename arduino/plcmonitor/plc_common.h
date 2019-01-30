@@ -58,10 +58,14 @@ enum error_codes
 	Error_inexistent = 1<<4, ///< PLC does not exist in server
   Error_overflow = 1<<5, ///< Overflow error
   Error_chunked = 1<<6, ///< Message does not come chunked
-  Error_maintain = 1<<7, ///<Cannot maintain connection
+  Error_maintain = 1<<7, ///< Cannot maintain connection
+  Error_available = 1<<8,
+  Error_httpstatus = 1<<9,
+  Error_httpheaders = 1<<10,
+  Error_jsonerror = 1<<11,
 };
 
-typedef uint8_t res_t;
+typedef uint16_t res_t;
 
 /* Data types */
 enum data_types
@@ -119,12 +123,16 @@ void Serial_println(String s = "")
 }
 #endif
 
+#ifdef DEBUG
+  #define PLC_DEBUG(s,n) plcDebug(s,n)
+#else
+  #define PLC_DEBUG(s,n) (void)0
+#endif
+
 /* Debug auxiliary function */
-void plcDebug(const char * s, int32_t n = 0)
+void plcDebug(const char * s, int32_t n)
 {
-  #ifdef DEBUG
   Serial_println("Debug: " + String(s) + " [" + String(n) + "]");
-  #endif
   return;
 }
 
@@ -159,9 +167,24 @@ res_t errorString(res_t e, char * s)
     case Error_overflow: strcpy(s, "Ovfl"); break;
     case Error_chunked: strcpy(s, "Chnk"); break;
     case Error_maintain: strcpy(s, "Mntn"); break;
+    case Error_available: strcpy(s, "Avai"); break;
+    case Error_httpstatus: strcpy(s, "Stat"); break;
+    case Error_httpheaders: strcpy(s, "Head"); break;
+    case Error_jsonerror: strcpy(s, "Json"); break;
     default: sprintf(s,"%d",e);
   }  
   return Ok;
+}
+
+/** Display error in LCD */
+void lcdError(res_t error, const char * msg)
+{
+  char es[10];
+  errorString(error,es);
+  char lcd_buf[PLC_LCD_BUFFER_SIZE] = "";
+  strcat(lcd_buf, msg);
+  strcat(lcd_buf, es);
+  lcdText(lcd_buf);
 }
 
 #endif //PLC_COMMON_H

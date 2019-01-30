@@ -15,7 +15,7 @@ float test_di[6];
 float test_ai[6];
 
 /* Functions to export */
-uint8_t _internalUpdate();
+void _internalUpdate();
 
 #include "plc_common.h"
 #include "plc_ethernet.h"
@@ -63,8 +63,8 @@ struct PlcDevice
   plc_in_t * ain; ///< Analog inputs
   plc_do_t dout[OUTPUT_COUNT]; ///< Digital outputs
   uint32_t timeStamp; ///< Timestamp
-	uint8_t logErrors; ///< Logging errors
-	uint8_t ioErrors; ///< IO errors
+	res_t logErrors; ///< Logging errors
+	res_t ioErrors; ///< IO errors
 	bool initialized; ///< Initialized flag
 };
 
@@ -72,8 +72,8 @@ struct PlcDevice
 PlcDevice plcDevice;
 
 /* Function prototype declarations */
-uint8_t _startupSequence();
-uint8_t _setOutputs();
+res_t _startupSequence();
+res_t _setOutputs();
 
 /* Initialize plcDevice */
 void _plcDeviceInit()
@@ -85,7 +85,7 @@ void _plcDeviceInit()
   plcDevice.id = PLC_ID;
 
   // Initialize inputs and outputs
-	for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+	for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
 		plcDevice.din[i].type = input_Digital;
     plcDevice.din[i].number = i+1;
@@ -123,7 +123,7 @@ void _initPlcMonitor()
 }
 
 /* Get config from server */
-uint8_t _plcGetConfig()
+res_t _plcGetConfig()
 {
 	uint32_t di_freq[6];
 	uint8_t di_count[6];
@@ -131,14 +131,14 @@ uint8_t _plcGetConfig()
 	float ai_gain[6];
 	float ai_offs[6];
 
-	uint8_t r = getConfig(di_freq, di_count, ai_freq, ai_gain, ai_offs);
+	res_t r = getConfig(di_freq, di_count, ai_freq, ai_gain, ai_offs);
 	if(r != Ok)
   {
-    plcDebug("Failed to get config, error = ", r);
+    PLC_DEBUG("Failed to get config, error = ", r);
     return r;
   }
 
-	for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i++)
+	for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
 	{
 		plcDevice.din[i].log_period_ms = di_freq[i] * 1000;
     uint8_t previous_type = plcDevice.din[i].type;
@@ -153,17 +153,19 @@ uint8_t _plcGetConfig()
 }
 
 /* Get outputs from server */
-uint8_t _plcGetOutputs()
+res_t _plcGetOutputs()
 {
-	uint8_t i;
 	bool outputs[OUTPUT_COUNT];
 
-	uint8_t r = getOutputs(outputs);
+	res_t r = getOutputs(outputs);
 	if (r != Ok)
   {
-    plcDebug("Failed to get outputs. Error = ", r);
+    PLC_DEBUG("Failed to get outputs. Error = ", r);
     return r;    
   }
+
+  for (uint8_t i = 0; i < OUTPUT_COUNT; ++i)
+    plcDevice.dout[i].value = outputs[i];
 
   _setOutputs();
 
@@ -175,19 +177,17 @@ res_t _plcGetCounters()
 {
   uint32_t di[DIGITAL_INPUT_COUNT];
 
-  uint8_t r = getDigitalInputs(di);
+  res_t r = getDigitalInputs(di);
   if (r != Ok)
   {
-    plcDebug("Failed to get counters. Error = ", r);
+    PLC_DEBUG("Failed to get counters. Error = ", r);
     return r;  
   }
 
-  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
     if (plcDevice.din[i].type == input_Counter)
-    {
       plcDevice.din[i].value = di[i];
-    }
   }
 
   return Ok;  
@@ -198,56 +198,57 @@ res_t _plcResetCounters()
 {
   int32_t rr[DIGITAL_INPUT_COUNT];
 
-  uint8_t r = getResets(rr);
+  res_t r = getResets(rr);
   if (r != Ok)
   {
-    plcDebug("Failed to get resets. Error = ", r);
+    PLC_DEBUG("Failed to get resets. Error = ", r);
     return r;  
   }
 
-  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
     if(rr[i] < 0) continue;
     plcDevice.din[i].value = rr[i];
   }
+  
   return Ok;
 }
 
 /* Send inputs to server */
-uint8_t _plcSendInputs()
+res_t _plcSendInputs()
 {
-	uint8_t i;
-
 	uint32_t din[DIGITAL_INPUT_COUNT];
 	uint32_t ain[ANALOG_INPUT_COUNT];
 
-	for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+	for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
 	{
 		din[i] = plcDevice.din[i].value;
 		ain[i] = plcDevice.ain[i].reading;
 	}
 
-	uint8_t r = setInputs(din,ain);
+	res_t r = setInputs(din,ain);
 	if (r != Ok)
   {
-    plcDebug("Failed to send inputs. Error = ", r);
+    PLC_DEBUG("Failed to send inputs. Error = ", r);
     return r;
   }
+  
   return Ok;
 }
 
 /* Log input to server */
-uint8_t _plcLogInput(plc_in_t * input)
+res_t _plcLogInput(plc_in_t * input)
 {
-	uint8_t r = logInput(input->number, input->type == input_Analog ? input_Analog : input_Digital , input->value);
+	res_t r = logInput(input->number, input->type == input_Analog ? input_Analog : input_Digital , input->value);
 	if (r != Ok)
   {
-    plcDebug("Failed to log input. Error = ", r);
+    PLC_DEBUG("Failed to log input. Error = ", r);
     return r;
   }
   return Ok;
 }
 
+#ifdef DEBUG
 /* Digital input types string name */
 String _typeString(uint8_t n)
 {
@@ -263,14 +264,11 @@ String _typeString(uint8_t n)
 /* Print device */
 void _printPlcDevice()
 {
-  #ifndef DEBUG
-  return;
-  #else
   uint8_t i;
   Serial_println("-------------------------------");
   // Plc info
   Serial_print("PLC ID:" + String(plcDevice.id));
-  Serial_print(" timestamp: " + String(plcDevice.timeStamp));
+  Serial_println(" timestamp: " + String(plcDevice.timeStamp));
   // Digital inputs
   for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
   {
@@ -311,7 +309,6 @@ void _printPlcDevice()
   Serial_println("-------------------------------");\
   Serial_println();
   Serial_println();
-  #endif
 }
 
 /* Mock inputs */
@@ -324,15 +321,12 @@ void mockInputs()
     uint8_t input_number = s.substring(s.indexOf("i")+1,s.indexOf(",")).toInt()-1;
     float value = s.substring(s.indexOf(",")+1).toFloat();
     if(input_type == input_Analog)
-    {
       test_ai[input_number] = value;
-    }
     else
-    {
       test_di[input_number] = value;
-    }
   }
 }
+#endif // DEBUG
 
 /* Digital read */
 uint8_t _plcDigitalRead(uint8_t d)
@@ -377,19 +371,15 @@ void _updateTimestamps()
   uint32_t e = t - plcDevice.timeStamp; // elapsed
   plcDevice.timeStamp = t; // update timestamp
 
-  uint8_t i;
-
   // Input timestamps
-  for (i = 0; i < INPUT_COUNT; i ++)
-	{
+  for (uint8_t i = 0; i < INPUT_COUNT; ++i)
     plcDevice.in[i].log_elapsed_ms += e;
-  }
 }
 
 /* Log inputs */
-uint8_t _logInputs()
+res_t _logInputs()
 {  
-	uint8_t r = Ok;
+	res_t r = Ok;
   for (uint8_t i = 0; i < INPUT_COUNT; i++)
   {  
     if (plcDevice.in[i].log_period_ms == 0) continue; // No logging
@@ -403,7 +393,7 @@ uint8_t _logInputs()
 }
 
 /* Read inputs */
-uint8_t _readInputs()
+res_t _readInputs()
 {
   // Digital inputs
   for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; i ++)
@@ -433,29 +423,25 @@ uint8_t _readInputs()
 }
 
 /* Set outputs */
-uint8_t _setOutputs()
+res_t _setOutputs()
 {
-  // Outputs
   for (uint8_t i = 0; i < OUTPUT_COUNT; i++)
-  {
     _plcDigitalWrite(i, plcDevice.dout[i].value);
-  }
 
   return Ok;
 }
 
 /* Internal update */
-uint8_t _internalUpdate()
+void _internalUpdate()
 {
   _updateTimestamps();
   _readInputs();
 }
 
 /* Update io */
-uint8_t _updateIo()
+res_t _updateIo()
 {  
-	uint8_t i;
-	uint8_t r = Ok;
+	res_t r = Ok;
 
   r |= _plcGetConfig();
   r |= _plcResetCounters();
@@ -470,14 +456,14 @@ uint8_t _updateIo()
 }
 
 /* Startup sequence */
-uint8_t _startupSequence()
+res_t _startupSequence()
 {
-  uint8_t r = Error;
+  res_t r = Error;
   while (r != Ok)
   {
     r = Ok;
     r |= _plcGetConfig();
-    r |= _plcResetCounters(); // Dismiss
+    r |= _plcResetCounters();
     r |= _plcGetCounters();  
     r |= _plcGetOutputs();
   }
@@ -485,38 +471,43 @@ uint8_t _startupSequence()
 }
 
 /* Update plc */
-uint8_t updatePlc()
+res_t updatePlc()
 { 
-  uint8_t r = Ok;
+  res_t r = Ok;
   
 	r |= _updateIo();
 	r |= _logInputs();
 
   ethernetResetWatchdog(); 
+  #ifdef DEBUG
   _printPlcDevice();
+  #endif
   return r;
 }
 
 /* Display analog inputs */
-uint8_t displayRaw()
+void displayRaw()
 {
   plc_lcd.clear(); // Clear the screen 
-  for(uint8_t i = 1; i <= 6; i ++){
+  for(uint8_t i = 1; i <= 6; ++i){
     plc_lcd.setCursor(((i-1)%3)*4,(i-1)/3); // Set the cursor in Column 0, Row 0 of the LCD  
     char buf[PLC_LCD_BUFFER_SIZE] = "";
     sprintf(buf,"%d",plc_analogRead(i));
     plc_lcd.print(buf); // Print this text where the cursor is
   }
   delay(500);
-  return Ok;
 }
 
+/* Initialize plc */
 void plc_init()
 {
   _initPlcMonitor();
+  #ifdef DEBUG
   _printPlcDevice();
+  #endif
 }
 
+/* Main loop */
 void plc_mainLoop()
 {
   if (plc_buttonRead(1)) 
