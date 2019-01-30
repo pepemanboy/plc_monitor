@@ -283,7 +283,8 @@ res_t getResets(int32_t * rr)
   res_t r = _retryPostJson("fase2/modules/post.php", q, "cnt_res: ");
   if (r != Ok)
     return r;
-  
+
+  g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
   if (!root.success())
   {
@@ -318,7 +319,8 @@ res_t getDigitalInputs(uint32_t * di)
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=control_inputs&plc_number=%d&operation=get&arduino=true", PLC_ID);
   _retryPostJson("fase2/modules/post.php", q, "get_in: ");
-  
+
+  g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
   if (!root.success())
   {
@@ -353,7 +355,8 @@ res_t getOutputs(bool * o)
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=control_outputs&plc_number=%d&operation=get&arduino=true", PLC_ID);
   _retryPostJson("fase2/modules/post.php", q, "get_out: ");
-  
+
+  g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
   if (!root.success())
   {
@@ -389,11 +392,12 @@ res_t setInputs(uint32_t * di, uint32_t * ai)
   sprintf(q, "module=control_inputs&plc_number=%d&operation=set&arduino=true&", PLC_ID);
   for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
-    sprintf(q+strlen(q),"di%d=%d&ai%d=%d",i+1,di[i],i+1,ai[i]);
+    sprintf(q+strlen(q),"di%d=%lu&ai%d=%lu",i+1,di[i],i+1,ai[i]);
     if(i != (DIGITAL_INPUT_COUNT - 1)) strcat(q,"&");
   }
   _retryPostJson("fase2/modules/post.php", q, "set_in: ");
-  
+
+  g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
   if (!root.success())
   {
@@ -429,8 +433,9 @@ res_t logInput(uint8_t n, uint8_t type, float val)
   strcat(q,"&value=");
   dtostrf(val,3,2,q+strlen(q));
   _retryPostJson("fase2/modules/post.php", q, "log_in: ");
-  
- JsonObject& root = g_jsonBuffer.parseObject(g_buf);
+
+  g_jsonBuffer.clear();
+  JsonObject& root = g_jsonBuffer.parseObject(g_buf);
   if (!root.success())
   {
     res_t r = Error_chunked;
@@ -444,7 +449,7 @@ res_t logInput(uint8_t n, uint8_t type, float val)
     lcdError(r, "cnt_res: ");
     return r;
   }
-    
+
   return Ok;
 }
 
@@ -465,7 +470,8 @@ res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, floa
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=config_program&plc_number=%d&operation=get&arduino=true&poweron=%d", PLC_ID, g_power_on);
   _retryPostJson("fase2/modules/post.php", q, "get_cfg: ");
-  
+
+  g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
   if (!root.success())
   {
