@@ -130,11 +130,13 @@ void Serial_println(String s = "")
 #endif
 
 /* Debug auxiliary function */
+#ifdef DEBUG
 void plcDebug(const char * s, int32_t n)
 {
   Serial_println("Debug: " + String(s) + " [" + String(n) + "]");
   return;
 }
+#endif
 
 /* Reset function */
 void(* softReset) (void) = 0; //declare reset function at address 0

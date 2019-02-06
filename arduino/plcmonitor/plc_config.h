@@ -11,13 +11,13 @@
 #define PLC_CONFIG_H
 
 /** PLC ID PREVIOUSLY DEFINED ON THE WEBSITE */
-#define PLC_ID (14)
+#define PLC_ID (1)
 
 /** PLC MAC ADDRESS */
 #define PLC_MAC { 0x90, 0xA2, 0xDA, 0x11, 0x10, PLC_ID }
 
 /** DEFINE IF DYNAMIC IP IS PREFERRED */
-#define PLC_DYNAMIC_IP
+// #define PLC_DYNAMIC_IP
 
 /** PLC IP */
 #define PLC_IP {192, 168, 1, (20+PLC_ID)}
@@ -26,7 +26,7 @@
 #define PLC_DNS { 8, 8, 8, 8}
 
 /** MODEM GATEWAY */
-#define PLC_GATEWAY { 192, 168, 137, 254 }
+#define PLC_GATEWAY { 192, 168, 1, 254 }
 
 /** MODEM SUBNET MASK */
 #define PLC_SUBNET { 255, 255, 255, 0 }
@@ -49,8 +49,8 @@
 /*** ADVANCED CONFIGURATION ***/
 
 /** ENABLE DEBUGGING. ONLY ADVANCED USE */
-#define DEBUG
-#define DEBUG_REQUEST
+// #define DEBUG
+// #define DEBUG_REQUEST
 
 /** ETHERNET LIBRARY VERSION */
 #define PLC_ETHERNET_VERSION_2
