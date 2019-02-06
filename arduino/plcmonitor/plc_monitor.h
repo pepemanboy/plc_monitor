@@ -264,51 +264,52 @@ String _typeString(uint8_t n)
 /* Print device */
 void _printPlcDevice()
 {
-  uint8_t i;
-  Serial_println("-------------------------------");
-  // Plc info
-  Serial_print("PLC ID:" + String(plcDevice.id));
-  Serial_println(" timestamp: " + String(plcDevice.timeStamp));
-  // Digital inputs
-  for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
-  {
-    Serial_print("DI #" + String(plcDevice.din[i].number));
-    Serial_print(" Type: " + _typeString(plcDevice.din[i].type));
-    Serial_print(", Value: " + String(plcDevice.din[i].value));
-    Serial_print(", Log period ms: " + String(plcDevice.din[i].log_period_ms));
-    Serial_print(", Log elapsed ms: " + String(plcDevice.din[i].log_elapsed_ms));
-    Serial_print(", Reading: " + String(plcDevice.din[i].reading));
-    Serial_println(", Reading_: " + String(plcDevice.din[i].reading_));
-  }
-
-  // Analog inputs
-  for (i = 0; i < ANALOG_INPUT_COUNT; i ++)
-  {
-    Serial_print("AI #" + String(plcDevice.ain[i].number));
-    Serial_print(" Type: " + _typeString(plcDevice.ain[i].type));
-    Serial_print(", Value: " + String(plcDevice.ain[i].value));
-    Serial_print(", Log period ms: " + String(plcDevice.ain[i].log_period_ms));
-    Serial_print(", Log elapsed ms: " + String(plcDevice.ain[i].log_elapsed_ms));
-    Serial_print(", Reading: " + String(plcDevice.ain[i].reading));
-    Serial_print(", Reading_: " + String(plcDevice.ain[i].reading_));
-    Serial_print(", Gain: " + String(plcDevice.ain[i].gof.g));
-    Serial_println(", Offset: " + String(plcDevice.ain[i].gof.o));
-  }
-
-  // Outputs
-  for (i = 0; i < OUTPUT_COUNT; i ++)
-  {
-    Serial_print("DO #" + String(plcDevice.dout[i].number));
-    Serial_println(" Value: " + String(plcDevice.dout[i].value));
-  }
-
-	// Errors
-	Serial_print("Errors. Error io: " + String(plcDevice.ioErrors));
-	Serial_println(" Error log: " + String(plcDevice.logErrors));
-
-  Serial_println("-------------------------------");\
-  Serial_println();
-  Serial_println();
+//  
+//  uint8_t i;
+//  Serial_println("-------------------------------");
+//  // Plc info
+//  Serial_print("PLC ID:" + String(plcDevice.id));
+//  Serial_println(" timestamp: " + String(plcDevice.timeStamp));
+//  // Digital inputs
+//  for (i = 0; i < DIGITAL_INPUT_COUNT; i ++)
+//  {
+//    Serial_print("DI #" + String(plcDevice.din[i].number));
+//    Serial_print(" Type: " + _typeString(plcDevice.din[i].type));
+//    Serial_print(", Value: " + String(plcDevice.din[i].value));
+//    Serial_print(", Log period ms: " + String(plcDevice.din[i].log_period_ms));
+//    Serial_print(", Log elapsed ms: " + String(plcDevice.din[i].log_elapsed_ms));
+//    Serial_print(", Reading: " + String(plcDevice.din[i].reading));
+//    Serial_println(", Reading_: " + String(plcDevice.din[i].reading_));
+//  }
+//
+//  // Analog inputs
+//  for (i = 0; i < ANALOG_INPUT_COUNT; i ++)
+//  {
+//    Serial_print("AI #" + String(plcDevice.ain[i].number));
+//    Serial_print(" Type: " + _typeString(plcDevice.ain[i].type));
+//    Serial_print(", Value: " + String(plcDevice.ain[i].value));
+//    Serial_print(", Log period ms: " + String(plcDevice.ain[i].log_period_ms));
+//    Serial_print(", Log elapsed ms: " + String(plcDevice.ain[i].log_elapsed_ms));
+//    Serial_print(", Reading: " + String(plcDevice.ain[i].reading));
+//    Serial_print(", Reading_: " + String(plcDevice.ain[i].reading_));
+//    Serial_print(", Gain: " + String(plcDevice.ain[i].gof.g));
+//    Serial_println(", Offset: " + String(plcDevice.ain[i].gof.o));
+//  }
+//
+//  // Outputs
+//  for (i = 0; i < OUTPUT_COUNT; i ++)
+//  {
+//    Serial_print("DO #" + String(plcDevice.dout[i].number));
+//    Serial_println(" Value: " + String(plcDevice.dout[i].value));
+//  }
+//
+//	// Errors
+//	Serial_print("Errors. Error io: " + String(plcDevice.ioErrors));
+//	Serial_println(" Error log: " + String(plcDevice.logErrors));
+//
+//  Serial_println("-------------------------------");
+//  Serial_println();
+//  Serial_println();
 }
 
 /* Mock inputs */
