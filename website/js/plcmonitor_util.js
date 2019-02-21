@@ -128,6 +128,8 @@ function getPhpVar(response_str, variable_str) {
  * @return {boolean} true if OK, else false.
  */
 function plcOk(error_code) {
+	if (!error_code)
+		return false;
 	var ok_code = "OK";
 	return (error_code == ok_code);
 }
