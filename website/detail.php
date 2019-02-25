@@ -59,6 +59,7 @@ if (!UserControl::adminSession())
               <th scope="col">DO4</th>
               <th scope="col">DO5</th>
               <th scope="col">DO6</th>
+              <th scope="col">Confirm</th>
             </tr>
           </thead>
           <tbody id = "detail-table-body">

@@ -28,6 +28,8 @@ $(document).ready(function() {
 
 /*** CUSTOM FUNCTIONS */
 
+g_data = 0;
+
 /**
  * Update plcs information.
  *
@@ -35,31 +37,39 @@ $(document).ready(function() {
  */
 function updatePlcs() {
 	moduleStatus("Querying table");
+
 	$.post("modules/post.php", {
 			module: "tabla_plcs",
 			operation: "get",
 			format: "array",
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+
+			var json_data = jQuery.parseJSON(data);
+			g_data = json_data;
+
+			var err = json_data.error;
+
+			detailStatus(err);
 			if (!plcOk(err))
 				return;
 
-			var ids = getPhpArr(data, "ids");
-			if (ids.error)
+			var ids = json_data.ids;
+			if (!ids)
 				return;
 
-			var names = getPhpArr(data, "names");
-			if (names.error)
+			var names = json_data.names;
+			if (!names)
 				return;
 
-			for (var i = 0; i < ids.val.length; ++i) {
+			for (var i = 0; i < ids.length; ++i) {
 				g_plcs.push({
-					id: ids.val[i],
-					name: names.val[i],
+					id: ids[i],
+					name: names[i],
 					di: [],
 					ai: [],
 					do: [],
+					confirmation: 0,
 					err: false,
 					ready: 0
 				});
@@ -80,7 +90,6 @@ function updatePlcs() {
 			}
 
 			getIO();
-			// getOutputs();
 		});
 }
 
@@ -107,13 +116,22 @@ function getInputs(n) {
 			operation: "get"
 		},
 		function(data, status) {
-			var digital_inputs = getPhpArray(data, "digital_inputs").map(Number);
-			var analog_inputs = getPhpArray(data, "analog_inputs").map(Number);
-			var err = getPhpVariable(data, "error");
-			if (!plcOk(err)) {
+
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			var digital_inputs = json_data.digital_inputs;
+			var analog_inputs = json_data.analog_inputs;
+
+			if (!digital_inputs || !analog_inputs || !plcOk(err))
+			{
 				g_plcs[n].err = true;
 				return;
 			}
+
+			digital_inputs = digital_inputs.map(Number);
+			analog_inputs = analog_inputs.map(Number);
+
 			for (i = 0; i < 6; i++) {
 				g_plcs[n].di[i].val = digital_inputs[i];
 				g_plcs[n].ai[i].val = analog_inputs[i];
@@ -135,16 +153,23 @@ function getOutputs(n) {
 			operation: "get"
 		},
 		function(data, status) {
-			var digital_outputs = getPhpArray(data, "digital_outputs").map(Number);
-			var err = getPhpVariable(data, "error");
-			if (!plcOk(err)) {
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			var digital_outputs = json_data.digital_outputs;
+			var confirmation = json_data.confirmation;
+
+			if (!digital_outputs || !plcOk(err))
+			{
 				g_plcs[n].err = true;
 				return;
 			}
+
 			for (i = 0; i < 6; i++) {
 				g_plcs[n].do[i].val = digital_outputs[i];
 			}
 			g_plcs[n].ready |= READY_OUTPUT_VALUES;
+			g_plcs[n].confirmation = confirmation;
 			updateTable();
 		});
 }
@@ -162,20 +187,23 @@ function getNames(n) {
 		},
 		function(data, status) {
 
-			var err = getPhpVariable(data, "error");
-			if (!plcOk(err)) {
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			if (!plcOk(err))
+			{
 				g_plcs[n].err = true;
 				return;
 			}
 
-			for (var i = 1; i <= 6; i++) {
-				ai_name = getPhpArray(data, "ai" + i)[0];
-				di_name = getPhpArray(data, "di" + i)[0];
-				do_name = getPhpArray(data, "do" + i)[0];
+			for (var i = 0; i < 6; i++) {
+				ai_name = json_data.ai[i].name;
+				di_name = json_data.di[i].name;
+				do_name = json_data.do[i].name;
 
-				g_plcs[n].ai[i - 1].name = ai_name;
-				g_plcs[n].di[i - 1].name = di_name;
-				g_plcs[n].do[i - 1].name = do_name;
+				g_plcs[n].ai[i].name = ai_name;
+				g_plcs[n].di[i].name = di_name;
+				g_plcs[n].do[i].name = do_name;
 			}
 			g_plcs[n].ready |= READY_NAMES;
 			updateTable();
@@ -213,6 +241,10 @@ function updateTable() {
 			do_txt = "<button type = 'button' class = '" + do_class + "'>" + do_val + "</button>";
 			$("#" + row_name).append("<td data-toggle='tooltip' data-placement='top' title='" + g_plcs[i].do[j].name + "'>" + do_txt + "</td>");
 		}
+		conf_val = g_plcs[i].confirmation ? "Pend" : "OK";
+		conf_class = "btn " + (g_plcs[i].confirmation ? "btn-warning" : "btn-info")
+		$("#" + row_name).append("<td><button type = 'button' class = '" + conf_class + "'>" + conf_val + "</button></td>");
+
 	}
 	$('[data-toggle="tooltip"]').tooltip();
 	moduleStatus("Table query OK");
@@ -231,10 +263,10 @@ function notify(text, title = "Notificación") {
 }
 
 /**
- * Report status of module
+ * Report status of module.
  *
- * @param {string} status Status of module
+ * @param {string} status
  */
-function moduleStatus(status) {
-	$("#status-indicator").text("Status: " + status);
+function detailStatus(status) {
+	$("#config-status-indicator").text("Status: " + status);
 }
