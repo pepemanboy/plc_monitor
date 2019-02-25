@@ -252,6 +252,7 @@ class Config extends Module
 		if ($result = mysqli_query($this->link, $query)) 
 		{
 			$row = mysqli_fetch_assoc($result);  
+
 			if ($this->getPostParameter("arduino"))
 			{
 				$di = array();
@@ -260,21 +261,25 @@ class Config extends Module
 				{
 					array_push($di, array("f" => $row["di{$i}_freq"], "c" =>$row["di{$i}_count"]));
 					array_push($ai, array("f" => $row["ai{$i}_freq"], "g" => $row["ai{$i}_gain"], "o" => $row["ai{$i}_offs"]));
-					// $di[$i] = array("f" => $row["di{$i}_freq"], "c" =>$row["di{$i}_count"]);
-					// $ai[$i] = array("f" => $row["ai{$i}_freq"], "g" => $row["ai{$i}_gain"], "o" => $row["ai{$i}_offs"]);
 				}
 				$this->setJsonParameter("di", $di);
 				$this->setJsonParameter("ai", $ai);
 			} 
 			else
 			{
+				$di = array();
+				$ai = array();
+				$do = array();
 				for ($i = 1; $i <= 6; $i ++)
 				{
 					/** @TODO: change to Json **/
-					$this->setParameter("di{$i}", "{$row["di{$i}_name"]},{$row["di{$i}_freq"]},{$row["di{$i}_count"]}", $message);
-					$this->setParameter("ai{$i}", "{$row["ai{$i}_name"]},{$row["ai{$i}_freq"]},{$row["ai{$i}_gain"]},{$row["ai{$i}_offs"]}", $message);
-					$this->setParameter("do{$i}", "{$row["do{$i}_name"]}", $message);
+					array_push($di, array('name' => $row["di{$i}_name"], 'freq' => $row["di{$i}_freq"], 'count' => $row["di{$i}_count"]));
+					array_push($ai, array('name' => $row["ai{$i}_name"], 'freq' => $row["ai{$i}_freq"], 'gain' => $row["ai{$i}_gain"], 'offset' => $row["ai{$i}_offs"]));
+					array_push($do, array('name' => $row["do{$i}_name"]));
 				}
+				$this->setJsonParameter("di", $di);
+				$this->setJsonParameter("ai", $ai);
+				$this->setJsonParameter("do", $do);
 			}		
 			mysqli_free_result($result);
 		}
