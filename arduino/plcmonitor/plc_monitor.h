@@ -99,6 +99,7 @@ void _plcDeviceInit()
 /* Init plc monitor */
 void _initPlcMonitor()
 {
+  res_t r = Ok;
   if(!plcDevice.initialized)
   {
     plc_setup();  
@@ -131,11 +132,12 @@ res_t _plcGetConfig()
 	float ai_gain[6];
 	float ai_offs[6];
 
-	res_t r = getConfig(di_freq, di_count, ai_freq, ai_gain, ai_offs);
-	if(r != Ok)
+  res_t r = Error;
+  while (r != Ok)
   {
+    r = getConfig(di_freq, di_count, ai_freq, ai_gain, ai_offs);
     PLC_DEBUG("Failed to get config, error = ", r);
-    return r;
+    lcdError(r, "p_get_cfg: ");
   }
 
 	for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
@@ -157,11 +159,12 @@ res_t _plcGetOutputs()
 {
 	bool outputs[OUTPUT_COUNT];
 
-	res_t r = getOutputs(outputs);
-	if (r != Ok)
+  res_t r = Error;
+  while (r != Ok)
   {
+    r = getOutputs(outputs);
     PLC_DEBUG("Failed to get outputs. Error = ", r);
-    return r;    
+    lcdError(r, "p_get_out: ");
   }
 
   for (uint8_t i = 0; i < OUTPUT_COUNT; ++i)
@@ -177,11 +180,12 @@ res_t _plcGetCounters()
 {
   uint32_t di[DIGITAL_INPUT_COUNT];
 
-  res_t r = getDigitalInputs(di);
-  if (r != Ok)
+  res_t r = Error;
+  while (r != Ok)
   {
+    r = getDigitalInputs(di);
     PLC_DEBUG("Failed to get counters. Error = ", r);
-    return r;  
+    lcdError(r, "p_get_cnt: ");
   }
 
   for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
@@ -198,11 +202,12 @@ res_t _plcResetCounters()
 {
   int32_t rr[DIGITAL_INPUT_COUNT];
 
-  res_t r = getResets(rr);
-  if (r != Ok)
+  res_t r = Error;
+  while (r != Ok)
   {
+    r = getResets(rr);
     PLC_DEBUG("Failed to get resets. Error = ", r);
-    return r;  
+    lcdError(r, "p_cnt_res: ");
   }
 
   for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
@@ -226,11 +231,12 @@ res_t _plcSendInputs()
 		ain[i] = plcDevice.ain[i].reading;
 	}
 
-	res_t r = setInputs(din,ain);
-	if (r != Ok)
+  res_t r = Error;
+  while (r != Ok)
   {
+    r = setInputs(din,ain);
     PLC_DEBUG("Failed to send inputs. Error = ", r);
-    return r;
+    lcdError(r, "p_set_in: ");
   }
   
   return Ok;
@@ -239,12 +245,14 @@ res_t _plcSendInputs()
 /* Log input to server */
 res_t _plcLogInput(plc_in_t * input)
 {
-	res_t r = logInput(input->number, input->type == input_Analog ? input_Analog : input_Digital , input->value);
-	if (r != Ok)
+  res_t r = Error;
+  while (r != Ok)
   {
+    r = logInput(input->number, input->type == input_Analog ? input_Analog : input_Digital , input->value);
     PLC_DEBUG("Failed to log input. Error = ", r);
-    return r;
+    lcdError(r, "p_log_in: ");
   }
+  
   return Ok;
 }
 
