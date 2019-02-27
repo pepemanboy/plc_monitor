@@ -113,13 +113,11 @@ res_t ethernetMaintain()
 /* Wait for client to be available or timeout */
 res_t _waitClientAvailable()
 {
-  int16_t i = 0;
-  int16_t d = PLC_TIMEOUT_MS/PLC_TIMEOUT_DELAY_MS;
+  unsigned long ts = millis();
   while(!client.available())
-  {
+  {    
     delay(PLC_TIMEOUT_DELAY_MS);
-    ++i;
-    if(i > d)
+    if ((millis() - ts) >= PLC_TIMEOUT_MS)
       return Error_available;
   }
   return Ok;
@@ -128,13 +126,11 @@ res_t _waitClientAvailable()
 /* Wait for client to disconnect or timeout */
 res_t _waitClientDisconnect()
 {
-  int16_t i = 0;
-  int16_t d = PLC_TIMEOUT_MS/PLC_TIMEOUT_DELAY_MS;
+  unsigned long ts = millis();
   while(client.connected())
-  {
+  {    
     delay(PLC_TIMEOUT_DELAY_MS);
-    ++i;
-    if(i > d)
+    if ((millis() - ts) >= PLC_TIMEOUT_MS)
       return Error_disconnect;
   }
   return Ok;
