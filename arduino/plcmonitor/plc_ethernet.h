@@ -261,6 +261,26 @@ res_t _retryPostJson(const char * url, const char * params, const char * msg)
   return r;
 }
 
+/* Validate jsonObject reply */
+res_t jsonReplyValidate(JsonObject & root)
+{
+  res_t r = Ok;
+  
+  if (!root.success())
+  {
+    r = Error_chunked;
+    return r;
+  }
+  
+  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
+  {
+    r = Error_jsonerror;
+    return r;
+  }
+
+  return r;
+}
+
 /* Get resets
  * Module: reset_counter
  * Args: plc_number = ID, operation = "get", arduino = true
@@ -273,28 +293,22 @@ res_t getResets(int32_t * rr)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=reset_counter&plc_number=%d&operation=get&arduino=true", PLC_ID);
-  res_t r = _retryPostJson("fase2/modules/post.php", q, "cnt_res: ");
-  if (r != Ok)
-    return r;
+  _retryPostJson("fase2/modules/post.php", q, "r_cnt_res: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  if (!root.success())
-  {
-    res_t r = Error_chunked;
-    lcdError(r, "cnt_res: ");
-    return r;
-  }
   
-  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
-  {
-    res_t r = Error_jsonerror;
-    lcdError(r, "cnt_res: ");
+  res_t r = jsonReplyValidate(root);
+  if (r != Ok)
     return r;
-  }
 
   for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
-    rr[i] = (int32_t)strtol(root["resets"][i].as<char*>(),0,10);
+  {
+    const char * v = root["resets"][i].as<char*>();
+    if (!v)
+      return Error_jsonvar;
+    rr[i] = (int32_t)strtol(v,0,10);
+  }    
 
   return Ok;
 }
@@ -311,26 +325,23 @@ res_t getDigitalInputs(uint32_t * di)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=control_inputs&plc_number=%d&operation=get&arduino=true", PLC_ID);
-  _retryPostJson("fase2/modules/post.php", q, "get_in: ");
+  _retryPostJson("fase2/modules/post.php", q, "r_get_in: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  if (!root.success())
-  {
-    res_t r = Error_chunked;
-    lcdError(r, "cnt_res: ");
-    return r;
-  }
   
-  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
-  {
-    res_t r = Error_jsonerror;
-    lcdError(r, "cnt_res: ");
+  res_t r = jsonReplyValidate(root);
+  if (r != Ok)
     return r;
-  }
 
   for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
-    di[i] = (uint32_t)strtol(root["di"][i].as<char*>(),0,10);
+  {
+    const char * v = root["di"][i].as<char*>();
+    if (!v)
+      return Error_jsonvar;
+      
+    di[i] = (uint32_t)strtol(v,0,10);
+  }    
   
   return Ok;
 }
@@ -347,26 +358,24 @@ res_t getOutputs(bool * o)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=control_outputs&plc_number=%d&operation=get&arduino=true", PLC_ID);
-  _retryPostJson("fase2/modules/post.php", q, "get_out: ");
+  _retryPostJson("fase2/modules/post.php", q, "r_get_out: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  if (!root.success())
-  {
-    res_t r = Error_chunked;
-    lcdError(r, "cnt_res: ");
-    return r;
-  }
   
-  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
-  {
-    res_t r = Error_jsonerror;
-    lcdError(r, "cnt_res: ");
+  res_t r = jsonReplyValidate(root);
+  if (r != Ok)
     return r;
-  }
 
   for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
-    o[i] = (bool)strtol(root["do"][i].as<char*>(),0,10);
+  {
+    const char * v = root["do"][i].as<char*>();
+    if (!v)
+      return Error_jsonvar;
+
+    o[i] = (bool)strtol(v,0,10);
+      
+  }
 
   return Ok;
 }
@@ -388,23 +397,14 @@ res_t setInputs(uint32_t * di, uint32_t * ai)
     sprintf(q+strlen(q),"di%d=%lu&ai%d=%lu",i+1,di[i],i+1,ai[i]);
     if(i != (DIGITAL_INPUT_COUNT - 1)) strcat(q,"&");
   }
-  _retryPostJson("fase2/modules/post.php", q, "set_in: ");
+  _retryPostJson("fase2/modules/post.php", q, "r_set_in: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  if (!root.success())
-  {
-    res_t r = Error_chunked;
-    lcdError(r, "cnt_res: ");
-    return r;
-  }
   
-  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
-  {
-    res_t r = Error_jsonerror;
-    lcdError(r, "cnt_res: ");
+  res_t r = jsonReplyValidate(root);
+  if (r != Ok)
     return r;
-  }
   
   return Ok;
 }
@@ -425,23 +425,14 @@ res_t logInput(uint8_t n, uint8_t type, float val)
   strcat(q, type == input_Analog ? "ai" : "di");
   strcat(q,"&value=");
   dtostrf(val,3,2,q+strlen(q));
-  _retryPostJson("fase2/modules/post.php", q, "log_in: ");
+  _retryPostJson("fase2/modules/post.php", q, "r_log_in: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  if (!root.success())
-  {
-    res_t r = Error_chunked;
-    lcdError(r, "cnt_res: ");
-    return r;
-  }
   
-  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
-  {
-    res_t r = Error_jsonerror;
-    lcdError(r, "cnt_res: ");
+  res_t r = jsonReplyValidate(root);
+  if (r != Ok)
     return r;
-  }
 
   return Ok;
 }
@@ -462,32 +453,32 @@ res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, floa
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=config_program&plc_number=%d&operation=get&arduino=true&poweron=%d", PLC_ID, g_power_on);
-  _retryPostJson("fase2/modules/post.php", q, "get_cfg: ");
+  _retryPostJson("fase2/modules/post.php", q, "r_get_cfg: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  if (!root.success())
-  {
-    res_t r = Error_chunked;
-    lcdError(r, "cnt_res: ");
-    return r;
-  }
   
-  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
-  {
-    res_t r = Error_jsonerror;
-    lcdError(r, "cnt_res: ");
+  res_t r = jsonReplyValidate(root);
+  if (r != Ok)
     return r;
-  }
 
   for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
-    dif[i] = (uint32_t)strtol(root["di"][i]["f"].as<char*>(),0,10);
-    dic[i] = (uint8_t)strtol(root["di"][i]["c"].as<char*>(),0,10);
+    const char * v_dif = root["di"][i]["f"].as<char*>();
+    const char * v_dic = root["di"][i]["c"].as<char*>();
+    const char * v_aif = root["ai"][i]["f"].as<char*>();
+    const char * v_aig = root["ai"][i]["g"].as<char*>();
+    const char * v_aio = root["ai"][i]["o"].as<char*>();
+    
+    if (!v_dif || !v_dic || !v_aif || !v_aig || !v_aio)
+      return Error_jsonvar;
+      
+    dif[i] = (uint32_t)strtol(v_dif,0,10);
+    dic[i] = (uint8_t)strtol(v_dic,0,10);
 
-    aif[i] = (uint32_t)strtol(root["ai"][i]["f"].as<char*>(),0,10);
-    aig[i] = (float)atof(root["ai"][i]["g"].as<char*>());
-    aio[i] = (float)atof(root["ai"][i]["o"].as<char*>());
+    aif[i] = (uint32_t)strtol(v_aif,0,10);
+    aig[i] = (float)atof(v_aig);
+    aio[i] = (float)atof(v_aio);
   }
   
   g_power_on = 0;
