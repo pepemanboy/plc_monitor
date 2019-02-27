@@ -1,10 +1,10 @@
 /*
- * PLC Server connectivity and communication library
- * 
- * Do not modify.
- *
- * Author: pepemanboy
- * Email: pepe_ciro@hotmail.com
+   PLC Server connectivity and communication library
+
+   Do not modify.
+
+   Author: pepemanboy
+   Email: pepe_ciro@hotmail.com
 */
 
 #ifndef PLC_ETHERNET_H
@@ -70,7 +70,7 @@ uint8_t g_power_on = 1;
 unsigned long g_readTimestamp = 0;
 
 /* Global Json buffer */
-const size_t capacity = 6*JSON_OBJECT_SIZE(2) + 7*JSON_OBJECT_SIZE(3) + 2*JSON_OBJECT_SIZE(6) + 60; // Use arduinojson.org/assistant to compute the capacity.
+const size_t capacity = 6 * JSON_OBJECT_SIZE(2) + 7 * JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(6) + 60; // Use arduinojson.org/assistant to compute the capacity.
 DynamicJsonBuffer g_jsonBuffer(capacity);
 
 /* Ethernet watchdog for consecutive errors*/
@@ -91,12 +91,12 @@ void ethernetResetWatchdog()
 
 /* Mantain ethernet connection */
 res_t ethernetMaintain()
-{  
+{
   int8_t res = 0;
   res = Ethernet.maintain();
   if (res != 0)
   {
-    switch(res)
+    switch (res)
     {
       case 1: lcdText("Renew fail"); break;
       case 2: lcdText("Renew success"); break;
@@ -105,17 +105,17 @@ res_t ethernetMaintain()
       default: lcdText("Unknown"); break;
     }
     delay(500);
-  }  
+  }
   res_t r = res & 0x01 ? Error_maintain : Ok;
-  return r; 
+  return r;
 }
 
 /* Wait for client to be available or timeout */
 res_t _waitClientAvailable()
 {
   unsigned long ts = millis();
-  while(!client.available())
-  {    
+  while (!client.available())
+  {
     delay(PLC_TIMEOUT_DELAY_MS);
     if ((millis() - ts) >= PLC_TIMEOUT_MS)
       return Error_available;
@@ -127,8 +127,8 @@ res_t _waitClientAvailable()
 res_t _waitClientDisconnect()
 {
   unsigned long ts = millis();
-  while(client.connected())
-  {    
+  while (client.connected())
+  {
     delay(PLC_TIMEOUT_DELAY_MS);
     if ((millis() - ts) >= PLC_TIMEOUT_MS)
       return Error_disconnect;
@@ -137,25 +137,25 @@ res_t _waitClientDisconnect()
 }
 
 /* Send a POST request to the server, receive JSON.
- *
- * @param url php file address from PLC_WEBSITE_DIRECTORY
- * @param params POST arguments
- * @return error code
+
+   @param url php file address from PLC_WEBSITE_DIRECTORY
+   @param params POST arguments
+   @return error code
 */
 res_t _postJson(const char * url, const char * params)
-{  
+{
   res_t r;
-  
-  r = ethernetMaintain(); 
+
+  r = ethernetMaintain();
   if (r != Ok)
-    return r;  
-    
+    return r;
+
   _internalUpdate();
-  
+
   // Connect to server
-  #ifdef PLC_ETHERNET_VERSION_2
+#ifdef PLC_ETHERNET_VERSION_2
   client.setConnectionTimeout(PLC_TIMEOUT_MS);
-  #endif
+#endif
   int8_t res = client.connect(SERVER, PORT);
   if (res != 1)
   {
@@ -183,16 +183,16 @@ res_t _postJson(const char * url, const char * params)
 
   // Wait for response
   r = _waitClientAvailable();
-  if(r != Ok)
+  if (r != Ok)
   {
     client.stop();
     return r;
   }
-  
+
   // Check HTTP status
   memset(g_buf, 0, sizeof(g_buf));
-  client.readBytesUntil('\r', g_buf, sizeof(g_buf));  
-  if (strcmp(g_buf, "HTTP/1.1 200 OK") != 0) 
+  client.readBytesUntil('\r', g_buf, sizeof(g_buf));
+  if (strcmp(g_buf, "HTTP/1.1 200 OK") != 0)
   {
     client.stop();
     return Error_httpstatus;
@@ -200,7 +200,7 @@ res_t _postJson(const char * url, const char * params)
 
   // Skip HTTP headers
   char endOfHeaders[] = "\r\n\r\n";
-  if (!client.find(endOfHeaders)) 
+  if (!client.find(endOfHeaders))
   {
     client.stop();
     return Error_httpheaders;
@@ -218,20 +218,20 @@ res_t _postJson(const char * url, const char * params)
         return Error_timeout;
       else if (strlen(g_buf) >= (sizeof(g_buf) - 1))
         return Error_overflow;
-      else        
-        strcat_c(g_buf, client.read());      
+      else
+        strcat_c(g_buf, client.read());
     }
   }
-  
-  #ifdef DEBUG_REQUEST
+
+#ifdef DEBUG_REQUEST
   Serial_println("------------START POSTJSON-----------");
   Serial_println("REQUEST:");
   Serial_println(params);
-  Serial_println("REPLY:");  
+  Serial_println("REPLY:");
   Serial_println(g_buf);
   Serial_println("------------ENDS POSTJSON-----------");
-  #endif
-  
+#endif
+
   // Wait for server to terminate
   r = _waitClientDisconnect();
 
@@ -246,15 +246,15 @@ res_t _retryPostJson(const char * url, const char * params, const char * msg)
   res_t r = Error;
   while (r != Ok)
   {
-    r = _postJson(url,params);
-    
-    #ifdef DEBUG
-    char d[30] = ""; 
+    r = _postJson(url, params);
+
+#ifdef DEBUG
+    char d[30] = "";
     strcat(d, "_postJson ");
     strcat(d, msg);
     PLC_DEBUG(d, r);
-    #endif
-    
+#endif
+
     lcdError(r, msg);
     ethernetWatchdog(r != Ok); // Veces totales que puede fallar
   }
@@ -265,14 +265,14 @@ res_t _retryPostJson(const char * url, const char * params, const char * msg)
 res_t jsonReplyValidate(JsonObject & root)
 {
   res_t r = Ok;
-  
+
   if (!root.success())
   {
     r = Error_chunked;
     return r;
   }
-  
-  if (strcmp(root["error"].as<char*>(), "OK") != 0) 
+
+  if (strcmp(root["error"].as<char*>(), "OK") != 0)
   {
     r = Error_jsonerror;
     return r;
@@ -282,12 +282,12 @@ res_t jsonReplyValidate(JsonObject & root)
 }
 
 /* Get resets
- * Module: reset_counter
- * Args: plc_number = ID, operation = "get", arduino = true
- * Returns: resets[-1,-1,-1,-1,-1,-1]
- *
- * @param rr placeholder for outputs array
- * @return error code
+   Module: reset_counter
+   Args: plc_number = ID, operation = "get", arduino = true
+   Returns: resets[-1,-1,-1,-1,-1,-1]
+
+   @param rr placeholder for outputs array
+   @return error code
 */
 res_t getResets(int32_t * rr)
 {
@@ -297,29 +297,29 @@ res_t getResets(int32_t * rr)
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  
+
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
     return r;
 
-  for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
     const char * v = root["resets"][i].as<char*>();
     if (!v)
       return Error_jsonvar;
-    rr[i] = (int32_t)strtol(v,0,10);
-  }    
+    rr[i] = (int32_t)strtol(v, 0, 10);
+  }
 
   return Ok;
 }
 
 /* Get digital inputs
- * Module: control_inputs
- * Args: plc_number = ID, operation = "get", arduino = true
- * Returns: di[0,0,0,0,0,0]
- *
- * @param di placeholder for inputs array
- * @return error code
+   Module: control_inputs
+   Args: plc_number = ID, operation = "get", arduino = true
+   Returns: di[0,0,0,0,0,0]
+
+   @param di placeholder for inputs array
+   @return error code
 */
 res_t getDigitalInputs(uint32_t * di)
 {
@@ -329,30 +329,30 @@ res_t getDigitalInputs(uint32_t * di)
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  
+
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
     return r;
 
-  for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
     const char * v = root["di"][i].as<char*>();
     if (!v)
       return Error_jsonvar;
-      
-    di[i] = (uint32_t)strtol(v,0,10);
-  }    
-  
+
+    di[i] = (uint32_t)strtol(v, 0, 10);
+  }
+
   return Ok;
 }
 
 /* Get outputs
- * Module: control_outputs
- * Args: plc_number = ID, operation = "get", arduino = "true"
- * Returns: do[0,0,0,0,0,0,0]
- *
- * @param o placeholder for outputs array
- * @return error code
+   Module: control_outputs
+   Args: plc_number = ID, operation = "get", arduino = "true"
+   Returns: do[0,0,0,0,0,0,0]
+
+   @param o placeholder for outputs array
+   @return error code
 */
 res_t getOutputs(bool * o)
 {
@@ -362,74 +362,74 @@ res_t getOutputs(bool * o)
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  
+
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
     return r;
 
-  for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
     const char * v = root["do"][i].as<char*>();
     if (!v)
       return Error_jsonvar;
 
-    o[i] = (bool)strtol(v,0,10);
-      
+    o[i] = (bool)strtol(v, 0, 10);
+
   }
 
   return Ok;
 }
 
 /* Set inputs
- * Module: control_inputs
- * Args: plc_number = ID, operation = "set", di1 = 0, di2 = 1, ... , ai1 = 0, ai2 = 1024, ...
- * Returns: error(OK)
- *
- * @param di digital input array
- * @param analog input array
+   Module: control_inputs
+   Args: plc_number = ID, operation = "set", di1 = 0, di2 = 1, ... , ai1 = 0, ai2 = 1024, ...
+   Returns: error(OK)
+
+   @param di digital input array
+   @param analog input array
 */
 res_t setInputs(uint32_t * di, uint32_t * ai)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=control_inputs&plc_number=%d&operation=set&arduino=true&", PLC_ID);
-  for(uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
-    sprintf(q+strlen(q),"di%d=%lu&ai%d=%lu",i+1,di[i],i+1,ai[i]);
-    if(i != (DIGITAL_INPUT_COUNT - 1)) strcat(q,"&");
+    sprintf(q + strlen(q), "di%d=%lu&ai%d=%lu", i + 1, di[i], i + 1, ai[i]);
+    if (i != (DIGITAL_INPUT_COUNT - 1)) strcat(q, "&");
   }
   _retryPostJson("fase2/modules/post.php", q, "r_set_in: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  
+
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
     return r;
-  
+
   return Ok;
 }
 
 /* Log input
- * Module: viz_graph
- * Args: plc_number = ID, signal_number = 1-6, signal_type = di/ai, operation = set, value = val
- *
- * @param n input number
- * @param type input type
- * @param val value
- * @return error code
+   Module: viz_graph
+   Args: plc_number = ID, signal_number = 1-6, signal_type = di/ai, operation = set, value = val
+
+   @param n input number
+   @param type input type
+   @param val value
+   @return error code
 */
 res_t logInput(uint8_t n, uint8_t type, float val)
 {
   char q [QUERY_BUFFER_SIZE] = "";
   sprintf(q, "module=viz_graph&plc_number=%d&operation=set&signal_number=%d&signal_type=", PLC_ID, n);
   strcat(q, type == input_Analog ? "ai" : "di");
-  strcat(q,"&value=");
-  dtostrf(val,3,2,q+strlen(q));
+  strcat(q, "&value=");
+  dtostrf(val, 3, 2, q + strlen(q));
   _retryPostJson("fase2/modules/post.php", q, "r_log_in: ");
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  
+
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
     return r;
@@ -438,16 +438,16 @@ res_t logInput(uint8_t n, uint8_t type, float val)
 }
 
 /* Get config
- * Module: config_program
- * Args: plc_number = ID, operation = "get", arduino = "true"
- * Returns:di1(freq,count)ai1(freq,gain,ofs)...
- *
- * @param dif digital input frequencies
- * @param dic digital input counts
- * @param aif analog input frequencies
- * @param aig analog input gains
- * @param aio analog input offsets
- * @return error code
+   Module: config_program
+   Args: plc_number = ID, operation = "get", arduino = "true"
+   Returns:di1(freq,count)ai1(freq,gain,ofs)...
+
+   @param dif digital input frequencies
+   @param dic digital input counts
+   @param aif analog input frequencies
+   @param aig analog input gains
+   @param aio analog input offsets
+   @return error code
 */
 res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, float * aio)
 {
@@ -457,7 +457,7 @@ res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, floa
 
   g_jsonBuffer.clear();
   JsonObject& root = g_jsonBuffer.parseObject(g_buf);
-  
+
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
     return r;
@@ -469,37 +469,37 @@ res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, floa
     const char * v_aif = root["ai"][i]["f"].as<char*>();
     const char * v_aig = root["ai"][i]["g"].as<char*>();
     const char * v_aio = root["ai"][i]["o"].as<char*>();
-    
+
     if (!v_dif || !v_dic || !v_aif || !v_aig || !v_aio)
       return Error_jsonvar;
-      
-    dif[i] = (uint32_t)strtol(v_dif,0,10);
-    dic[i] = (uint8_t)strtol(v_dic,0,10);
 
-    aif[i] = (uint32_t)strtol(v_aif,0,10);
+    dif[i] = (uint32_t)strtol(v_dif, 0, 10);
+    dic[i] = (uint8_t)strtol(v_dic, 0, 10);
+
+    aif[i] = (uint32_t)strtol(v_aif, 0, 10);
     aig[i] = (float)atof(v_aig);
     aio[i] = (float)atof(v_aio);
   }
-  
+
   g_power_on = 0;
-  
+
   return Ok;
 }
 
 /* Initialization.
- * Initialize ethernet module
- *
- * @return error code
+   Initialize ethernet module
+
+   @return error code
 */
 res_t initEthernet()
 {
   // Disable SD
-  pinMode(4,OUTPUT);
-  digitalWrite(4,HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
 
   PLC_DEBUG("Connecting to ethernet shield", 0);
-  
-  #ifdef PLC_DYNAMIC_IP
+
+#ifdef PLC_DYNAMIC_IP
   int8_t res = Ethernet.begin(mac);
   if (res != 1)
   {
@@ -508,25 +508,25 @@ res_t initEthernet()
     delay(1000);
     softReset();
   }
-  #else // !PLC_DYNAMIC_IP
+#else // !PLC_DYNAMIC_IP
   Ethernet.begin(mac , ip, plc_dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
-  #endif // PLC_DYNAMIC_IP
+#endif // PLC_DYNAMIC_IP
 
-  #ifdef PLC_ETHERNET_VERSION_2
-  if (Ethernet.hardwareStatus() == EthernetNoHardware) 
+#ifdef PLC_ETHERNET_VERSION_2
+  if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
     lcdText("Shield not found");
     delay(1000);
     softReset();
   }
   Ethernet.setRetransmissionCount(2);
-  Ethernet.setRetransmissionTimeout(200);    
-  #endif  // !PLC_ETHERNET_VERSION_2
-  
+  Ethernet.setRetransmissionTimeout(200);
+#endif  // !PLC_ETHERNET_VERSION_2
+
   client.setTimeout(PLC_TIMEOUT_MS);
 
   PLC_DEBUG("Connected to ethernet shield.", 0);
-  
+
   return Ok;
 }
 
