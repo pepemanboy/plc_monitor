@@ -511,6 +511,17 @@ res_t initEthernet()
   #else // !PLC_DYNAMIC_IP
   Ethernet.begin(mac , ip, plc_dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
   #endif // PLC_DYNAMIC_IP
+
+  #ifdef PLC_ETHERNET_VERSION_2
+  if (Ethernet.hardwareStatus() == EthernetNoHardware) 
+  {
+    lcdText("Shield not found");
+    delay(1000);
+    softReset();
+  }
+  Ethernet.setRetransmissionCount(2);
+  Ethernet.setRetransmissionTimeout(200);    
+  #endif  // !PLC_ETHERNET_VERSION_2
   
   client.setTimeout(PLC_TIMEOUT_MS);
 
