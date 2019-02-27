@@ -59,10 +59,11 @@ enum error_codes
   Error_overflow = 1<<5, ///< Overflow error
   Error_chunked = 1<<6, ///< Message does not come chunked
   Error_maintain = 1<<7, ///< Cannot maintain connection
-  Error_available = 1<<8,
-  Error_httpstatus = 1<<9,
-  Error_httpheaders = 1<<10,
-  Error_jsonerror = 1<<11,
+  Error_available = 1<<8, ///< Ethernet not available
+  Error_httpstatus = 1<<9, ///< Error in HTTP status
+  Error_httpheaders = 1<<10, ///< Error in HTTP headers
+  Error_jsonerror = 1<<11, ///< Error parsing json
+  Error_jsonvar = 1<<12, ///< Invalid json variable
 };
 
 typedef uint16_t res_t;
@@ -172,7 +173,8 @@ res_t errorString(res_t e, char * s)
     case Error_available: strcpy(s, "Avai"); break;
     case Error_httpstatus: strcpy(s, "Stat"); break;
     case Error_httpheaders: strcpy(s, "Head"); break;
-    case Error_jsonerror: strcpy(s, "Json"); break;
+    case Error_jsonerror: strcpy(s, "Jerr"); break;
+    case Error_jsonvar: strcpy(s, "Jvar"); break;
     default: sprintf(s,"%d",e);
   }  
   return Ok;
