@@ -83,8 +83,12 @@ $("#manager-modificar-modal-boton").click(function() {
 			permissions: perm,
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
-			if (!plcOk(err)) {
+
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			if (!plcOk(err))
+			{
 				notify("No se pudo modificar usuario '" + user + "'. Código de error = " + err);
 				return;
 			} else {
@@ -138,7 +142,10 @@ $("#manager-agregar-modal-boton").click(function() {
 			permissions: perm,
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+
 			if (!plcOk(err)) {
 				notify("No se pudo agregar usuario '" + user + "'. Cheque que no se repita el nombre. Código de error = " + err);
 				return;
@@ -178,7 +185,9 @@ $("#manager-borrar-modal-boton").click(function() {
 			user_id: g_user_id,
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			if (!plcOk(err)) {
 				notify("No se pudo eliminar usuario '" + user + "'. Código de error = " + err);
 				return;
@@ -201,17 +210,20 @@ function updateTable() {
 			operation: "get_user_table"
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
-			var table = getPhpVar(data, "table");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			var table = json_data.table;
+
 			if (!plcOk(err)) {
 				moduleStatus("Table query error " + err);
 				return;
 			}
-			if (table.error) {
+			if (!table) {
 				moduleStatus("Table query error");
 				return;
 			}
-			$("#manager-user-table").html(table.val);
+			$("#manager-user-table").html(table);
 			moduleStatus("Table query OK");
 		});
 }

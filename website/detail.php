@@ -34,6 +34,7 @@ if (!UserControl::adminSession())
       </div>
       <div class = "row titulo">
         <h2>Detalles</h2> 
+        <button type='button' class='btn btn-light detail-receive-boton' id = 'detail-receive-boton'>Recibir</button>
       </div><!-- Acaba titulo e indicador --> 
       <!-- Tabla -->
       <div class = "row">
@@ -60,6 +61,7 @@ if (!UserControl::adminSession())
               <th scope="col">DO5</th>
               <th scope="col">DO6</th>
               <th scope="col">Confirm</th>
+              <th scope="col">Enviar</th>
             </tr>
           </thead>
           <tbody id = "detail-table-body">

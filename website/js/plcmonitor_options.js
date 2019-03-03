@@ -30,7 +30,10 @@ $("#options-save-boton").click(function() {
       property_title: title,
     },
     function(data, status) {
-      var err = getPhpVar(data, "error").val;
+      var json_data = jQuery.parseJSON(data);
+
+      var err = json_data.error;
+
       if (!plcOk(err)) {
         notify("Error guardando opciones. Codigo de error = " + err);
         return;
@@ -55,19 +58,21 @@ function updateProperties() {
       operation: "get_properties"
     },
     function(data, status) {
-      var err = getPhpVar(data, "error").val;
+      var json_data = jQuery.parseJSON(data);
+
+      var err = json_data.error;
       if (!plcOk(err)) {
         moduleStatus("Query properties error " + err);
         return;
       }
 
-      var title = getPhpVar(data, "title");
-      if (title.error) {
+      var title = json_data.title;
+      if (!title) {
         moduleStatus("Query properties error ");
         return;
       }
       moduleStatus("Query properties OK");
-      $("#options-title-input").val(title.val);
-      document.title = title.val + " - Options";
+      $("#options-title-input").val(title);
+      document.title = title + " - Options";
     });
 }

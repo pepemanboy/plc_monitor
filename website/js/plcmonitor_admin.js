@@ -20,6 +20,7 @@ g_progress = 0; ///< Backup progress
 $(document).ready(function() {
 	setTitle("Admin");
 	activeNavbarItem("admin");
+	adminStatus("Actualizando tabla");
 	updateTable();
 	getDatabaseSize();
 });
@@ -79,7 +80,10 @@ $('#admin-respaldar-senales-boton').click(function() {
 			var json_data = jQuery.parseJSON(data);
 			var err = json_data.error;
 			if (!plcOk(err))
+			{
+				adminStatus("Respaldar " + err);
 				return;
+			}
 
 			if (!json_data.ids)
 				return;
@@ -196,22 +200,16 @@ function updateTable() {
 			var json_data = jQuery.parseJSON(data);
 
 			var err = json_data.error;
-			if (!plcOk(err))
-				return;
-
 			var table = json_data.table;
-			if (!table)
+			var dates = json_data.status_;
+			var ids = json_data.ids_;
+
+			adminStatus(err);
+
+			if (!plcOk(err) || !table || !dates || !ids)
 				return;
 
 			$("#admin-plc-table").html(table);
-
-			var dates = json_data.status_;
-			if (!dates)
-				return;
-
-			var ids = json_data.ids_;
-			if (!ids)
-				return;
 
 			// Check if PLC is online and display an "OK" badge
 			for (var i = 0; i < dates.length; i++) {
@@ -247,16 +245,14 @@ function getSignal(index, plc_number, signal_number, signal_type) {
 			var json_data = jQuery.parseJSON(data);
 			var err = json_data.error;
 
-			if (!plcOk(err))
+			if (!plcOk(err) || !json_data.signal)
+			{
+				adminStatus("Get signal errror : " + err);
 				return;
+			}
 
-			if (!json_data.values)
-				return;
-			var values = json_data.values.map(Number);
-
-			var dates = json_data.dates;
-			if (!dates)
-				return;
+			var values = json_data.signal.values.map(Number);
+			var dates = json_data.signal.dates;
 
 			if (signal_type == 'ai') {
 				g_signals[index].ai[signal_number] = {

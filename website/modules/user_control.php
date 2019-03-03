@@ -173,7 +173,7 @@ class UserControl extends Module
 			";		
 		}
 		
-		$this->setParameter("table", $p, $message);
+		$this->setJsonParameter("table", $p);
 		return OK;
 	}
 

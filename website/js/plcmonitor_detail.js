@@ -26,6 +26,48 @@ $(document).ready(function() {
 	updatePlcs();
 });
 
+/**
+ * Receive table button. On click.
+ *
+ * Update table.
+ */
+$('#detail-receive-boton').click(function() {
+	updatePlcs();
+});
+
+
+/**
+* Output set button. On click.
+*/
+$(document).on("click", '.do-button', function() {
+	var val = $(this).data("do-value");
+	val = val ? 0 : 1;
+	var plc_index = $(this).data("plc-index");
+	var do_index = $(this).data("do-index");
+	g_plcs[plc_index].do[do_index].val = val;
+
+	$(this).data("do-value", val);
+	if (val)
+	{
+		$(this).removeClass("btn-secondary");
+		$(this).addClass("btn-success");
+		$(this).text("ON");
+	} else
+	{
+		$(this).removeClass("btn-success");
+		$(this).addClass("btn-secondary");
+		$(this).text("OFF");
+	}
+});
+
+/**
+* Send outputs button. On click.
+*/
+$(document).on("click", '.send-button', function() {
+	var plc_index = $(this).data("plc-index");
+	sendOutputs(plc_index);
+});
+
 /*** CUSTOM FUNCTIONS */
 
 g_data = 0;
@@ -61,6 +103,8 @@ function updatePlcs() {
 			var names = json_data.names;
 			if (!names)
 				return;
+
+			g_plcs = Array();
 
 			for (var i = 0; i < ids.length; ++i) {
 				g_plcs.push({
@@ -107,7 +151,7 @@ function getIO() {
 /**
  * Populate g_plcs global object with inputs.
  *
- * @param {integer} n PLC id
+ * @param {integer} n PLC index
  */
 function getInputs(n) {
 	$.post("modules/post.php", {
@@ -144,7 +188,7 @@ function getInputs(n) {
 /**
  * Populate g_plcs global object with outputs.
  *
- ** @param {integer} n PLC id
+ * @param {integer} n PLC index
  */
 function getOutputs(n) {
 	$.post("modules/post.php", {
@@ -173,6 +217,43 @@ function getOutputs(n) {
 			updateTable();
 		});
 }
+
+g_arr = 0;
+
+/**
+* Send outputs to server. Update table if successful.
+*
+* @param {integer} n PLC index
+*/
+function sendOutputs(n)
+{
+
+	var arr = Array();
+	for(var i = 0; i < 6; ++i)
+		arr.push(g_plcs[n].do[i].val);
+
+	var id = g_plcs[n].id;
+
+	moduleStatus("Sending PLC " + id + " outputs");
+
+	$.post("modules/post.php", {
+			module: "control_outputs",
+			plc_number: id,
+			outputs: arr,
+			operation: "set"
+		},
+		function(data, status) {
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			moduleStatus("Send PLC " + id + " outputs " + err);
+			if (!plcOk(err))
+				return;
+
+			updatePlcs();
+		});
+}
+
 
 /**
  * Populate g_plcs global object with io names.
@@ -223,6 +304,8 @@ function updateTable() {
 		if (g_plcs[i].ready != READY_ALL) return false;
 	}
 
+	$("#detail-table-body").html("");
+
 	for (var i = 0; i < g_plcs.length; ++i) {
 		var row_name = "detail-table-row-" + i;
 		$("#detail-table-body").append("<tr id = '" + row_name + "'>");
@@ -237,16 +320,17 @@ function updateTable() {
 
 		for (var j = 0; j < 6; ++j) {
 			do_val = g_plcs[i].do[j].val ? "ON" : "OFF";
-			do_class = "btn " + (g_plcs[i].do[j].val ? "btn-success" : "btn-secondary");
-			do_txt = "<button type = 'button' class = '" + do_class + "'>" + do_val + "</button>";
-			$("#" + row_name).append("<td data-toggle='tooltip' data-placement='top' title='" + g_plcs[i].do[j].name + "'>" + do_txt + "</td>");
+			do_class = "btn do-button " + (g_plcs[i].do[j].val ? "btn-success" : "btn-secondary");
+			do_txt = "<button data-do-index = " + j + " data-plc-index = " + i + " data-do-value = " + g_plcs[i].do[j].val + " type = 'button' class = '" + do_class + "'>" + do_val + "</button>";
+			$("#" + row_name).append("<td data-toggle='tooltip' data-placement='top'  title='" + g_plcs[i].do[j].name + "'>" + do_txt + "</td>");
 		}
 		conf_val = g_plcs[i].confirmation ? "Pend" : "OK";
 		conf_class = "btn " + (g_plcs[i].confirmation ? "btn-warning" : "btn-info")
 		$("#" + row_name).append("<td><button type = 'button' class = '" + conf_class + "'>" + conf_val + "</button></td>");
 
+		$("#" + row_name).append("<td><button data-plc-index = " + i + " type = 'button' class = 'send-button btn btn-light'> Enviar </button></td>");
 	}
-	$('[data-toggle="tooltip"]').tooltip();
+	$('[data-toggle="tooltip"]').tooltip({trigger : 'hover'});
 	moduleStatus("Table query OK");
 }
 
@@ -268,5 +352,5 @@ function notify(text, title = "Notificación") {
  * @param {string} status
  */
 function detailStatus(status) {
-	$("#config-status-indicator").text("Status: " + status);
+	$("#detail-status-indicator").text("Status: " + status);
 }

@@ -229,7 +229,6 @@ class Module
         $r = $this->postRequestData($operation, $message);
 
         end:
-        // echo("{{$message}error({$r})}");
         $this->setJsonParameter("error", $r);
         echo json_encode($this->json_parameters, JSON_NUMERIC_CHECK);
 
