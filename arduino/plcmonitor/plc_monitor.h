@@ -116,6 +116,7 @@ void _initPlcMonitor()
     delay(500);
     lcdText("Configuring...");
     _startupSequence();
+    PLC_DEBUG("Finished startup sequence", 0);
     delay(500);
     lcdText("All set!");
     delay(500);

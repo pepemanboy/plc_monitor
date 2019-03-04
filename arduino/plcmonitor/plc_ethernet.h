@@ -516,6 +516,7 @@ res_t initEthernet()
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
     lcdText("Shield not found");
+    PLC_DEBUG("Shield not found", 0);
     delay(1000);
     softReset();
   }
