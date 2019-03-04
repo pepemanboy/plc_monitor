@@ -517,11 +517,13 @@ void plc_init()
 /* Main loop */
 void plc_mainLoop()
 {
+  #ifndef DEBUG
   if (plc_buttonRead(1)) 
   {    
     displayRaw();
     return;
   }
+  #endif // !DEBUG
   updatePlc();
 }
 
