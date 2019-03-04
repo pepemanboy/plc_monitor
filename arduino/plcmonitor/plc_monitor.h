@@ -512,9 +512,6 @@ void displayRaw()
 void plc_init()
 {
   _initPlcMonitor();
-  #ifdef DEBUG
-  _printPlcDevice();
-  #endif
 }
 
 /* Main loop */

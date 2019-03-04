@@ -102,26 +102,6 @@ void Serial_begin()
   #endif
   return;  
 }
-
-/* Print to serial */
-void Serial_print(String s)
-{
-  #ifdef DEBUG
-  Serial_begin();
-  Serial.print(s);
-  #endif
-  return;
-}
-
-/* Print line to serial */
-void Serial_println(String s = "")
-{
-  #ifdef DEBUG
-  Serial_begin();
-  Serial.println(s);
-  #endif
-  return;
-}
 #endif
 
 #ifdef DEBUG
@@ -134,7 +114,11 @@ void Serial_println(String s = "")
 #ifdef DEBUG
 void plcDebug(const char * s, int32_t n)
 {
-  Serial_println("Debug: " + String(s) + " [" + String(n) + "]");
+  Serial.print("Debug: ");
+  Serial.print(s);
+  Serial.print(" [");
+  Serial.print(n);
+  Serial.println("]");
   return;
 }
 #endif

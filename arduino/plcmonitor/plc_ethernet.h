@@ -224,12 +224,12 @@ res_t _postJson(const char * url, const char * params)
   }
 
 #ifdef DEBUG_REQUEST
-  Serial_println("------------START POSTJSON-----------");
-  Serial_println("REQUEST:");
-  Serial_println(params);
-  Serial_println("REPLY:");
-  Serial_println(g_buf);
-  Serial_println("------------ENDS POSTJSON-----------");
+  Serial.println("------------START POSTJSON-----------");
+  Serial.println("REQUEST:");
+  Serial.println(params);
+  Serial.println("REPLY:");
+  Serial.println(g_buf);
+  Serial.println("------------ENDS POSTJSON-----------");
 #endif
 
   // Wait for server to terminate
