@@ -101,8 +101,8 @@ class Customize extends Module
 		$r = $this->getProperty("title", $title);
 		if ($r != OK)
 			return $r;
-		
-		$this->setParameter("title", $title, $message);
+
+		$this->setJsonParameter("title", $title);
 		return OK;
 	}
 

@@ -76,7 +76,9 @@ $('.config-reset-boton').click(function() {
 			r6: v[5],
 		},
 		function(data, status) {
-			var err = getPhpVariable(data, "error");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			configStatus(err);
 			if (!plcOk(err))
 				return;
@@ -91,7 +93,7 @@ $('.config-reset-boton').click(function() {
  * @param {integer} id PLC id.
  */
 function getConfig(id) {
-	if (n < 1)
+	if (id < 1)
 		return false;
 
 	configStatus("Querying config");
@@ -102,7 +104,10 @@ function getConfig(id) {
 			operation: "get"
 		},
 		function(data, status) {
-			var err = getPhpVariable(data, "error");
+
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			configStatus(err);
 			if (!plcOk(err))
 				return;
@@ -110,13 +115,13 @@ function getConfig(id) {
 			$(".config-reset-boton").attr("disabled", "disabled");
 
 			for (var i = 1; i <= 6; i++) {
-				var di = getPhpArray(data, "di" + i);
-				var ai = getPhpArray(data, "ai" + i);
-				var dout = getPhpArray(data, "do" + i);
+				var di = json_data.di[i-1];
+				var ai = json_data.ai[i-1];
+				var dout = json_data.do[i-1];
 
-				$("#name-di" + i).val(di[0]);
-				$("#freq-di" + i).val(di[1]);
-				var c = di[2] > 0 ? true : false;
+				$("#name-di" + i).val(di.name);
+				$("#freq-di" + i).val(di.freq);
+				var c = di.count > 0 ? true : false;
 				$("#count-di" + i).prop("checked", c);
 				$('#config-reset-input-' + i).val("");
 
@@ -128,12 +133,12 @@ function getConfig(id) {
 					$(".config-reset-boton").removeAttr("disabled");
 				}
 
-				$("#name-ai" + i).val(ai[0]);
-				$("#freq-ai" + i).val(ai[1]);
-				$("#gain-ai" + i).val(ai[2]);
-				$("#offs-ai" + i).val(ai[3]);
+				$("#name-ai" + i).val(ai.name);
+				$("#freq-ai" + i).val(ai.freq);
+				$("#gain-ai" + i).val(ai.gain);
+				$("#offs-ai" + i).val(ai.offset);
 
-				$("#name-do" + i).val(dout[0]);
+				$("#name-do" + i).val(dout.name);
 			}
 		});
 }
@@ -160,18 +165,18 @@ function setConfig(id) {
 		di[0] = $("#name-di" + i).val();
 		di[1] = $("#freq-di" + i).val();
 		di[2] = $("#count-di" + i).prop("checked");
-		digital_inputs[i - 1] = di;
+		digital_inputs.push(di);
 
 		ai = new Array();
-		ai[0] = $("#name-ai" + i).val();
+		ai[0]= $("#name-ai" + i).val();
 		ai[1] = $("#freq-ai" + i).val();
 		ai[2] = $("#gain-ai" + i).val();
 		ai[3] = $("#offs-ai" + i).val();
-		analog_inputs[i - 1] = ai;
+		analog_inputs.push(ai);
 
 		dout = new Array();
 		dout[0] = $("#name-do" + i).val();
-		digital_outputs[i - 1] = dout;
+		digital_outputs.push(dout);
 	}
 
 	$.post("modules/post.php", {
@@ -183,11 +188,13 @@ function setConfig(id) {
 			dout: digital_outputs
 		},
 		function(data, status) {
-			var err = getPhpVariable(data, "error");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			configStatus(err);
 			if (!plcOk(err))
 				return;
-			getConfig(n);
+			getConfig(id);
 		});
 }
 

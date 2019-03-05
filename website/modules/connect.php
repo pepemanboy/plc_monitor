@@ -24,6 +24,11 @@ class DbConnection
 		if (mysqli_connect_errno())
 			return ERROR_CONNECTION;
 
+		$query = "SET time_zone = '-06:00';";
+		$r = mysqli_query($connection, $query);
+		if (!$r)
+			return ERROR_CONNECTION;
+
 		return OK;
 	}
 

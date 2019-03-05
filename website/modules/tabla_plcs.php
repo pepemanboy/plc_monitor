@@ -165,16 +165,16 @@ class TablaPlcs extends Module
 
 		if($format == "table") 
 		{
-			$this->printTable($ids, $names, $status, $message);	
-			$n = count($ids);
-			$this->setParameterArray("status_", $status, $n, $message);
-			$this->setParameterArray("ids_", $ids, $n, $message);
+			$table = "";
+			$this->printTable($ids, $names, $status, $table);	
+			$this->setJsonParameter("table", $table);
+			$this->setJsonParameter("status_", $status);
+			$this->setJsonParameter("ids_", $ids);
 		}
 		else
 		{
-			$n = count($ids);
-			$this->setParameterArray("ids", $ids, $n, $message);
-			$this->setParameterArray("names", $names, $n, $message);
+			$this->setJsonParameter("ids", $ids);
+			$this->setJsonParameter("names", $names);
 		}
 
 		return OK;
@@ -263,7 +263,7 @@ class TablaPlcs extends Module
 		if (($n = mysqli_num_rows($result)) > 0) 
 			$exists = 1;
 
-		$this->setParameter("exists", $exists, $message);
+		$this->setJsonParameter("exists", $exists);
 
 		return OK;
 	}
@@ -292,7 +292,7 @@ class TablaPlcs extends Module
 			$row = mysqli_fetch_assoc($result);
 			$mb = $row["SIZE IN MB"];
 			mysqli_free_result($result);
-			$message .= "megabytes({$mb})";
+			$this->setJsonParameter("megabytes", $mb);
 		}
 		else
 		{
@@ -368,7 +368,7 @@ class TablaPlcs extends Module
 		    </tr>
 			";		
 		}
-		$this->setParameter("table", $p, $message);
+		$message = $p;
 	}
 
 	/** 

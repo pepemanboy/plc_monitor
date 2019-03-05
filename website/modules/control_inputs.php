@@ -178,9 +178,9 @@ class ControlInputs extends Module
 		    $ai = array_slice($row,6,6);  
 
 		    if(!$this->getPostParameter("arduino"))
-		    {		    	
-		    	$this->setParameterArray("digital_inputs", $di, 6, $message);
-		    	$this->setParameterArray("analog_inputs", $ai, 6, $message);
+		    {	
+		    	$this->setJsonParameter("digital_inputs", $di);
+		    	$this->setJsonParameter("analog_inputs", $ai);
 		    }
 		    else // Arduino
 		    {

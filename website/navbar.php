@@ -5,7 +5,7 @@ include_once("modules/user_control.php");
 
 <!-- Navbar --> 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-  <a class="navbar-brand" href="#">DPlastico SCADA</a>
+  <a class="navbar-brand" href="admin.php">DPlastico SCADA</a>
   <!-- Boton de toggle en movil -->
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -36,10 +36,10 @@ include_once("modules/user_control.php");
           <a class='nav-link' href='detail.php' id = 'navbar-item-detail'>Detalle</a>
         </li>  
         <li class='nav-item'>
-          <a class='nav-link' href='manager.php' id = 'navbar-item-manager'>Accounts</a>
+          <a class='nav-link' href='manager.php' id = 'navbar-item-manager'>Cuentas</a>
         </li>
         <li class='nav-item'>
-          <a class='nav-link' href='options.php' id = 'navbar-item-options'>Options</a>
+          <a class='nav-link' href='options.php' id = 'navbar-item-options'>Opciones</a>
         </li>
         ");
       }

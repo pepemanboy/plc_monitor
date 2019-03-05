@@ -128,6 +128,8 @@ function getPhpVar(response_str, variable_str) {
  * @return {boolean} true if OK, else false.
  */
 function plcOk(error_code) {
+	if (!error_code)
+		return false;
 	var ok_code = "OK";
 	return (error_code == ok_code);
 }
@@ -220,10 +222,12 @@ function setTitle(module_name) {
 			operation: "get_properties"
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			if (!plcOk(err))
 				return;
-			var title = getPhpVar(data, "title").val;
+			var title = json_data.title;
 			document.title = title + " - " + module_name;
 		});
 }

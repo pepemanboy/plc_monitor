@@ -20,6 +20,7 @@ g_progress = 0; ///< Backup progress
 $(document).ready(function() {
 	setTitle("Admin");
 	activeNavbarItem("admin");
+	adminStatus("Actualizando tabla");
 	updateTable();
 	getDatabaseSize();
 });
@@ -76,10 +77,18 @@ $('#admin-respaldar-senales-boton').click(function() {
 			format: "array",
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+			var json_data = jQuery.parseJSON(data);
+			var err = json_data.error;
 			if (!plcOk(err))
+			{
+				adminStatus("Respaldar " + err);
 				return;
-			g_ids = getPhpArray(data, "ids");
+			}
+
+			if (!json_data.ids)
+				return;
+
+			g_ids = json_data.ids;
 			g_progress = 0;
 			g_signals = Array();
 			for (var i = 0; i < g_ids.length; i++)
@@ -143,7 +152,8 @@ function deletePlc(n) {
 			plc_number: n
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+			var json_data = jQuery.parseJSON(data);
+			var err = json_data.error;
 			adminStatus(err);
 			if (plcOk(err))
 				updateTable();
@@ -165,7 +175,8 @@ function addPlc(nombre_plc) {
 			plc_name: nombre_plc
 		},
 		function(data, status) {
-			err = getPhpVar(data, "error").val;
+			var json_data = jQuery.parseJSON(data);
+			var err = json_data.error;
 			adminStatus(err);
 			if (!plcOk(err))
 				return;
@@ -173,6 +184,8 @@ function addPlc(nombre_plc) {
 			$("#admin-agregar-modal-input").val("");
 		});
 }
+
+g_jq = 0;
 
 /**
  * Update PLC html table and show it.
@@ -184,16 +197,20 @@ function updateTable() {
 			format: "table",
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
-			if (!plcOk(err))
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			var table = json_data.table;
+			var dates = json_data.status_;
+			var ids = json_data.ids_;
+
+			adminStatus(err);
+
+			if (!plcOk(err) || !table || !dates || !ids)
 				return;
-			var table = getPhpVar(data, "table");
-			if (table.error) {
-				return;
-			}
-			$("#admin-plc-table").html(table.val);
-			var dates = getPhpArray(data, "status_");
-			var ids = getPhpArray(data, "ids_");
+
+			$("#admin-plc-table").html(table);
+
 			// Check if PLC is online and display an "OK" badge
 			for (var i = 0; i < dates.length; i++) {
 				var d = moment(dates[i], 'YYYY-MM-DD HH:mm:ss');
@@ -225,11 +242,18 @@ function getSignal(index, plc_number, signal_number, signal_type) {
 			operation: "get_backup",
 		},
 		function(data, status) {
-			var err = getPhpVariable(data, "error");
-			if (!plcOk(err))
+			var json_data = jQuery.parseJSON(data);
+			var err = json_data.error;
+
+			if (!plcOk(err) || !json_data.signal)
+			{
+				adminStatus("Get signal errror : " + err);
 				return;
-			var values = getPhpArray(data, "values").map(Number);
-			var dates = getPhpArray(data, "dates");
+			}
+
+			var values = json_data.signal.values.map(Number);
+			var dates = json_data.signal.dates;
+
 			if (signal_type == 'ai') {
 				g_signals[index].ai[signal_number] = {
 					dates: dates,
@@ -244,8 +268,6 @@ function getSignal(index, plc_number, signal_number, signal_type) {
 			backupFinished();
 			g_progress += 1 / (g_signals.length * 12) * 100;
 			$("#admin-respaldar-senales-boton").text("Respaldando " + g_progress.toFixed(2) + "%");
-			if (!plcOk(err))
-				return;
 		});
 }
 
@@ -317,12 +339,18 @@ function getDatabaseSize() {
 			operation: "megabytes"
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			if (!plcOk(err)) {
 				$("#admin-megabytes-boton").text("Espacio: Err");
 				return;
 			}
-			var mb = getPhpVariable(data, "megabytes");
+
+			var mb = json_data.megabytes;
+			if (!mb)
+				return;
+
 			$("#admin-megabytes-boton").text("Espacio: " + mb + " MB");
 		});
 }

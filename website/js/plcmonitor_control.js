@@ -115,12 +115,21 @@ function getInputs(id) {
 			operation: "get"
 		},
 		function(data, status) {
-			var digital_inputs = getPhpArray(data, "digital_inputs").map(Number);
-			var analog_inputs = getPhpArray(data, "analog_inputs").map(Number);
-			var err = getPhpVariable(data, "error");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			inputsStatus(err);
 			if (!plcOk(err))
 				return;
+
+			var digital_inputs = json_data.digital_inputs;
+			if (!digital_inputs)
+				return;			
+
+			var analog_inputs = json_data.analog_inputs;
+			if (!analog_inputs)
+				return;			
+
 			for (i = 0; i < 6; i++) {
 				$("#di" + (i + 1)).text(digital_inputs[i]);
 				$("#ai" + (i + 1)).text(analog_inputs[i]);
@@ -148,11 +157,17 @@ function getOutputs(id) {
 			operation: "get"
 		},
 		function(data, status) {
-			var digital_outputs = getPhpArray(data, "digital_outputs").map(Number);
-			var err = getPhpVariable(data, "error");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			outputsStatus(err);
 			if (!plcOk(err))
 				return;
+
+			var digital_outputs = json_data.digital_outputs;
+			if (!digital_outputs)
+				return;
+
 			for (i = 0; i < 6; i++) {
 				$("#do" + (i + 1)).text(digital_outputs[i] ? "ON" : "OFF");
 			}
@@ -190,14 +205,17 @@ function setOutputs(id) {
 			operation: "set"
 		},
 		function(data, status) {
-			var err = getPhpVariable(data, "error");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			outputsStatus(err);
 			if (!plcOk(err))
 				return;
+
 			moduleStatus("Pending PLC " + id);
 			g_confirmationPending = moment();
 			setTimeout(function() {
-				confirmationWait(n);
+				confirmationWait(id);
 			}, 5000);
 		});
 }
@@ -211,23 +229,28 @@ function setOutputs(id) {
  */
 function confirmationWait(id) {
 	$.post("modules/post.php", {
-			module: "tabla_plcs",
+			module: "control_outputs",
 			plc_number: id,
-			operation: "date"
+			operation: "confirmation"
 		},
 		function(data, status) {
-			var err = getPhpVariable(data, "error");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			outputsStatus(err);
-			if (!plcOk(err)) {
+			if (!plcOk(err))
+			{
 				moduleStatus("Confirmation Error PLC " + id);
 				return;
 			}
-			var d = moment(getPhpVariable(data, "date"), 'YYYY-MM-DD HH:mm:ss');
-			var diff = d.diff(g_confirmationPending);
-			if (diff > 0) {
-				moduleStatus("Confirmed PLC " + n);
+
+			var confirmation = json_data.confirmation;
+			if (confirmation == 0)
+			{
+				moduleStatus("Confirmed PLC " + id);
 				return;
 			}
+
 			setTimeout(function() {
 				confirmationWait(id);
 			}, 5000);
@@ -256,8 +279,6 @@ function updateButtonColors() {
  * Report status of inputs.
  * @param {string} status Status of inputs.
  */
-func
-
 function inputsStatus(status) {
 	$("#control-inputs-indicator").text("Inputs status: " + status);
 }

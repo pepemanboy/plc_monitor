@@ -26,7 +26,51 @@ $(document).ready(function() {
 	updatePlcs();
 });
 
+/**
+ * Receive table button. On click.
+ *
+ * Update table.
+ */
+$('#detail-receive-boton').click(function() {
+	updatePlcs();
+});
+
+
+/**
+* Output set button. On click.
+*/
+$(document).on("click", '.do-button', function() {
+	var val = $(this).data("do-value");
+	val = val ? 0 : 1;
+	var plc_index = $(this).data("plc-index");
+	var do_index = $(this).data("do-index");
+	g_plcs[plc_index].do[do_index].val = val;
+
+	$(this).data("do-value", val);
+	if (val)
+	{
+		$(this).removeClass("btn-secondary");
+		$(this).addClass("btn-success");
+		$(this).text("ON");
+	} else
+	{
+		$(this).removeClass("btn-success");
+		$(this).addClass("btn-secondary");
+		$(this).text("OFF");
+	}
+});
+
+/**
+* Send outputs button. On click.
+*/
+$(document).on("click", '.send-button', function() {
+	var plc_index = $(this).data("plc-index");
+	sendOutputs(plc_index);
+});
+
 /*** CUSTOM FUNCTIONS */
+
+g_data = 0;
 
 /**
  * Update plcs information.
@@ -35,31 +79,41 @@ $(document).ready(function() {
  */
 function updatePlcs() {
 	moduleStatus("Querying table");
+
 	$.post("modules/post.php", {
 			module: "tabla_plcs",
 			operation: "get",
 			format: "array",
 		},
 		function(data, status) {
-			var err = getPhpVar(data, "error").val;
+
+			var json_data = jQuery.parseJSON(data);
+			g_data = json_data;
+
+			var err = json_data.error;
+
+			detailStatus(err);
 			if (!plcOk(err))
 				return;
 
-			var ids = getPhpArr(data, "ids");
-			if (ids.error)
+			var ids = json_data.ids;
+			if (!ids)
 				return;
 
-			var names = getPhpArr(data, "names");
-			if (names.error)
+			var names = json_data.names;
+			if (!names)
 				return;
 
-			for (var i = 0; i < ids.val.length; ++i) {
+			g_plcs = Array();
+
+			for (var i = 0; i < ids.length; ++i) {
 				g_plcs.push({
-					id: ids.val[i],
-					name: names.val[i],
+					id: ids[i],
+					name: names[i],
 					di: [],
 					ai: [],
 					do: [],
+					confirmation: 0,
 					err: false,
 					ready: 0
 				});
@@ -80,7 +134,6 @@ function updatePlcs() {
 			}
 
 			getIO();
-			// getOutputs();
 		});
 }
 
@@ -98,7 +151,7 @@ function getIO() {
 /**
  * Populate g_plcs global object with inputs.
  *
- * @param {integer} n PLC id
+ * @param {integer} n PLC index
  */
 function getInputs(n) {
 	$.post("modules/post.php", {
@@ -107,13 +160,22 @@ function getInputs(n) {
 			operation: "get"
 		},
 		function(data, status) {
-			var digital_inputs = getPhpArray(data, "digital_inputs").map(Number);
-			var analog_inputs = getPhpArray(data, "analog_inputs").map(Number);
-			var err = getPhpVariable(data, "error");
-			if (!plcOk(err)) {
+
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			var digital_inputs = json_data.digital_inputs;
+			var analog_inputs = json_data.analog_inputs;
+
+			if (!digital_inputs || !analog_inputs || !plcOk(err))
+			{
 				g_plcs[n].err = true;
 				return;
 			}
+
+			digital_inputs = digital_inputs.map(Number);
+			analog_inputs = analog_inputs.map(Number);
+
 			for (i = 0; i < 6; i++) {
 				g_plcs[n].di[i].val = digital_inputs[i];
 				g_plcs[n].ai[i].val = analog_inputs[i];
@@ -126,7 +188,7 @@ function getInputs(n) {
 /**
  * Populate g_plcs global object with outputs.
  *
- ** @param {integer} n PLC id
+ * @param {integer} n PLC index
  */
 function getOutputs(n) {
 	$.post("modules/post.php", {
@@ -135,19 +197,63 @@ function getOutputs(n) {
 			operation: "get"
 		},
 		function(data, status) {
-			var digital_outputs = getPhpArray(data, "digital_outputs").map(Number);
-			var err = getPhpVariable(data, "error");
-			if (!plcOk(err)) {
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			var digital_outputs = json_data.digital_outputs;
+			var confirmation = json_data.confirmation;
+
+			if (!digital_outputs || !plcOk(err))
+			{
 				g_plcs[n].err = true;
 				return;
 			}
+
 			for (i = 0; i < 6; i++) {
 				g_plcs[n].do[i].val = digital_outputs[i];
 			}
 			g_plcs[n].ready |= READY_OUTPUT_VALUES;
+			g_plcs[n].confirmation = confirmation;
 			updateTable();
 		});
 }
+
+g_arr = 0;
+
+/**
+* Send outputs to server. Update table if successful.
+*
+* @param {integer} n PLC index
+*/
+function sendOutputs(n)
+{
+
+	var arr = Array();
+	for(var i = 0; i < 6; ++i)
+		arr.push(g_plcs[n].do[i].val);
+
+	var id = g_plcs[n].id;
+
+	moduleStatus("Sending PLC " + id + " outputs");
+
+	$.post("modules/post.php", {
+			module: "control_outputs",
+			plc_number: id,
+			outputs: arr,
+			operation: "set"
+		},
+		function(data, status) {
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			moduleStatus("Send PLC " + id + " outputs " + err);
+			if (!plcOk(err))
+				return;
+
+			updatePlcs();
+		});
+}
+
 
 /**
  * Populate g_plcs global object with io names.
@@ -162,20 +268,23 @@ function getNames(n) {
 		},
 		function(data, status) {
 
-			var err = getPhpVariable(data, "error");
-			if (!plcOk(err)) {
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
+			if (!plcOk(err))
+			{
 				g_plcs[n].err = true;
 				return;
 			}
 
-			for (var i = 1; i <= 6; i++) {
-				ai_name = getPhpArray(data, "ai" + i)[0];
-				di_name = getPhpArray(data, "di" + i)[0];
-				do_name = getPhpArray(data, "do" + i)[0];
+			for (var i = 0; i < 6; i++) {
+				ai_name = json_data.ai[i].name;
+				di_name = json_data.di[i].name;
+				do_name = json_data.do[i].name;
 
-				g_plcs[n].ai[i - 1].name = ai_name;
-				g_plcs[n].di[i - 1].name = di_name;
-				g_plcs[n].do[i - 1].name = do_name;
+				g_plcs[n].ai[i].name = ai_name;
+				g_plcs[n].di[i].name = di_name;
+				g_plcs[n].do[i].name = do_name;
 			}
 			g_plcs[n].ready |= READY_NAMES;
 			updateTable();
@@ -195,6 +304,8 @@ function updateTable() {
 		if (g_plcs[i].ready != READY_ALL) return false;
 	}
 
+	$("#detail-table-body").html("");
+
 	for (var i = 0; i < g_plcs.length; ++i) {
 		var row_name = "detail-table-row-" + i;
 		$("#detail-table-body").append("<tr id = '" + row_name + "'>");
@@ -209,12 +320,17 @@ function updateTable() {
 
 		for (var j = 0; j < 6; ++j) {
 			do_val = g_plcs[i].do[j].val ? "ON" : "OFF";
-			do_class = "btn " + (g_plcs[i].do[j].val ? "btn-success" : "btn-secondary");
-			do_txt = "<button type = 'button' class = '" + do_class + "'>" + do_val + "</button>";
-			$("#" + row_name).append("<td data-toggle='tooltip' data-placement='top' title='" + g_plcs[i].do[j].name + "'>" + do_txt + "</td>");
+			do_class = "btn do-button " + (g_plcs[i].do[j].val ? "btn-success" : "btn-secondary");
+			do_txt = "<button data-do-index = " + j + " data-plc-index = " + i + " data-do-value = " + g_plcs[i].do[j].val + " type = 'button' class = '" + do_class + "'>" + do_val + "</button>";
+			$("#" + row_name).append("<td data-toggle='tooltip' data-placement='top'  title='" + g_plcs[i].do[j].name + "'>" + do_txt + "</td>");
 		}
+		conf_val = g_plcs[i].confirmation ? "Pend" : "OK";
+		conf_class = "btn " + (g_plcs[i].confirmation ? "btn-warning" : "btn-info")
+		$("#" + row_name).append("<td><button type = 'button' class = '" + conf_class + "'>" + conf_val + "</button></td>");
+
+		$("#" + row_name).append("<td><button data-plc-index = " + i + " type = 'button' class = 'send-button btn btn-light'> Enviar </button></td>");
 	}
-	$('[data-toggle="tooltip"]').tooltip();
+	$('[data-toggle="tooltip"]').tooltip({trigger : 'hover'});
 	moduleStatus("Table query OK");
 }
 
@@ -231,10 +347,10 @@ function notify(text, title = "Notificación") {
 }
 
 /**
- * Report status of module
+ * Report status of module.
  *
- * @param {string} status Status of module
+ * @param {string} status
  */
-function moduleStatus(status) {
-	$("#status-indicator").text("Status: " + status);
+function detailStatus(status) {
+	$("#detail-status-indicator").text("Status: " + status);
 }

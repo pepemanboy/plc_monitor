@@ -162,3 +162,8 @@ body {
 .actions-variables-dropdown{
 	min-width: 150px;
 }
+
+.detail-receive-boton,
+.detail-send-boton{
+	margin-left: 10px;
+}

@@ -170,29 +170,33 @@ function updateSignalDropdown(n) {
 		return false;
 
 	vizStatus("Querying signal names");
-
 	$.post("modules/post.php", {
 			module: "config_program",
 			plc_number: n,
 			operation: "get"
 		},
 		function(data, status) {
-			var err = getPhpVariable(data, "error");
+			var json_data = jQuery.parseJSON(data);
+
+			var err = json_data.error;
 			vizStatus(err);
 			if (!plcOk(err))
 				return;
 
 			for (var i = 1; i <= 6; i++) {
-				di = getPhpArray(data, "di" + i);
-				ai = getPhpArray(data, "ai" + i);
-				g_do_names[i - 1] = getPhpArray(data, "do" + i)[0];
-				g_di_names[i - 1] = di[0];
-				g_ai_names[i - 1] = ai[0];
+				var di = json_data.di[i-1];
+				var ai = json_data.ai[i-1];
+				var dout = json_data.do[i-1];
 
-				$("#viz-signal-dropdown-di" + i).text("DI" + i + ": " + di[0]);
-				$("#viz-signal-dropdown-di" + i).attr("data-signal-name", di[0]);
-				$("#viz-signal-dropdown-ai" + i).text("AI" + i + ": " + ai[0]);
-				$("#viz-signal-dropdown-ai" + i).attr("data-signal-name", ai[0]);
+
+				g_do_names[i-1] = dout.name;
+				g_di_names[i - 1] = di.name;
+				g_ai_names[i - 1] = ai.name;
+
+				$("#viz-signal-dropdown-di" + i).text("DI" + i + ": " + di.name);
+				$("#viz-signal-dropdown-di" + i).attr("data-signal-name", di.name);
+				$("#viz-signal-dropdown-ai" + i).text("AI" + i + ": " + ai.name);
+				$("#viz-signal-dropdown-ai" + i).attr("data-signal-name", ai.name);
 			}
 
 		});
@@ -220,10 +224,12 @@ function getGraphSignals(date1, date2) {
 				date_end: date2
 			},
 			function(data, status) {
-				var err = getPhpVariable(data, "error");
-				var v = getPhpArray(data, "values").map(Number);
-				var d = getPhpArray(data, "dates");
-				var n = getPhpVariable(data, "name");
+				var json_data = jQuery.parseJSON(data);
+
+				var err = json_data.error;
+				var v = json_data.signal.values.map(Number);
+				var d = json_data.signal.dates;
+				var n = json_data.name;
 				var sig = {
 					values: v,
 					dates: d,

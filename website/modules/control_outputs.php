@@ -62,7 +62,8 @@ class ControlOutputs extends Module
 				do3 int(11) NOT NULL,
 				do4 int(11) NOT NULL,
 				do5 int(11) NOT NULL,
-				do6 int(11) NOT NULL	
+				do6 int(11) NOT NULL,
+				confirmation int(1) DEFAULT 0	
 			)
 			";
 			$r = mysqli_query($this->link, $query);
@@ -106,6 +107,7 @@ class ControlOutputs extends Module
 		{
 		    case "set": return $this->postSet($message);
 		    case "get": return $this->postGet($message);
+		    case "confirmation": return $this->postConfirmation($message);
 		    default: return ERROR_ARGUMENTS; 
 	    }
 	}
@@ -133,8 +135,8 @@ class ControlOutputs extends Module
 			$query = "
 			DELETE FROM {$this->table_name};
 			INSERT INTO {$this->table_name} 
-			(do1,do2,do3,do4,do5,do6) 
-			VALUES ({$arr[0]}, {$arr[1]}, {$arr[2]}, {$arr[3]}, {$arr[4]}, {$arr[5]});
+			(do1,do2,do3,do4,do5,do6,confirmation) 
+			VALUES ({$arr[0]}, {$arr[1]}, {$arr[2]}, {$arr[3]}, {$arr[4]}, {$arr[5]}, 1);
 			";  	
 
 			$r = mysqli_multi_query($this->link, $query);
@@ -186,16 +188,65 @@ class ControlOutputs extends Module
 		if ($result = mysqli_query($this->link, $query)) 
 		{
 		    $row = mysqli_fetch_row($result);  
-		     
+
 		    if(!$this->getPostParameter("arduino"))
 		    {		    	
-		    	$this->setParameterArray("digital_outputs", $row, 6, $message);
+		    	$this->setJsonParameter("digital_outputs", $row);
 		    }
 		    else // Arduino
 		    {
 		    	$this->setJsonParameter("do", $row);
 		    }		    
 		    
+		    mysqli_free_result($result);
+		}
+		else
+			return ERROR_QUERY;
+
+		// Get confirmation flag
+		if (!$this->getPostParameter("arduino"))
+		{
+			$query = "SELECT confirmation  FROM {$this->table_name} ORDER BY timeStamp DESC LIMIT 1"; 
+
+			if ($result = mysqli_query($this->link, $query)) 
+			{
+			    $row = mysqli_fetch_row($result);  
+			    $this->setJsonParameter("confirmation", $row[0]);
+			    mysqli_free_result($result);
+			}
+			else
+				return ERROR_QUERY;
+		}
+		// Assert onfirmation flag in arduino
+		else 
+		{
+			$query = "UPDATE {$this->table_name} SET confirmation = 0;";
+			$r = mysqli_query($this->link, $query);
+			if (!$r)
+				return ERROR_QUERY;
+			return OK;
+		}
+
+		return OK;
+	}
+
+	/** 
+	* Get confirmation value
+	* 
+	* Message format:
+	* * confirmation(1)
+	* 
+	* @param {out}string $message
+	* @return integer Error code
+	*/
+	private function postConfirmation(&$message)
+	{
+		$query = "SELECT confirmation  FROM {$this->table_name} ORDER BY timeStamp DESC LIMIT 1"; 
+
+		if ($result = mysqli_query($this->link, $query)) 
+		{
+		    $row = mysqli_fetch_row($result);  
+		    $this->setJsonParameter("confirmation", $row[0]);
 		    mysqli_free_result($result);
 		}
 		else

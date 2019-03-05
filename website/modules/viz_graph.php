@@ -139,11 +139,13 @@ class VizGraph extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
-		$r = $this->fetchValDate($date_start, $date_end, $message);
+		$val_date = null;
+		$r = $this->fetchValDate($date_start, $date_end, $val_date);
 		if ($r != OK)
 			return $r;
 
-		$this->setParameter("name", $signal_name, $message);
+		$this->setJsonParameter("name", $signal_name);
+		$this->setJsonParameter("signal", $val_date);
 
 		return OK;
 	}
@@ -158,7 +160,12 @@ class VizGraph extends Module
 	*/
 	private function postGetBackup(&$message)
 	{
-		return $this->fetchValDate(null, null, $message);
+		$val_date = null;
+		$r =  $this->fetchValDate(null, null, $val_date);
+		if ($r != OK)
+			return $r;
+		$this->setJsonParameter("signal", $val_date);
+		return OK;
 	}
 
 	/** 
@@ -171,7 +178,7 @@ class VizGraph extends Module
 	* @param {out}string $message
 	* @return integer Error code
 	*/
-	private function fetchValDate($date_start, $date_end, &$message)
+	private function fetchValDate($date_start, $date_end, &$val_date)
 	{
 		$condition = "";
 		if (!is_null($date_start) && !is_null($date_end))
@@ -182,6 +189,9 @@ class VizGraph extends Module
 	   	$result = mysqli_query($this->link, $query);
 	   	if (!$result)
 	   		return ERROR_QUERY;
+
+	   	$values = array();
+	   	$dates = array();
 	   	
 	   	if (($n = mysqli_num_rows($result)) > 0) 
 	   	{
@@ -194,12 +204,10 @@ class VizGraph extends Module
 		        $dates[$i] = $row["timeStamp"];
 		        $i = $i + 1;
 		    }
-
-			$this->setParameterArray("values", $values, $n, $message);
-			$this->setParameterArray("dates", $dates, $n, $message);
-
 		    mysqli_free_result($result);
 		}
+		
+		$val_date = array("values" => $values, "dates" => $dates);
 		return OK;
 	}
 }

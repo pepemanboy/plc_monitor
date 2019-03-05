@@ -59,10 +59,12 @@ enum error_codes
   Error_overflow = 1<<5, ///< Overflow error
   Error_chunked = 1<<6, ///< Message does not come chunked
   Error_maintain = 1<<7, ///< Cannot maintain connection
-  Error_available = 1<<8,
-  Error_httpstatus = 1<<9,
-  Error_httpheaders = 1<<10,
-  Error_jsonerror = 1<<11,
+  Error_available = 1<<8, ///< Ethernet not available
+  Error_httpstatus = 1<<9, ///< Error in HTTP status
+  Error_httpheaders = 1<<10, ///< Error in HTTP headers
+  Error_jsonerror = 1<<11, ///< Error parsing json
+  Error_jsonvar = 1<<12, ///< Invalid json variable
+  Error_shield = 1<<13, ///< Shield error
 };
 
 typedef uint16_t res_t;
@@ -101,26 +103,6 @@ void Serial_begin()
   #endif
   return;  
 }
-
-/* Print to serial */
-void Serial_print(String s)
-{
-  #ifdef DEBUG
-  Serial_begin();
-  Serial.print(s);
-  #endif
-  return;
-}
-
-/* Print line to serial */
-void Serial_println(String s = "")
-{
-  #ifdef DEBUG
-  Serial_begin();
-  Serial.println(s);
-  #endif
-  return;
-}
 #endif
 
 #ifdef DEBUG
@@ -133,7 +115,11 @@ void Serial_println(String s = "")
 #ifdef DEBUG
 void plcDebug(const char * s, int32_t n)
 {
-  Serial_println("Debug: " + String(s) + " [" + String(n) + "]");
+  Serial.print("Debug: ");
+  Serial.print(s);
+  Serial.print(" [");
+  Serial.print(n);
+  Serial.println("]");
   return;
 }
 #endif
@@ -172,7 +158,9 @@ res_t errorString(res_t e, char * s)
     case Error_available: strcpy(s, "Avai"); break;
     case Error_httpstatus: strcpy(s, "Stat"); break;
     case Error_httpheaders: strcpy(s, "Head"); break;
-    case Error_jsonerror: strcpy(s, "Json"); break;
+    case Error_jsonerror: strcpy(s, "Jerr"); break;
+    case Error_jsonvar: strcpy(s, "Jvar"); break;
+    case Error_shield: strcpy(s, "Jshd"); break;
     default: sprintf(s,"%d",e);
   }  
   return Ok;
