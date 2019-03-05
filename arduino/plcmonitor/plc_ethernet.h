@@ -79,7 +79,7 @@ void ethernetWatchdog(bool b)
   ethernet_error_count = b ? ethernet_error_count + 1 : 0;
   if (ethernet_error_count > PLC_MAX_ERRORS)
   {
-    lcdText("Be right back!");
+    lcdText("Be right back! ");
     PLC_DEBUG("Watchdog reset", 0);
     delay(1000);
     softReset();
