@@ -64,6 +64,7 @@ enum error_codes
   Error_httpheaders = 1<<10, ///< Error in HTTP headers
   Error_jsonerror = 1<<11, ///< Error parsing json
   Error_jsonvar = 1<<12, ///< Invalid json variable
+  Error_shield = 1<<13, ///< Shield error
 };
 
 typedef uint16_t res_t;
@@ -159,6 +160,7 @@ res_t errorString(res_t e, char * s)
     case Error_httpheaders: strcpy(s, "Head"); break;
     case Error_jsonerror: strcpy(s, "Jerr"); break;
     case Error_jsonvar: strcpy(s, "Jvar"); break;
+    case Error_shield: strcpy(s, "Jshd"); break;
     default: sprintf(s,"%d",e);
   }  
   return Ok;

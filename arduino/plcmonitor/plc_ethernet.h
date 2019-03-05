@@ -73,13 +73,17 @@ unsigned long g_readTimestamp = 0;
 const size_t capacity = 6 * JSON_OBJECT_SIZE(2) + 7 * JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(6) + 60; // Use arduinojson.org/assistant to compute the capacity.
 DynamicJsonBuffer g_jsonBuffer(capacity);
 
+/* Forward declarations */
+res_t initEthernet();
+
 /* Ethernet watchdog for consecutive errors*/
 void ethernetWatchdog(bool b)
 {
   ethernet_error_count = b ? ethernet_error_count + 1 : 0;
   if (ethernet_error_count > PLC_MAX_ERRORS)
   {
-    // @TODO: reinit ethernet connection.
+    initEthernet();
+    ethernet_error_count = 0;
   }
 }
 
@@ -106,7 +110,7 @@ res_t ethernetMaintain()
     }
     delay(500);
   }
-  res_t r = res & 0x01 ? Error_maintain : Ok;
+  res_t r = (res & 0x01) ? Error_maintain : Ok;
   return r;
 }
 
@@ -153,9 +157,7 @@ res_t _postJson(const char * url, const char * params)
   _internalUpdate();
 
   // Connect to server
-#ifdef PLC_ETHERNET_VERSION_2
   client.setConnectionTimeout(PLC_TIMEOUT_MS);
-#endif
   int8_t res = client.connect(SERVER, PORT);
   if (res != 1)
   {
@@ -506,23 +508,22 @@ res_t initEthernet()
     PLC_DEBUG("DHCP Error", res);
     lcdText("DHCP Error");
     delay(1000);
-    softReset();
+    return Error_shield;
   }
 #else // !PLC_DYNAMIC_IP
   Ethernet.begin(mac , ip, plc_dns, gateway, subnet); // Without IP, about 20 seconds. With IP, about 1 second.
 #endif // PLC_DYNAMIC_IP
 
-#ifdef PLC_ETHERNET_VERSION_2
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
     lcdText("Shield not found");
     PLC_DEBUG("Shield not found", 0);
     delay(1000);
-    softReset();
+    return Error_shield;
   }
+  
   Ethernet.setRetransmissionCount(2);
   Ethernet.setRetransmissionTimeout(200);
-#endif  // !PLC_ETHERNET_VERSION_2
 
   client.setTimeout(PLC_TIMEOUT_MS);
 
