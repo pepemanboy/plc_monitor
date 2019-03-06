@@ -36,7 +36,6 @@
 #define PLC_TIMEOUT_DELAY_MS (10)
 
 /* Retry settings */
-#define PLC_MAX_RETRY (5)
 #define PLC_MAX_ERRORS (5)
 
 /* Module errors */
@@ -164,6 +163,7 @@ res_t _postJson(const char * url, const char * params)
 
   _internalUpdate();
 
+  // Maintain DHCP connection
   r = ethernetMaintain();
   if (r != Ok)
     return r;
@@ -291,7 +291,11 @@ res_t jsonReplyValidate(JsonObject & root)
     return r;
   }
 
-  if (strcmp(root["error"].as<char*>(), "OK") != 0)
+  const char * v = root["error"].as<char*>();
+  if (!v)
+    return Error_jsonvar;
+
+  if (strcmp(v, "OK") != 0)
   {
     r = Error_jsonerror;
     return r;
