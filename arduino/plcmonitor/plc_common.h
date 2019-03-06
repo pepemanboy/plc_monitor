@@ -88,22 +88,6 @@ void strcat_c (char *str, char c)
   *str++ = c; 
   *str++ = 0;
 }
-#ifdef DEBUG
-/* Debug to serial functions */
-/* Open serial port */
-void Serial_begin()
-{
-  #ifdef DEBUG
-  static bool serial_initialized = false;
-  if(!serial_initialized)
-  {
-    Serial.begin(SERIAL_BAUDRATE);
-    serial_initialized = true;
-  }
-  #endif
-  return;  
-}
-#endif
 
 #ifdef DEBUG
   #define PLC_DEBUG(s,n) plcDebug(s,n)
