@@ -70,8 +70,7 @@ uint8_t g_power_on = 1;
 unsigned long g_readTimestamp = 0;
 
 /* Global Json buffer */
-const size_t capacity = 6 * JSON_OBJECT_SIZE(2) + 7 * JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(6) + 60; // Use arduinojson.org/assistant to compute the capacity.
-DynamicJsonBuffer g_jsonBuffer(capacity);
+const size_t jsonBufferCapacity = 6 * JSON_OBJECT_SIZE(2) + 7 * JSON_OBJECT_SIZE(3) + 2 * JSON_OBJECT_SIZE(6) + 60; // Use arduinojson.org/assistant to compute the capacity.
 
 /* Forward declarations */
 res_t initEthernet();
@@ -82,7 +81,7 @@ void ethernetWatchdog(bool b)
   ethernet_error_count = b ? ethernet_error_count + 1 : 0;
   if (ethernet_error_count > PLC_MAX_ERRORS)
   {
-    initEthernet();
+    lcdText("Watchdog");
     ethernet_error_count = 0;
   }
 }
@@ -112,6 +111,19 @@ res_t ethernetMaintain()
   }
   res_t r = (res & 0x01) ? Error_maintain : Ok;
   return r;
+}
+
+/* Wait for client to be ready or timeout */
+res_t _waitClientReady()
+{
+  unsigned long ts = millis();
+  while (!client)
+  {
+    delay(PLC_TIMEOUT_DELAY_MS);
+    if ((millis() - ts) >= PLC_TIMEOUT_MS)
+      return Error_ready;
+  }
+  return Ok;
 }
 
 /* Wait for client to be available or timeout */
@@ -150,11 +162,16 @@ res_t _postJson(const char * url, const char * params)
 {
   res_t r;
 
+  _internalUpdate();
+
   r = ethernetMaintain();
   if (r != Ok)
     return r;
 
-  _internalUpdate();
+  // Wait for client to be ready
+  r = _waitClientReady();
+  if (r != Ok)
+    return r;  
 
   // Connect to server
   client.setConnectionTimeout(PLC_TIMEOUT_MS);
@@ -297,8 +314,8 @@ res_t getResets(int32_t * rr)
   sprintf(q, "module=reset_counter&plc_number=%d&operation=get&arduino=true", PLC_ID);
   _retryPostJson("fase2/modules/post.php", q, "r_cnt_res: ");
 
-  g_jsonBuffer.clear();
-  JsonObject& root = g_jsonBuffer.parseObject(g_buf);
+  StaticJsonBuffer<jsonBufferCapacity> jb;
+  JsonObject& root = jb.parseObject(g_buf);
 
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
@@ -329,8 +346,8 @@ res_t getDigitalInputs(uint32_t * di)
   sprintf(q, "module=control_inputs&plc_number=%d&operation=get&arduino=true", PLC_ID);
   _retryPostJson("fase2/modules/post.php", q, "r_get_in: ");
 
-  g_jsonBuffer.clear();
-  JsonObject& root = g_jsonBuffer.parseObject(g_buf);
+  StaticJsonBuffer<jsonBufferCapacity> jb;
+  JsonObject& root = jb.parseObject(g_buf);
 
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
@@ -362,8 +379,8 @@ res_t getOutputs(bool * o)
   sprintf(q, "module=control_outputs&plc_number=%d&operation=get&arduino=true", PLC_ID);
   _retryPostJson("fase2/modules/post.php", q, "r_get_out: ");
 
-  g_jsonBuffer.clear();
-  JsonObject& root = g_jsonBuffer.parseObject(g_buf);
+  StaticJsonBuffer<jsonBufferCapacity> jb;
+  JsonObject& root = jb.parseObject(g_buf);
 
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
@@ -401,8 +418,8 @@ res_t setInputs(uint32_t * di, uint32_t * ai)
   }
   _retryPostJson("fase2/modules/post.php", q, "r_set_in: ");
 
-  g_jsonBuffer.clear();
-  JsonObject& root = g_jsonBuffer.parseObject(g_buf);
+  StaticJsonBuffer<jsonBufferCapacity> jb;
+  JsonObject& root = jb.parseObject(g_buf);
 
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
@@ -429,8 +446,8 @@ res_t logInput(uint8_t n, uint8_t type, float val)
   dtostrf(val, 3, 2, q + strlen(q));
   _retryPostJson("fase2/modules/post.php", q, "r_log_in: ");
 
-  g_jsonBuffer.clear();
-  JsonObject& root = g_jsonBuffer.parseObject(g_buf);
+  StaticJsonBuffer<jsonBufferCapacity> jb;
+  JsonObject& root = jb.parseObject(g_buf);
 
   res_t r = jsonReplyValidate(root);
   if (r != Ok)
@@ -457,8 +474,8 @@ res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, floa
   sprintf(q, "module=config_program&plc_number=%d&operation=get&arduino=true&poweron=%d", PLC_ID, g_power_on);
   _retryPostJson("fase2/modules/post.php", q, "r_get_cfg: ");
 
-  g_jsonBuffer.clear();
-  JsonObject& root = g_jsonBuffer.parseObject(g_buf);
+  StaticJsonBuffer<jsonBufferCapacity> jb;
+  JsonObject& root = jb.parseObject(g_buf);
 
   res_t r = jsonReplyValidate(root);
   if (r != Ok)

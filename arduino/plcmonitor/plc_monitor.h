@@ -108,7 +108,7 @@ void _initPlcMonitor()
     plc_lcd.clear(); // Clear the screen
     lcdText("Connecting...");
     #ifdef DEBUG
-    Serial_begin();
+    Serial.begin(SERIAL_BAUDRATE);
     #endif
     _plcDeviceInit();
     initEthernet();

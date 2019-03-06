@@ -65,6 +65,7 @@ enum error_codes
   Error_jsonerror = 1<<11, ///< Error parsing json
   Error_jsonvar = 1<<12, ///< Invalid json variable
   Error_shield = 1<<13, ///< Shield error
+  Error_ready = 1<<14, ///< Client ready error
 };
 
 typedef uint16_t res_t;
@@ -145,6 +146,7 @@ res_t errorString(res_t e, char * s)
     case Error_jsonerror: strcpy(s, "Jerr"); break;
     case Error_jsonvar: strcpy(s, "Jvar"); break;
     case Error_shield: strcpy(s, "Jshd"); break;
+    case Error_ready: strcpy(s, "Rdy"); break;
     default: sprintf(s,"%d",e);
   }  
   return Ok;
