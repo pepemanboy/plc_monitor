@@ -436,7 +436,7 @@ void _internalUpdate()
 {
   _updateTimestamps();
   _readInputs();
-  if (initialized && (plcDevice.save_elapsed_ms > plc_SAVE_PERIOD_ms))
+  if (plcDevice.initialized && (plcDevice.save_elapsed_ms > plc_SAVE_PERIOD_ms))
   {
     plcDevice.save_elapsed_ms = 0;
     _putEeprom();
