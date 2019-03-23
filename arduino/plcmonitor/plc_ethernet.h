@@ -169,9 +169,9 @@ res_t _postJson(const char * url, const char * params)
     return r;
 
   // Wait for client to be ready
-  r = _waitClientReady();
-  if (r != Ok)
-    return r;  
+  // r = _waitClientReady();
+  // if (r != Ok)
+  //  return r;  
 
   // Connect to server
   client.setConnectionTimeout(PLC_TIMEOUT_MS);
@@ -234,9 +234,15 @@ res_t _postJson(const char * url, const char * params)
     while (client.available())
     {
       if ((millis() - g_readTimestamp) > PLC_TIMEOUT_MS)
+      {
+        client.stop();
         return Error_timeout;
+      }
       else if (strlen(g_buf) >= (sizeof(g_buf) - 1))
+      {
+        client.stop();
         return Error_overflow;
+      }        
       else
         strcat_c(g_buf, client.read());
     }
