@@ -19,6 +19,7 @@ void _internalUpdate();
 
 #include "plc_common.h"
 #include "plc_ethernet.h"
+#include <EEPROM.h>
 
 /* Clear object using pointer */
 #define clearObject(p) memset((p), 0, sizeof(*(p)))
@@ -38,7 +39,7 @@ struct plc_in_t
   uint8_t type; ///< Input type
   uint8_t number; ///< Input number
 	uint32_t log_period_ms; ///< Logging period
-  uint32_t log_elapsed_ms; ///< Elapsed seconds since last logging
+  uint32_t log_elapsed_ms; ///< Elapsed time since last logging [ms]
   float value; ///< Input value
   float reading; ///< Input reading
   float reading_; ///< Past input reading
@@ -66,10 +67,24 @@ struct PlcDevice
 	res_t logErrors; ///< Logging errors
 	res_t ioErrors; ///< IO errors
 	bool initialized; ///< Initialized flag
+  uint32_t save_elapsed_ms; ///< Elapsed time since last EEPROM save [ms]
 };
 
 /* Global plcDevice */
 PlcDevice plcDevice;
+
+/* EEProm save struct */
+typedef struct PlcEEPROMContents PlcEEPROMContents;
+struct PlcEEPROMContents
+{
+  uint32_t di[DIGITAL_INPUT_COUNT];
+};
+
+/* EEProm address */
+#define plc_EEPROM_ADDRESS 0
+
+/* EEProm saving period */
+#define plc_SAVE_PERIOD_ms 1800000 /* 30 minutes */
 
 /* Function prototype declarations */
 res_t _startupSequence();
@@ -189,10 +204,19 @@ res_t _plcGetCounters()
     lcdError(r, "p_get_cnt: ");
   }
 
+  // Read counters from EEPROM
+  PlcEEPROMContents p;
+  EEPROM.get(plc_EEPROM_ADDRESS, p);
+
   for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
   {
     if (plcDevice.din[i].type == input_Counter)
-      plcDevice.din[i].value = di[i];
+    {
+      if (p.di[i] > di[i])
+        plcDevice.din[i].value = p.di[i];
+      else
+        plcDevice.din[i].value = di[i];
+    }      
   }
 
   return Ok;  
@@ -333,6 +357,8 @@ void _updateTimestamps()
   // Input timestamps
   for (uint8_t i = 0; i < INPUT_COUNT; ++i)
     plcDevice.in[i].log_elapsed_ms += e;
+
+  plcDevice.save_elapsed_ms += e;
 }
 
 /* Log inputs */
@@ -390,11 +416,25 @@ res_t _setOutputs()
   return Ok;
 }
 
+/* Save inputs to EEPROM */
+void _putEeprom()
+{
+  PlcEEPROMContents p;
+  for (uint8_t i = 0; i < DIGITAL_INPUT_COUNT; ++i)
+    p.di[i] = plcDevice.din[i].value;
+  EEPROM.put(plc_EEPROM_ADDRESS, p);
+}
+
 /* Internal update */
 void _internalUpdate()
 {
   _updateTimestamps();
   _readInputs();
+  if (initialized && (plcDevice.save_elapsed_ms > plc_SAVE_PERIOD_ms))
+  {
+    plcDevice.save_elapsed_ms = 0;
+    _putEeprom();
+  }
 }
 
 /* Update io */
