@@ -157,7 +157,7 @@ res_t _waitClientDisconnect()
    @param params POST arguments
    @return error code
 */
-res_t _postJson(const char * url, const char * params)
+res_t _postJson(const char * url, const char * params, const char * msg)
 {
   res_t r;
 
@@ -231,20 +231,16 @@ res_t _postJson(const char * url, const char * params)
   g_readTimestamp = millis();
   while (client.connected())
   {
+    if ((millis() - g_readTimestamp) > PLC_TIMEOUT_MS)
+    {
+      client.stop();
+      return Error_timeout;
+    }
     while (client.available())
     {
-      if ((millis() - g_readTimestamp) > PLC_TIMEOUT_MS)
-      {
-        client.stop();
-        return Error_timeout;
-      }
-      else if (strlen(g_buf) >= (sizeof(g_buf) - 1))
-      {
-        client.stop();
-        return Error_overflow;
-      }        
-      else
-        strcat_c(g_buf, client.read());
+      char c = client.read();
+      if (strlen(g_buf) < (sizeof(g_buf) - 1))
+        strcat_c(g_buf, c);
     }
   }
 
@@ -258,7 +254,14 @@ res_t _postJson(const char * url, const char * params)
 #endif
 
   // Wait for server to terminate
-  r = _waitClientDisconnect();
+  // r = _waitClientDisconnect();
+  unsigned long ts = millis();
+  while (client.connected())
+  {
+    delay(PLC_TIMEOUT_DELAY_MS);
+    if ((millis() - ts) >= PLC_TIMEOUT_MS)
+      lcdError(Error_disconnect, msg);
+  }
 
   // Disconnect
   client.stop();
@@ -271,7 +274,7 @@ res_t _retryPostJson(const char * url, const char * params, const char * msg)
   res_t r = Error;
   while (r != Ok)
   {
-    r = _postJson(url, params);
+    r = _postJson(url, params, msg);
 
 #ifdef DEBUG
     char d[30] = "";
