@@ -182,7 +182,18 @@ res_t _postJson(const char * url, const char * params, const char * msg)
     return Error_connect;
   }
 
+  // Check Tx buffer free bytes
+  int clientFree = client.free();
+  PLC_DEBUG("Client free space ", clientFree);  
+  if(clientFree < 1000)
+  {
+    client.stop();
+    return Error_connect;
+  }
+
   // Send request
+  lcdWarning("send", msg);
+  client.flush();
   client.print(F("POST "));
   client.print(F(PLC_WEBSITE_DIRECTORY));
   client.print(url);
@@ -197,8 +208,9 @@ res_t _postJson(const char * url, const char * params, const char * msg)
   client.print(F("Content-Length: "));
   client.println(strlen(params));
   client.println();
-  client.println(params);
-  client.flush();
+  client.println(params);  
+  client.flush();  
+  lcdWarning("sent", msg);
 
   // Wait for response
   r = _waitClientAvailable();

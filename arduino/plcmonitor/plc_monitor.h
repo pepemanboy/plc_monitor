@@ -111,7 +111,9 @@ void _initPlcMonitor()
     Serial.begin(SERIAL_BAUDRATE);
     #endif
     _plcDeviceInit();
-    initEthernet();
+    r = Error;
+    while (r != Ok)
+      r = initEthernet();
     lcdText("Connected!...");
     delay(500);
     lcdText("Configuring...");
@@ -137,7 +139,7 @@ res_t _plcGetConfig()
   while (r != Ok)
   {
     r = getConfig(di_freq, di_count, ai_freq, ai_gain, ai_offs);
-    PLC_DEBUG("Failed to get config, error = ", r);
+    PLC_DEBUG("Get config, error = ", r);
     lcdError(r, "p_get_cfg: ");
   }
 
@@ -164,7 +166,7 @@ res_t _plcGetOutputs()
   while (r != Ok)
   {
     r = getOutputs(outputs);
-    PLC_DEBUG("Failed to get outputs. Error = ", r);
+    PLC_DEBUG("Get outputs. Error = ", r);
     lcdError(r, "p_get_out: ");
   }
 
@@ -185,7 +187,7 @@ res_t _plcGetCounters()
   while (r != Ok)
   {
     r = getDigitalInputs(di);
-    PLC_DEBUG("Failed to get counters. Error = ", r);
+    PLC_DEBUG("Get counters. Error = ", r);
     lcdError(r, "p_get_cnt: ");
   }
 
@@ -207,7 +209,7 @@ res_t _plcResetCounters()
   while (r != Ok)
   {
     r = getResets(rr);
-    PLC_DEBUG("Failed to get resets. Error = ", r);
+    PLC_DEBUG("Get resets. Error = ", r);
     lcdError(r, "p_cnt_res: ");
   }
 
@@ -236,7 +238,7 @@ res_t _plcSendInputs()
   while (r != Ok)
   {
     r = setInputs(din,ain);
-    PLC_DEBUG("Failed to send inputs. Error = ", r);
+    PLC_DEBUG("Send inputs. Error = ", r);
     lcdError(r, "p_set_in: ");
   }
   
@@ -250,7 +252,7 @@ res_t _plcLogInput(plc_in_t * input)
   while (r != Ok)
   {
     r = logInput(input->number, input->type == input_Analog ? input_Analog : input_Digital , input->value);
-    PLC_DEBUG("Failed to log input. Error = ", r);
+    PLC_DEBUG("Log input. Error = ", r);
     lcdError(r, "p_log_in: ");
   }
   

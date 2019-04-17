@@ -163,4 +163,12 @@ void lcdError(res_t error, const char * msg)
   lcdText(lcd_buf);
 }
 
+void lcdWarning(const char * warning, const char * msg)
+{
+  char lcd_buf[PLC_LCD_BUFFER_SIZE] = "";
+  strcat(lcd_buf, msg);
+  strcat(lcd_buf, warning);
+  lcdText(lcd_buf);
+}
+
 #endif //PLC_COMMON_H
