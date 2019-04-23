@@ -13,6 +13,7 @@
 #include <Ethernet.h>
 #include "plc_config.h"
 #include <plcshield.h>
+#include <avr/wdt.h>
 
 #define SERIAL_BAUDRATE 115200
 
@@ -66,6 +67,7 @@ enum error_codes
   Error_jsonvar = 1<<12, ///< Invalid json variable
   Error_shield = 1<<13, ///< Shield error
   Error_ready = 1<<14, ///< Client ready error
+  Error_free = 1<<15, ///< Client free error
 };
 
 typedef uint16_t res_t;
@@ -112,6 +114,12 @@ void plcDebug(const char * s, int32_t n)
 /* Reset function */
 void(* softReset) (void) = 0; //declare reset function at address 0
 
+void reboot() {
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {}
+}
+
 #define PLC_LCD_BUFFER_SIZE 17
 /* Debug monitor through lcd */
 void lcdText(const char * s)
@@ -147,6 +155,7 @@ res_t errorString(res_t e, char * s)
     case Error_jsonvar: strcpy(s, "Jvar"); break;
     case Error_shield: strcpy(s, "Jshd"); break;
     case Error_ready: strcpy(s, "Rdy"); break;
+    case Error_free: strcpy(s, "Free"); break;
     default: sprintf(s,"%d",e);
   }  
   return Ok;

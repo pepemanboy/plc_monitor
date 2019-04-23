@@ -138,6 +138,19 @@ res_t _waitClientAvailable()
   return Ok;
 }
 
+/* Wait buffer free */
+res_t _waitBufferFree()
+{
+  unsigned long ts = millis();
+  while (client.free() < 1000)
+  {
+    delay(PLC_TIMEOUT_DELAY_MS);
+    if ((millis() - ts) >= PLC_TIMEOUT_MS)
+      return Error_free;
+  }
+  return Ok;
+}
+
 /* Wait for client to disconnect or timeout */
 res_t _waitClientDisconnect()
 {
@@ -183,12 +196,11 @@ res_t _postJson(const char * url, const char * params, const char * msg)
   }
 
   // Check Tx buffer free bytes
-  int clientFree = client.free();
-  PLC_DEBUG("Client free space ", clientFree);  
-  if(clientFree < 1000)
+  r = _waitBufferFree();
+  if(r != Ok)
   {
     client.stop();
-    return Error_connect;
+    return r;
   }
 
   // Send request
