@@ -195,6 +195,14 @@ res_t _postJson(const char * url, const char * params, const char * msg)
     return Error_connect;
   }
 
+  // Check free sockets
+  res = client.freeSockets();
+  if (r != 1)
+  {
+    lcdWarning("sock", msg);
+    delay(500);
+  }
+
   // Check Tx buffer free bytes
   r = _waitBufferFree();
   if(r != Ok)
