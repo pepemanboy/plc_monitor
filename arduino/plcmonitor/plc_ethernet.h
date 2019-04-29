@@ -235,7 +235,7 @@ res_t _postJson(const char * url, const char * params, const char * msg)
   // Check HTTP status
   memset(g_buf, 0, sizeof(g_buf));
   client.readBytesUntil('\r', g_buf, sizeof(g_buf));
-  if (strcmp(g_buf, "HTTP/1.1 200 OK") != 0)
+  if (strstr(g_buf, "OK") != NULL)
   {
     client.stop();
     return Error_httpstatus;

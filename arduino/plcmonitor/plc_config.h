@@ -38,7 +38,7 @@
 #define PLC_PORT (80) 
 
 /** WEBSITE */
-#define PLC_WEBSITE "www.dplastico-scada.com"
+#define PLC_WEBSITE "https://www.dplastico-scada.com"
 
 /** WEBSITE DIRECTORY */
 #define PLC_WEBSITE_DIRECTORY "/"
