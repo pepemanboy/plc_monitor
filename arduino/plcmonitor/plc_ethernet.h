@@ -38,6 +38,9 @@
 /* Retry settings */
 #define PLC_MAX_ERRORS (5)
 
+/* Reset pin */
+#define PLC_RESET_PIN (53)
+
 /* Module errors */
 uint8_t ethernet_error_count = 0;
 
@@ -74,6 +77,17 @@ const size_t jsonBufferCapacity = 6 * JSON_OBJECT_SIZE(2) + 7 * JSON_OBJECT_SIZE
 /* Forward declarations */
 res_t initEthernet();
 
+/* Reset ethernet shield */
+void _resetShield()
+{
+  pinMode(PLC_RESET_PIN,OUTPUT);
+  digitalWrite(PLC_RESET_PIN, LOW);
+  delay(100);
+  digitalWrite(PLC_RESET_PIN, HIGH);
+  pinMode(PLC_RESET_PIN,INPUT);
+  delay(1000);
+}
+
 /* Ethernet watchdog for consecutive errors*/
 void ethernetWatchdog(bool b)
 {
@@ -81,6 +95,8 @@ void ethernetWatchdog(bool b)
   if (ethernet_error_count > PLC_MAX_ERRORS)
   {
     lcdText("Watchdog");
+    _resetShield();
+    initEthernet();
     ethernet_error_count = 0;
   }
 }
@@ -235,7 +251,7 @@ res_t _postJson(const char * url, const char * params, const char * msg)
   // Check HTTP status
   memset(g_buf, 0, sizeof(g_buf));
   client.readBytesUntil('\r', g_buf, sizeof(g_buf));
-  if (strstr(g_buf, "OK") != NULL)
+  if (strstr(g_buf, "OK") == NULL)
   {
     client.stop();
     return Error_httpstatus;
@@ -549,6 +565,9 @@ res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, floa
 */
 res_t initEthernet()
 {
+  // Reset shield
+  _resetShield();
+  
   // Disable SD
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
