@@ -95,8 +95,7 @@ void ethernetWatchdog(bool b)
   if (ethernet_error_count > PLC_MAX_ERRORS)
   {
     lcdText("Watchdog");
-    _resetShield();
-    initEthernet();
+    reboot();
     ethernet_error_count = 0;
   }
 }
@@ -190,17 +189,16 @@ res_t _postJson(const char * url, const char * params, const char * msg)
 {
   res_t r;
 
+  // Reset watchdog
+  watchdogReset();
+
+  // Update internal IOs
   _internalUpdate();
 
   // Maintain DHCP connection
   r = ethernetMaintain();
   if (r != Ok)
     return r;
-
-  // Wait for client to be ready
-  // r = _waitClientReady();
-  // if (r != Ok)
-  //  return r;  
 
   // Connect to server
   client.setConnectionTimeout(PLC_TIMEOUT_MS);
@@ -567,6 +565,9 @@ res_t initEthernet()
 {
   // Reset shield
   _resetShield();
+
+  // Enable watchdog
+  watchdogEnable();
   
   // Disable SD
   pinMode(4, OUTPUT);
@@ -601,6 +602,9 @@ res_t initEthernet()
   client.setTimeout(PLC_TIMEOUT_MS);
 
   PLC_DEBUG("Connected to ethernet shield.", 0);
+
+  // Reset watchdog
+  watchdogReset();
 
   return Ok;
 }

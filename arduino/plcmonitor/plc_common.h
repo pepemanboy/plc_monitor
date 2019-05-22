@@ -116,8 +116,24 @@ void(* softReset) (void) = 0; //declare reset function at address 0
 
 void reboot() {
   wdt_disable();
-  wdt_enable(WDTO_15MS);
+  wdt_enable(WDTO_8S);
   while (1) {}
+}
+
+void watchdogReset()
+{
+  wdt_reset();
+}
+
+void watchdogEnable()
+{
+  wdt_reset();
+  wdt_enable(WDTO_8S);
+}
+
+void watchdogDisable()
+{
+  wdt_disable();
 }
 
 #define PLC_LCD_BUFFER_SIZE 17
