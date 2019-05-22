@@ -563,11 +563,11 @@ res_t getConfig(uint32_t * dif, uint8_t * dic, uint32_t * aif, float * aig, floa
 */
 res_t initEthernet()
 {
-  // Reset shield
-  _resetShield();
-
   // Enable watchdog
   watchdogEnable();
+  
+  // Reset shield
+  _resetShield();
   
   // Disable SD
   pinMode(4, OUTPUT);

@@ -1,6 +1,8 @@
 #include "plc_monitor.h"
 
-void setup() {
+void setup() {  
+  watchdogDisable();
+  watchdogReset();
   plc_init();
 }
 
