@@ -1,5 +1,6 @@
 <?php
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 include_once("modules/user_control.php");
 ?>
 

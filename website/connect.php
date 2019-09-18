@@ -41,7 +41,7 @@ function connectToDatabase(&$connection, $db = DATABASE)
 		return ERROR_CONNECTION;
 	}
 
-	$query = "SET time_zone = '-06:00';";
+	$query = "SET time_zone = '-05:00';";
 	$r = mysqli_query($connection, $query);
 	if (!$r)
 	{

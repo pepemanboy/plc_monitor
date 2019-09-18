@@ -3,7 +3,8 @@
  * PLC control inputs module implementation.
  */
 
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
 include_once( dirname(__FILE__) . '/tabla_plcs.php');
@@ -37,6 +38,7 @@ class ControlInputs extends Module
 		$b = True;
 		$plc_number = 0;
 		$b = $b && $this->getPostParameter("plc_number", $plc_number);
+		$aig = mysqli_real_escape_string($this->link, (string)$plc_number);
 
 		if (!$b)
 			return ERROR_ARGUMENTS;
@@ -136,6 +138,8 @@ class ControlInputs extends Module
 		{
 			$b = $b && $this->getPostParameter("di{$i}", $di[$i-1]);
 			$b = $b && $this->getPostParameter("ai{$i}", $ai[$i-1]);
+			$di[$i-1] = mysqli_real_escape_string($this->link, (string)$di[$i-1]);
+			$ai[$i-1] = mysqli_real_escape_string($this->link, (string)$ai[$i-1]);
 		}
 		if (!$b)
 			return ERROR_ARGUMENTS;

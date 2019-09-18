@@ -3,7 +3,8 @@
  * PLC control outputs module implementation.
  */
 
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
 include_once( dirname(__FILE__) . '/tabla_plcs.php');
@@ -79,7 +80,7 @@ class ControlOutputs extends Module
 		if ($empty)
 		{
 			$query = "
-			INSERT INTO {$this->table_name}
+			INSERT INTO {$this->table_name} 
 			(do1,do2,do3,do4,do5,do6) 
 			VALUES (0,0,0,0,0,0);
 			";  

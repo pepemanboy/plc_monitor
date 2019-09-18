@@ -1,5 +1,6 @@
 <?php
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 include_once("modules/user_control.php");
 UserControl::validateSession(); // Will redirect if fails
 ?>
@@ -44,7 +45,7 @@ UserControl::validateSession(); // Will redirect if fails
     </div>
     <!-- Botones -->
     <?php
-      include_once("user_control.php");
+      include_once("modules/user_control.php");
       if(UserControl::validatePermissions(PERMISSIONS_ACTIONS))
       {
         echo("
@@ -62,7 +63,7 @@ UserControl::validateSession(); // Will redirect if fails
         <h3>Entradas digitales</h3>
       </div>      
       <?php
-      include_once("user_control.php");
+      include_once("modules/user_control.php");
       $p = !UserControl::validatePermissions(PERMISSIONS_OUTPUTS) ? "disabled" : "";
       for ($i = 1; $i <= 6; $i++) {
         echo ' 
@@ -188,7 +189,7 @@ UserControl::validateSession(); // Will redirect if fails
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
 <script src = "js/plcmonitor_util.js"> </script>
-<script src = "js/plcmonitor_config.js"> </script>
+<script src = "js/plcmonitor_config.js?2"> </script>
 <!-- Acaba Javascript -->
 </body>
 </html> 

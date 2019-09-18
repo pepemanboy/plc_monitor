@@ -20,7 +20,6 @@ $(document).ready(function() {
 	updateTable();
 });
 
-
 /**
  * Modify an account button. On click.
  *

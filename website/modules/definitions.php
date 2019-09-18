@@ -5,9 +5,9 @@ if(!defined("DEFINITIONS"))
 	define("DEFINITIONS", "DEFINITIONS");
 
 	/* Username and password */
-	define("SERVER", "localhost");
-	define("USERNAME", "dplastic_sc_ivan");
-	define("PASSWORD", "Kristal$737733");
+	define("SERVER", "127.0.0.1");
+	define("USERNAME", "root");
+	define("PASSWORD", "pepe1995");
 	define("DATABASE", "dplastic_dplastico_scada");
 	define("TABLE_PREFIX", "plc");
 	define("MAIN_TABLE", "plcs");

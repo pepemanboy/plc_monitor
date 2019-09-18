@@ -3,7 +3,8 @@
  * PLC main table.
  */
 
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
 include_once( dirname(__FILE__) . '/user_control.php');
@@ -377,7 +378,7 @@ class TablaPlcs extends Module
 	 * @param integer $id PLC ID.
 	 * @param {out}string $name PLC name in PLC table.
 	 */
-	public function findPlcById($id, &$name)
+	public function findPlcById($id, &$name = null)
 	{ 
 		if (!$this->initialized())
             return ERROR_INITIALIZE;

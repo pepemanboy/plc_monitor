@@ -118,17 +118,11 @@ class Module
         $this->link = null;
         $r = $this->connectToDatabase();
         if ($r != OK)
-        {
-            echo("could not connect");
             return $r;
-        }
 
         $r = $this->initialize();
         if ($r != OK)
-        {
-            echo("no pudeee({$r})");
             return $r;
-        }
 
         $this->initialized = true;
 

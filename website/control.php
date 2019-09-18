@@ -1,5 +1,6 @@
 <?php
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 include_once("modules/user_control.php");
 UserControl::validateSession(); // Will redirect if fails
 ?>
@@ -104,7 +105,7 @@ UserControl::validateSession(); // Will redirect if fails
     <div class = "row">
       <button type="button" class="btn btn-success control-recibir-boton" data-toggle='modal' id = "control-recibir-boton">Recibir</button>
       <?php
-      if(UserControl::validatePermissions(PERMISSIONS_ACTIONS))
+      if(UserControl::validatePermissions(PERMISSIONS_OUTPUTS))
       {
         echo("
           <button type='button' class='btn btn-success control-enviar-boton' data-toggle='modal' id = 'control-enviar-boton'>Enviar</button>

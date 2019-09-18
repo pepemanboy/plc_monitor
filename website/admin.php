@@ -1,5 +1,6 @@
 <?php
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 include_once("modules/user_control.php");
 UserControl::validateSession(); // Will redirect if fails
 ?>
@@ -51,7 +52,7 @@ UserControl::validateSession(); // Will redirect if fails
     <!-- Boton de agregar nuevo -->
     <div class = "row">
       <?php
-      include_once("user_control.php");
+      include_once("modules/user_control.php");
       if(UserControl::adminSession())
       {
         echo("

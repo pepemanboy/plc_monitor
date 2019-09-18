@@ -1,5 +1,6 @@
 <?php 
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 include_once("modules/user_control.php");
 UserControl::validateSession(); // Will redirect if fails
 ?>
@@ -136,11 +137,12 @@ UserControl::validateSession(); // Will redirect if fails
       });
     }
   </script>
+  <script src="js/jquery.canvasjs.min.js"></script>
   <script src = "js/plcmonitor_util.js"> </script>
   <script src = "js/plcmonitor_viz.js"> </script>
   <!-- Charts -->
   <!-- <script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script> -->
-  <script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
+ 
 <!-- End charts -->
 <!-- Acaba Javascript -->
 </body>

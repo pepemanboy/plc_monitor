@@ -1,5 +1,6 @@
 <?php 
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 
 include_once( dirname(__FILE__) . "/config_program.php");
 include_once( dirname(__FILE__) . "/control_inputs.php");
@@ -25,7 +26,11 @@ switch ($module_name) {
 	case "user_control": $module = new UserControl(); break;
 	// case "viz_action": $module = new Actions(); break;
 	case "viz_graph": $module = new VizGraph(); break;
-	default: die("{error(" . ERROR_ARGUMENT . ")}");
+	default: 
+		$ret = array("error" => ERROR_ARGUMENTS);
+		echo json_encode($ret, JSON_NUMERIC_CHECK);
+		break;
+	;
 }
 
 $module->postRequest();

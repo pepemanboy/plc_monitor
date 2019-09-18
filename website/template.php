@@ -1,12 +1,11 @@
 <?php
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 include_once("modules/user_control.php");
 UserControl::validateSession(); // Will redirect if fails
 if (!UserControl::adminSession())
   echo("<meta http-equiv='refresh' content='0; url=admin.php' />");
 ?>
-
-<?php session_start(); ?>
 <!doctype html>
 <!-- template.php -->
 <html lang="en">

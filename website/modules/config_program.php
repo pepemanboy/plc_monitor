@@ -3,7 +3,8 @@
  * PLC configuration module implementation.
  */
 
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
 include_once( dirname(__FILE__) . '/tabla_plcs.php');
@@ -201,10 +202,21 @@ class Config extends Module
 			$ai = $analog_inputs[$i];
 			$do = $digital_outputs[$i];
 
+			$din = mysqli_real_escape_string($this->link, (string)$di[0]);
+			$dif = mysqli_real_escape_string($this->link, (string)$di[1]);
+			$dic = mysqli_real_escape_string($this->link, (string)$di[2]);
+
+			$ain = mysqli_real_escape_string($this->link, (string)$ai[0]);
+			$aif = mysqli_real_escape_string($this->link, (string)$ai[1]);
+			$aig = mysqli_real_escape_string($this->link, (string)$ai[2]);
+			$aio = mysqli_real_escape_string($this->link, (string)$ai[3]);
+
+			$don = mysqli_real_escape_string($this->link, (string)$do[0]);
+
 			$query .= "
-			'{$di[0]}', {$di[1]}, {$di[2]},
-			'{$ai[0]}', {$ai[1]}, {$ai[2]}, {$ai[3]},
-			'{$do[0]}'";
+			'{$din}', {$dif}, {$dic},
+			'{$ain}', {$aif}, {$aig}, {$aio},
+			'{$don}'";
 
 			if ($i != 5) 
 				$query .= ",";

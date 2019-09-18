@@ -3,7 +3,8 @@
  * User control module implementation.
  */
 
-session_start();
+if(session_status() == PHP_SESSION_NONE)
+    session_start();
 
 include_once( dirname(__FILE__) . '/module.php');
 include_once( dirname(__FILE__) . '/tabla_plcs.php');
@@ -163,7 +164,7 @@ class UserControl extends Module
 		      </td>
 		      <td>
 		      ";
-			if (strcmp($user, $admin_name) != 0)
+			if (strcmp($user, $this->admin_name) != 0)
 			{
 				$p .= "<button type='button' class='btn btn-danger manager-borrar-boton' data-user-number = '{$id}' id = 'modal-borrar-boton-{$id}' data-toggle='modal' data-target='#manager-borrar-modal'>Borrar</button>";
 			}
@@ -200,6 +201,11 @@ class UserControl extends Module
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
+		$user_id = mysqli_real_escape_string($this->link, $user_id);
+		$username = mysqli_real_escape_string($this->link, $username);
+		$password = mysqli_real_escape_string($this->link, $password);
+		$permissions = mysqli_real_escape_string($this->link, $permissions);
+
 		$query = "
 		UPDATE {$this->table_name}
 		SET username = '{$username}', password = '{$password}', permissions = {$permissions}
@@ -231,6 +237,11 @@ class UserControl extends Module
 		$b = $b && $this->getPostParameter("username", $username);
 		$b = $b && $this->getPostParameter("password", $password);
 		$b = $b && $this->getPostParameter("permissions", $permissions);
+
+		$username = mysqli_real_escape_string($this->link, $username);
+		$password = mysqli_real_escape_string($this->link, $password);
+		$permissions = mysqli_real_escape_string($this->link, $permissions);
+
 		if (!$b)
 			return ERROR_ARGUMENTS;
 
@@ -252,6 +263,9 @@ class UserControl extends Module
 		$b = True;
 		$user_id = null;
 		$b = $b && $this->getPostParameter("user_id", $user_id);
+
+		$user_id = mysqli_real_escape_string($this->link, $user_id);
+
 		if (!$b)
 			return ERROR_ARGUMENTS;
 

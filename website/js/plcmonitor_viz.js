@@ -260,7 +260,10 @@ function graphSignals() {
 
 	// Compute data
 	var dataArray = new Array();
+    var axis = new Array();
 	for (var i = 0; i < g_graph_signals.signals.length; i++) {
+		var min = -1;
+		var max = -1;
 		var s = g_graph_signals.signals[i];
 		var dataPoints = [];
 		for (var j = 0; j < s.values.length; j++) {
@@ -270,27 +273,39 @@ function graphSignals() {
 				x: x,
 				y: y
 			});
+			if (y < min || min < 0)
+				min = y;
+			if (y > max || max < 0)
+				max = y;
 		}
+		axis.push({
+			title: s.name,
+			includeZero: false,
+			minimum: min,
+			maximum: max,
+			titleFontSize: 14
+		});
 		dataArray.push({
 			dataPoints: dataPoints,
 			name: s.name,
 			showInLegend: true,
-			type: "spline"
+			type: "spline",
+			axisYIndex: i 
 		});
 	}
 
+
 	var chart = new CanvasJS.Chart("chartContainer", {
 		animationEnabled: true,
+		zoomEnabled:true,
 		title: {
-			text: "Señales"
+			text: "Señales",
+			fontFamily: "arial"
 		},
 		axisX: {
 			valueFormatString: "DD MMM,YY"
 		},
-		axisY: {
-			title: "Valor",
-			includeZero: false
-		},
+		axisY: axis,
 		legend: {
 			cursor: "pointer",
 			fontSize: 16,
@@ -301,7 +316,7 @@ function graphSignals() {
 			contentFormatter: function(e) {
 				var content = "";
 				for (var i = 0; i < e.entries.length; i++) {
-					content = CanvasJS.formatDate(e.entries[i].dataPoint.x, "D/MMM/YYYY HH:mm:ss");
+					content = CanvasJS.formatDate(e.entries[i].dataPoint.x, "D/MMM HH:mm") + " = " + e.entries[i].dataPoint.y;
 				}
 				return content;
 			}
