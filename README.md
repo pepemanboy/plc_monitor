@@ -14,7 +14,7 @@ This is the visualization tab, where one can graph different signals of differen
 ![Viz tab of plcmonitor](https://github.com/pepemanboy/plc_monitor/blob/master/images/plcmonitor_viz.PNG)
 
 This is the configuration tab, where one can configure the PLCs.
-![Config tab of plcmonitor](https://github.com/pepemanboy/plc_monitor/blob/master/images/plcmonitor_viz.PNG)
+![Config tab of plcmonitor](https://github.com/pepemanboy/plc_monitor/blob/master/images/plcmonitor_config.PNG)
 
 All software code is in the website folder.
 
