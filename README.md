@@ -1,6 +1,6 @@
 # Plc_monitor
 
-This repo contains the implementation of a system for remote monitoring and control of [plcshield]()
+This repo contains the implementation of a system for remote monitoring and control of [plcshield](https://github.com/pepemanboy/plcshield)
 
 The system consists of two parts: software and firmware
 
